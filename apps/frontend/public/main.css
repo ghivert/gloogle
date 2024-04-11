@@ -1,0 +1,50 @@
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+:root {
+  --background: white;
+  --card-background: #f6f6f6;
+  --border-color: #eee;
+  --input-background: #fcfcfc;
+  --text-color: #000;
+  --text-grey-color: #555;
+  --border-color: #ddd;
+  --green: #01FF70;
+  --purple: #8C3A96;
+  --white: white;
+--orange: #FF851B;
+  --link: #0074D9;
+  --disabled: #ddd;
+  --text-disabled: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #222;
+    --card-background: #333;
+    --border-color: #111;
+    --input-background: #121212;
+    --text-color: #CCC;
+    --text-grey-color: #999;
+    --border-color: #333;
+    --disabled: #444;
+    --text-disabled: #555;
+  }
+}
+
+@keyframes progress_bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}

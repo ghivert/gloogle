@@ -1,0 +1,3 @@
+pub type Msg {
+  None
+}

@@ -1,0 +1,28 @@
+#!/usr/bin/env escript
+
+% Dump the configuration from Terraform to init the frontend.
+% The configuration will be written in apps/frontend/src/config.ts.
+main(_) ->
+  {ok, Dir} = file:get_cwd(),
+  RawConfig = read_terraform_config(Dir),
+  Config = improve_config(RawConfig),
+  FrontendDir = filename:join(Dir, "apps/frontend/src"),
+  ok = file:set_cwd(FrontendDir),
+  ConfigFile = filename:join(FrontendDir, "config.ts"),
+  file:write_file(ConfigFile, "export const config = " ++ Config ++ " as const"),
+  io:format("Configuration written in config.ts!\n").
+
+% Terraform dumps the config as a string containing a JSON. Everything is
+% surrounded with \ and ", so they need to be replaced.
+improve_config(Config) ->
+  FirstRemoved = string:replace(Config, "\"{", "{\n  "),
+  SecondRemoved = string:replace(FirstRemoved, ",", ",\n  ", all),
+  ThirdRemoved = string:replace(SecondRemoved, "}\"", "\n}"),
+  string:trim(string:replace(ThirdRemoved, "\\\"", "\"", all)).
+
+% Read the terraform output, everything is stored directly in the Terraform state.
+read_terraform_config(Dir) ->
+  InfrastructureDir = filename:join(Dir, "infrastructure"),
+  ok = file:set_cwd(InfrastructureDir),
+  Content = os:cmd("terraform output"),
+  string:replace(Content, "config = ", "").

@@ -27,7 +27,8 @@ export const writeDotEnv = async () => {
   await Promise.all(envs.map(async ([envPath, dbName]) => {
     const content = await dotenv.load({ envPath })
     const dbUrl = ['postgres://postgres:gling@localhost:5432', dbName].join('/')
-    const newContent: Record<string, string> = { ...content, DATABASE_URL: dbUrl }
+    const sslDisabled = [dbUrl, 'sslmode=disable'].join('?')
+    const newContent: Record<string, string> = { ...content, DATABASE_URL: sslDisabled }
     await Deno.writeTextFile(envPath, dotenv.stringify(newContent))
   }))
   console.info('✏️  .env and .env.test correctly initialized!')

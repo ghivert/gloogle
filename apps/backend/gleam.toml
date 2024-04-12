@@ -11,6 +11,10 @@ radiate = {path = "../../packages/gleam-radiate"}
 wisp = "~> 0.14"
 simplifile = "~> 1.7"
 gleam_pgo = "~> 0.7"
+pgo = "~> 0.14"
+dot_env = "~> 0.5"
+gleam_otp = "~> 0.10"
+gleam_package_interface = "~> 1.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

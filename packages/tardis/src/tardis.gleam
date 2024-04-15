@@ -12,7 +12,7 @@ import lustre/effect
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event
-import sketch
+import sketch/lustre as sketch
 import sketch/options as sketch_options
 import tardis/internals/data/colors
 import tardis/internals/data/debugger as debugger_
@@ -50,12 +50,10 @@ pub fn setup() {
   let #(shadow_root, lustre_root) = setup.mount_shadow_node()
 
   // Attach the StyleSheet to the Shadow DOM.
-  let renderer =
-    sketch_options.shadow(shadow_root)
-    |> sketch.lustre_setup()
-
-  renderer
-  |> result.map(fn(r) { lustre.application(init, update, r(view)) })
+  sketch_options.shadow(shadow_root)
+  |> sketch.setup()
+  |> result.map(fn(cache) { sketch.compose(view, cache) })
+  |> result.map(fn(v) { lustre.application(init, update, v) })
   |> result.map_error(fn(error) {
     io.debug("Unable to start sketch. Check your configuration.")
     io.debug(error)

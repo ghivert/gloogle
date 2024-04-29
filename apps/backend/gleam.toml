@@ -2,19 +2,22 @@ name = "backend"
 version = "1.0.0"
 
 [dependencies]
+birl = "~> 1.6"
+dot_env = "~> 0.5"
 gleam_erlang = "~> 0.25"
 gleam_http = "~> 3.6"
 gleam_json = "~> 1.0"
-gleam_stdlib = "~> 0.34 or ~> 1.0"
-mist = "1.0.0-rc2"
-radiate = {path = "../../packages/gleam-radiate"}
-wisp = "~> 0.14"
-simplifile = "~> 1.7"
-gleam_pgo = "~> 0.7"
-pgo = "~> 0.14"
-dot_env = "~> 0.5"
 gleam_otp = "~> 0.10"
 gleam_package_interface = "~> 1.0"
+gleam_pgo = "~> 0.7"
+gleam_stdlib = "~> 0.34 or ~> 1.0"
+mist = "1.0.0-rc2"
+pgo = "~> 0.14"
+radiate = {path = "../../packages/gleam-radiate"}
+simplifile = "~> 1.7"
+wisp = "~> 0.14"
+gleam_hexpm = "~> 1.0"
+gleam_hackney = "~> 1.2"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

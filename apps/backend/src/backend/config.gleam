@@ -7,12 +7,13 @@ pub type Context {
 }
 
 pub type Config {
-  Config(database_url: String)
+  Config(database_url: String, hex_api_key: String)
 }
 
 pub fn read_config() {
   let assert Ok(database_url) = os.get_env("DATABASE_URL")
-  Config(database_url)
+  let assert Ok(hex_api_key) = os.get_env("HEX_API_KEY")
+  Config(database_url, hex_api_key)
 }
 
 pub fn get_secret_key_base() {

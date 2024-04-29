@@ -3,22 +3,24 @@ import gleam/io
 import gleam/function
 import gleam/otp/actor
 import gleam/result
-
-// import packages/error.{type Error}
+import backend/index/error.{type Error}
 
 pub opaque type Message {
   Rerun
 }
 
 type State(a) {
-  State(self: Subject(Message), work: fn() -> Result(a, Nil), interval: Int)
+  State(self: Subject(Message), work: fn() -> Result(a, Error), interval: Int)
 }
 
-/// Repeatedly call a function, leaving `interval` milliseconds between each
-/// call.
+fn enqueue_next_rerun(state: State(a)) {
+  process.send_after(state.self, state.interval, Rerun)
+}
+
+/// Repeatedly call a function, leaving `interval` milliseconds between each call.
 /// When the `work` function returns an error it is printed.
 pub fn periodically(
-  do work: fn() -> Result(a, Nil),
+  do work: fn() -> Result(a, Error),
   waiting interval: Int,
 ) -> Result(Subject(Message), actor.StartError) {
   fn() { init(interval, work) }
@@ -28,16 +30,14 @@ pub fn periodically(
 
 fn init(
   interval: Int,
-  work: fn() -> Result(a, Nil),
+  work: fn() -> Result(a, Error),
 ) -> actor.InitResult(State(a), Message) {
   let subject = process.new_subject()
   let state = State(subject, work, interval)
   process.new_selector()
   |> process.selecting(subject, function.identity)
-  |> fn(selector) {
-    enqueue_next_rerun(state)
-    actor.Ready(state, selector)
-  }
+  |> actor.Ready(state, _)
+  |> function.tap(fn(_) { enqueue_next_rerun(state) })
 }
 
 fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {
@@ -48,8 +48,4 @@ fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {
       actor.continue(state)
     }
   }
-}
-
-fn enqueue_next_rerun(state: State(a)) {
-  process.send_after(state.self, state.interval, Rerun)
 }

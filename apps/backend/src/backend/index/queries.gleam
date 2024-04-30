@@ -5,10 +5,12 @@ import backend/index/error
 import backend/index/helpers
 import birl.{type Time}
 import gleam/bool
+import gleam/dict
 import gleam/dynamic
 import gleam/hexpm
 import gleam/io
 import gleam/list
+import gleam/option
 import gleam/pgo
 import gleam/result
 
@@ -127,14 +129,39 @@ pub fn sync_package_owners(
 
 pub fn upsert_package(db: pgo.Connection, package: hexpm.Package) {
   let name = pgo.text(package.name)
-  let repo = pgo.nullable(pgo.text, package.html_url)
+  let hex_url = pgo.nullable(pgo.text, package.html_url)
   let docs = pgo.nullable(pgo.text, package.docs_html_url)
-  "INSERT INTO package (name, repository, documentation)
-   VALUES ($1, $2, $3)
+  let repo =
+    package.meta.links
+    |> dict.get("Repository")
+    |> option.from_result()
+    |> pgo.nullable(pgo.text, _)
+  let links =
+    package.meta.links
+    |> helpers.json_dict()
+    |> pgo.text()
+  let licenses =
+    package.meta.licenses
+    |> helpers.json_list()
+    |> pgo.text()
+  let description = pgo.nullable(pgo.text, package.meta.description)
+  "INSERT INTO package
+    (name, repository, documentation, hex_url, links, licenses, description)
+   VALUES ($1, $2, $3, $4, $5, $6, $7)
    ON CONFLICT (name) DO UPDATE
-     SET repository = $2, documentation = $3
+     SET
+       repository = $2,
+       documentation = $3,
+       hex_url = $4,
+       links = $5,
+       licenses = $6,
+       description = $7
    RETURNING id"
-  |> pgo.execute(db, [name, repo, docs], dynamic.element(0, dynamic.int))
+  |> pgo.execute(
+    db,
+    [name, repo, docs, hex_url, links, licenses, description],
+    dynamic.element(0, dynamic.int),
+  )
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
     response.rows

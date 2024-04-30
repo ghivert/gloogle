@@ -102,6 +102,10 @@ CREATE TABLE public.package (
     name text NOT NULL,
     repository text,
     documentation text,
+    hex_url text,
+    links jsonb,
+    licenses jsonb,
+    description text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

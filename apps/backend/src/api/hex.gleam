@@ -4,7 +4,6 @@ import gleam/hackney
 import gleam/hexpm
 import gleam/http/request
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/result
 import gleam/uri
@@ -20,7 +19,6 @@ pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
   )
 
   response.body
-  |> io.debug()
   |> json.decode(using: dynamic.list(decode_hex_owner))
   |> result.map_error(error.JsonError)
 }
@@ -29,7 +27,7 @@ fn decode_hex_owner(data) {
   dynamic.decode3(
     hexpm.PackageOwner,
     dynamic.field("username", dynamic.string),
-    dynamic.optional(dynamic.field("email", dynamic.string)),
+    dynamic.optional_field("email", dynamic.string),
     dynamic.field("url", dynamic.string),
   )(data)
 }

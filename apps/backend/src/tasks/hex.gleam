@@ -6,19 +6,12 @@ import backend/index/error.{type Error}
 import backend/index/queries as index
 import birl.{type Time}
 import birl/duration
-import gleam/dynamic
-import gleam/hackney
 import gleam/hexpm.{type Package}
-import gleam/http/request
-import gleam/int
-import gleam/io
-import gleam/json
 import gleam/list
 import gleam/order
 import gleam/pgo
 import gleam/result
 import gleam/string
-import gleam/uri
 import wisp
 
 type State {
@@ -66,7 +59,9 @@ fn first_timestamp(packages: List(hexpm.Package), state: State) -> Time {
 }
 
 fn sync_packages(state: State) -> Result(Time, Error) {
-  use all_packages <- result.try(get_api_packages_page(state))
+  let page = state.page
+  let api_key = state.hex_api_key
+  use all_packages <- result.try(api.get_api_packages_page(page, api_key))
   let state = State(..state, newest: first_timestamp(all_packages, state))
   let new_packages = take_fresh_packages(all_packages, state.limit)
   use state <- result.try(list.try_fold(new_packages, state, sync_package))
@@ -79,7 +74,6 @@ fn sync_packages(state: State) -> Result(Time, Error) {
 
 fn sync_package(state: State, package: hexpm.Package) -> Result(State, Error) {
   let secret = state.hex_api_key
-  let db = state.db
   use releases <- result.try(lookup_gleam_releases(package, secret: secret))
   case releases {
     [] -> Ok(log_if_needed(state, package.updated_at))
@@ -113,29 +107,10 @@ fn lookup_gleam_releases(
   package: hexpm.Package,
   secret hex_api_key: String,
 ) -> Result(List(hexpm.Release), Error) {
-  let lookup = list.try_map(package.releases, lookup_release(_, hex_api_key))
+  let lookup =
+    list.try_map(package.releases, api.lookup_release(_, hex_api_key))
   use releases <- result.map(lookup)
   list.filter(releases, fn(r) { list.contains(r.meta.build_tools, "gleam") })
-}
-
-fn lookup_release(
-  release: hexpm.PackageRelease,
-  secret hex_api_key: String,
-) -> Result(hexpm.Release, Error) {
-  let assert Ok(url) = uri.parse(release.url)
-
-  use response <- result.try(
-    request.new()
-    |> request.set_host("hex.pm")
-    |> request.set_path(url.path)
-    |> request.prepend_header("authorization", hex_api_key)
-    |> hackney.send
-    |> result.map_error(error.FetchError),
-  )
-
-  response.body
-  |> json.decode(using: hexpm.decode_release)
-  |> result.map_error(error.JsonError)
 }
 
 fn log_if_needed(state: State, time: Time) -> State {
@@ -153,23 +128,4 @@ fn log_if_needed(state: State, time: Time) -> State {
 pub fn take_fresh_packages(packages: List(Package), limit: Time) {
   use package <- list.take_while(packages)
   birl.compare(limit, package.updated_at) == order.Lt
-}
-
-fn get_api_packages_page(state: State) -> Result(List(hexpm.Package), Error) {
-  use response <- result.try(
-    request.new()
-    |> request.set_host("hex.pm")
-    |> request.set_path("/api/packages")
-    |> request.set_query([
-      #("sort", "updated_at"),
-      #("page", int.to_string(state.page)),
-    ])
-    |> request.prepend_header("authorization", state.hex_api_key)
-    |> hackney.send
-    |> result.map_error(error.FetchError),
-  )
-
-  response.body
-  |> json.decode(using: dynamic.list(of: hexpm.decode_package))
-  |> result.map_error(error.JsonError)
 }

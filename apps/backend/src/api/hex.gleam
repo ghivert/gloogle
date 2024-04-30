@@ -3,9 +3,11 @@ import gleam/dynamic
 import gleam/hackney
 import gleam/hexpm
 import gleam/http/request
+import gleam/int
 import gleam/io
 import gleam/json
 import gleam/result
+import gleam/uri
 
 pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
   use response <- result.try(
@@ -30,4 +32,40 @@ fn decode_hex_owner(data) {
     dynamic.optional(dynamic.field("email", dynamic.string)),
     dynamic.field("url", dynamic.string),
   )(data)
+}
+
+pub fn lookup_release(release: hexpm.PackageRelease, secret hex_api_key: String) {
+  let assert Ok(url) = uri.parse(release.url)
+
+  use response <- result.try(
+    request.new()
+    |> request.set_host("hex.pm")
+    |> request.set_path(url.path)
+    |> request.prepend_header("authorization", hex_api_key)
+    |> hackney.send
+    |> result.map_error(error.FetchError),
+  )
+
+  response.body
+  |> json.decode(using: hexpm.decode_release)
+  |> result.map_error(error.JsonError)
+}
+
+pub fn get_api_packages_page(page: Int, hex_api_key: String) {
+  use response <- result.try(
+    request.new()
+    |> request.set_host("hex.pm")
+    |> request.set_path("/api/packages")
+    |> request.set_query([
+      #("sort", "updated_at"),
+      #("page", int.to_string(page)),
+    ])
+    |> request.prepend_header("authorization", hex_api_key)
+    |> hackney.send
+    |> result.map_error(error.FetchError),
+  )
+
+  response.body
+  |> json.decode(using: dynamic.list(of: hexpm.decode_package))
+  |> result.map_error(error.JsonError)
 }

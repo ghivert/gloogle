@@ -1,3 +1,4 @@
+import api/hex as api
 import backend/config.{type Config}
 import backend/data/hex_read.{type HexRead}
 import backend/index/connect as postgres
@@ -9,7 +10,6 @@ import gleam/dynamic
 import gleam/hackney
 import gleam/hexpm.{type Package}
 import gleam/http/request
-
 import gleam/int
 import gleam/io
 import gleam/json
@@ -84,7 +84,7 @@ fn sync_package(state: State, package: hexpm.Package) -> Result(State, Error) {
   case releases {
     [] -> Ok(log_if_needed(state, package.updated_at))
     _ -> {
-      use _ <- result.map(insert_package_and_releases(package, releases, db))
+      use _ <- result.map(insert_package_and_releases(package, releases, state))
       State(..state, last_logged: birl.now())
     }
   }
@@ -93,16 +93,20 @@ fn sync_package(state: State, package: hexpm.Package) -> Result(State, Error) {
 fn insert_package_and_releases(
   package: hexpm.Package,
   releases: List(hexpm.Release),
-  db: pgo.Connection,
+  state: State,
 ) {
+  let secret = state.hex_api_key
   let versions =
     releases
     |> list.map(fn(release) { release.version })
     |> string.join(", v")
   wisp.log_info("Saving " <> package.name <> " v" <> versions)
-  use id <- result.try(index.upsert_package(db, package))
-  use _ <- result.try(index.sync_package_owners(db, package))
-  list.try_each(releases, fn(r) { index.upsert_release(db, id, r) })
+  use id <- result.try(index.upsert_package(state.db, package))
+  wisp.log_info("Saving owners for " <> package.name)
+  use owners <- result.try(api.get_package_owners(package.name, secret: secret))
+  use _ <- result.try(index.sync_package_owners(state.db, id, owners))
+  wisp.log_info("Saving releases for " <> package.name)
+  list.try_each(releases, fn(r) { index.upsert_release(state.db, id, r) })
 }
 
 fn lookup_gleam_releases(

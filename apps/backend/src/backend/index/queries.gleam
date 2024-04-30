@@ -1,18 +1,16 @@
 import backend/data/hex_read.{type HexRead, HexRead}
 import backend/data/hex_user.{type HexUser}
 import backend/index/decoders
-import backend/index/error.{type Error}
+import backend/index/error
 import backend/index/helpers
 import birl.{type Time}
 import gleam/bool
-import gleam/dynamic.{type Dynamic}
+import gleam/dynamic
 import gleam/hexpm
 import gleam/io
 import gleam/list
-import gleam/option.{type Option, None, Some}
 import gleam/pgo
 import gleam/result
-import gleam/string
 
 pub fn get_last_hex_date(db: pgo.Connection) {
   "SELECT id, last_check FROM hex_read ORDER BY last_check DESC LIMIT 1"
@@ -50,11 +48,12 @@ pub fn upsert_hex_user(db: pgo.Connection, owner: hexpm.PackageOwner) {
   let url = pgo.text(owner.url)
   "INSERT INTO hex_user (username, email, url)
    VALUES ($1, $2, $3)
-   ON CONFLICT (email) DO UPDATE
-     SET username = $1, email = $2, url = $3
+   ON CONFLICT (username) DO UPDATE
+     SET email = $2, url = $3
    RETURNING id, username, email, url, created_at, updated_at"
   |> pgo.execute(db, [username, email, url], decoders.hex_user)
   |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
 }
 
 fn upsert_package_owners(db: pgo.Connection, owners: List(hexpm.PackageOwner)) {
@@ -64,72 +63,66 @@ fn upsert_package_owners(db: pgo.Connection, owners: List(hexpm.PackageOwner)) {
   |> result.map(list.flatten)
 }
 
-fn get_current_package_owners(db: pgo.Connection, package: hexpm.Package) {
+fn get_current_package_owners(db: pgo.Connection, package_id: Int) {
+  let pid = pgo.int(package_id)
   "SELECT package_owner.hex_user_id
    FROM package_owner
-   JOIN package
-     ON package_owner.package_id = package.id
-   WHERE package.name = $1"
-  |> pgo.execute(db, [pgo.text(package.name)], dynamic.element(0, dynamic.int))
+   WHERE package_owner.package_id = $1"
+  |> pgo.execute(db, [pid], dynamic.element(0, dynamic.int))
   |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
 }
 
 fn add_new_package_owners(
   db: pgo.Connection,
   owners: List(HexUser),
   current_owners: List(Int),
-  package: hexpm.Package,
+  package_id: Int,
 ) {
   owners
-  |> list.filter(fn(o) { list.contains(current_owners, o.id) })
+  |> list.filter(fn(o) { bool.negate(list.contains(current_owners, o.id)) })
   |> list.map(fn(u) {
     let hex_user_id = pgo.int(u.id)
-    let name = pgo.text(package.name)
+    let pid = pgo.int(package_id)
     "INSERT INTO package_owner (hex_user_id, package_id)
-       SELECT $1, package.id FROM package WHERE package.name = $2"
-    |> pgo.execute(db, [hex_user_id, name], dynamic.dynamic)
+     VALUES ($1, $2)"
+    |> pgo.execute(db, [hex_user_id, pid], dynamic.dynamic)
   })
   |> result.all()
+  |> result.map_error(error.DatabaseError)
 }
 
 fn remove_old_package_owners(
   db: pgo.Connection,
   owners: List(HexUser),
   current_owners: List(Int),
-  package: hexpm.Package,
+  package_id: Int,
 ) {
+  let curr = list.map(owners, fn(o) { o.id })
   current_owners
-  |> list.filter(fn(id) {
-    owners
-    |> list.map(fn(o) { o.id })
-    |> list.contains(id)
-    |> bool.negate()
-  })
+  |> list.filter(fn(id) { list.contains(curr, id) })
   |> list.map(fn(u) {
     let hex_user_id = pgo.int(u)
-    let name = pgo.text(package.name)
+    let pid = pgo.int(package_id)
     "DELETE FROM package_owner
-     USING package
      WHERE package_owner.hex_user_id = $1
-       AND package_owner.package_id = package.id
-       AND package.name = $2"
-    |> pgo.execute(db, [hex_user_id, name], dynamic.dynamic)
+       AND package_owner.package_id = $2"
+    |> pgo.execute(db, [hex_user_id, pid], dynamic.dynamic)
   })
   |> result.all()
+  |> result.map_error(error.DatabaseError)
 }
 
-pub fn sync_package_owners(db: pgo.Connection, package: hexpm.Package) {
-  case package.owners {
-    None -> Ok(Nil)
-    Some(owners) -> {
-      use news <- result.try(upsert_package_owners(db, owners))
-      use curr <- result.try(get_current_package_owners(db, package))
-      use _ <- result.try(add_new_package_owners(db, news, curr, package))
-      use _ <- result.try(remove_old_package_owners(db, news, curr, package))
-      Ok(Nil)
-    }
-  }
-  |> result.map_error(error.DatabaseError)
+pub fn sync_package_owners(
+  db: pgo.Connection,
+  package_id: Int,
+  owners: List(hexpm.PackageOwner),
+) {
+  use news <- result.try(upsert_package_owners(db, owners))
+  use curr <- result.try(get_current_package_owners(db, package_id))
+  use _ <- result.try(add_new_package_owners(db, news, curr, package_id))
+  use _ <- result.try(remove_old_package_owners(db, news, curr, package_id))
+  Ok(Nil)
 }
 
 pub fn upsert_package(db: pgo.Connection, package: hexpm.Package) {

@@ -1,8 +1,8 @@
 import backend/index/error
 import gleam/dynamic
-import gleam/hackney
 import gleam/hexpm
 import gleam/http/request
+import gleam/httpc
 import gleam/int
 import gleam/json
 import gleam/result
@@ -14,7 +14,7 @@ pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
     |> request.set_host("hex.pm")
     |> request.set_path("/api/packages/" <> package_name <> "/owners")
     |> request.prepend_header("authorization", hex_api_key)
-    |> hackney.send()
+    |> httpc.send()
     |> result.map_error(error.FetchError),
   )
 
@@ -40,7 +40,7 @@ pub fn lookup_release(release: hexpm.PackageRelease, secret hex_api_key: String)
     |> request.set_host("hex.pm")
     |> request.set_path(url.path)
     |> request.prepend_header("authorization", hex_api_key)
-    |> hackney.send
+    |> httpc.send()
     |> result.map_error(error.FetchError),
   )
 
@@ -59,7 +59,7 @@ pub fn get_api_packages_page(page: Int, hex_api_key: String) {
       #("page", int.to_string(page)),
     ])
     |> request.prepend_header("authorization", hex_api_key)
-    |> hackney.send
+    |> httpc.send()
     |> result.map_error(error.FetchError),
   )
 

@@ -1,3 +1,5 @@
+-- Used to create a many-to-many relationship between package and owners.
+
 -- migrate:up
 create table package_owner (
   hex_user_id int references hex_user(id),

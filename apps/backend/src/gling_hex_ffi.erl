@@ -2,8 +2,8 @@
 -export([extract_tar/3, remove_tar/1]).
 
 package_interface_path(ContentDest, BaseName) ->
-  BuildFolder = "/build/dev/docs/",
-  Package = "/package-interface.json",
+  BuildFolder = <<"/build/dev/docs/">>,
+  Package = <<"/package-interface.json">>,
   Path = <<ContentDest/binary, BuildFolder/binary, BaseName/binary, Package/binary>>,
   unicode:characters_to_binary(Path).
 

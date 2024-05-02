@@ -1,11 +1,34 @@
 -- migrate:up
+create type type_nature
+  as enum (
+    'function',
+    'type_definition',
+    'type_alias',
+    'constant'
+  );
+
 create table package_type_fun_signature (
+  -- Primary key
   id integer primary key generated always as identity,
-  package_release_id int references package_release(id),
-  module text not null,
+
+  -- Data, used in search and display mostly.
+  -- Keeping the source code signature, reconstructed from the package interface
+  --  allows to search in it directly, with full text search.
+  -- Name, documentation, nature and metadata directly comes from package interface.
   name text not null,
-  content text not null,
-  comment text,
+  documentation text not null,
+  signature_ text not null,
+  nature type_nature not null,
+  parameters int[] not null,
+  metadata jsonb not null,
+
+  -- Where is located the signature.
+  -- Module is simply the module name from the package.
+  -- Package can be retrieved through the package release.
+  module text not null,
+  package_release_id int references package_release(id),
+
+  -- Metadata on the row itself.
   created_at timestamptz default current_timestamp not null,
   updated_at timestamptz default current_timestamp not null,
   unique (package_release_id, module, name)
@@ -19,3 +42,4 @@ create trigger package_type_fun_signature_moddatetime
 -- migrate:down
 drop trigger package_type_fun_signature_moddatetime on package_type_fun_signature;
 drop table package_type_fun_signature;
+drop type type_nature;

@@ -37,6 +37,18 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 
+--
+-- Name: type_nature; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.type_nature AS ENUM (
+    'function',
+    'type_definition',
+    'type_alias',
+    'constant'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -171,11 +183,14 @@ ALTER TABLE public.package_release ALTER COLUMN id ADD GENERATED ALWAYS AS IDENT
 
 CREATE TABLE public.package_type_fun_signature (
     id integer NOT NULL,
-    package_release_id integer,
-    module text NOT NULL,
     name text NOT NULL,
-    content text NOT NULL,
-    comment text,
+    documentation text NOT NULL,
+    signature_ text NOT NULL,
+    nature public.type_nature NOT NULL,
+    parameters integer[] NOT NULL,
+    metadata jsonb NOT NULL,
+    module text NOT NULL,
+    package_release_id integer,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

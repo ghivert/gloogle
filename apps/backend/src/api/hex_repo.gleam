@@ -3,7 +3,6 @@ import gleam/bit_array
 import gleam/http
 import gleam/http/request
 import gleam/httpc
-import gleam/io
 import gleam/json
 import gleam/package_interface
 import gleam/result
@@ -46,7 +45,6 @@ fn read_package_interface(blob: String) {
   blob
   |> json.decode(using: package_interface.decoder)
   |> result.map_error(error.JsonError)
-  |> io.debug()
 }
 
 fn read_gleam_toml(blob: String) {

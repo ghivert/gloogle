@@ -55,8 +55,9 @@ gleam_stdlib = { version = "~> 0.34 or ~> 1.0" }
 gleeunit = { version = "~> 1.0" }
 mist = { version = "1.0.0-rc2" }
 pgo = { version = "~> 0.14" }
-pprint = { version = ">= 1.0.3 and < 2.0.0"}
+pprint = { version = ">= 1.0.3 and < 2.0.0" }
 radiate = { path = "../../packages/gleam-radiate" }
+ranger = { version = ">= 1.2.0 and < 2.0.0"}
 simplifile = { version = ">= 1.7.0 and < 2.0.0" }
 tom = { version = ">= 0.3.0 and < 1.0.0" }
 wisp = { version = "~> 0.14" }

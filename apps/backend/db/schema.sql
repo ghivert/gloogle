@@ -138,6 +138,34 @@ ALTER TABLE public.package ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: package_module; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.package_module (
+    id integer NOT NULL,
+    name text NOT NULL,
+    documentation text NOT NULL,
+    package_release_id integer,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: package_module_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.package_module ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.package_module_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: package_owner; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -158,6 +186,7 @@ CREATE TABLE public.package_release (
     package_id integer,
     version text NOT NULL,
     url text NOT NULL,
+    gleam_constraint text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -186,11 +215,11 @@ CREATE TABLE public.package_type_fun_signature (
     name text NOT NULL,
     documentation text NOT NULL,
     signature_ text NOT NULL,
+    json_signature jsonb NOT NULL,
     nature public.type_nature NOT NULL,
     parameters integer[] NOT NULL,
     metadata jsonb NOT NULL,
-    module text NOT NULL,
-    package_release_id integer,
+    package_module_id integer,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -244,6 +273,22 @@ ALTER TABLE ONLY public.hex_user
 
 
 --
+-- Name: package_module package_module_package_release_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_module
+    ADD CONSTRAINT package_module_package_release_id_name_key UNIQUE (package_release_id, name);
+
+
+--
+-- Name: package_module package_module_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_module
+    ADD CONSTRAINT package_module_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: package package_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -284,11 +329,11 @@ ALTER TABLE ONLY public.package_release
 
 
 --
--- Name: package_type_fun_signature package_type_fun_signature_package_release_id_module_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: package_type_fun_signature package_type_fun_signature_package_module_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.package_type_fun_signature
-    ADD CONSTRAINT package_type_fun_signature_package_release_id_module_name_key UNIQUE (package_release_id, module, name);
+    ADD CONSTRAINT package_type_fun_signature_package_module_id_name_key UNIQUE (package_module_id, name);
 
 
 --
@@ -322,6 +367,13 @@ CREATE TRIGGER package_moddatetime BEFORE UPDATE ON public.package FOR EACH ROW 
 
 
 --
+-- Name: package_module package_module_moddatetime; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER package_module_moddatetime BEFORE UPDATE ON public.package_module FOR EACH ROW EXECUTE FUNCTION public.moddatetime('updated_at');
+
+
+--
 -- Name: package_owner package_owner_moddatetime; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -340,6 +392,14 @@ CREATE TRIGGER package_release_moddatetime BEFORE UPDATE ON public.package_relea
 --
 
 CREATE TRIGGER package_type_fun_signature_moddatetime BEFORE UPDATE ON public.package_type_fun_signature FOR EACH ROW EXECUTE FUNCTION public.moddatetime('updated_at');
+
+
+--
+-- Name: package_module package_module_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_module
+    ADD CONSTRAINT package_module_package_release_id_fkey FOREIGN KEY (package_release_id) REFERENCES public.package_release(id);
 
 
 --
@@ -367,11 +427,11 @@ ALTER TABLE ONLY public.package_release
 
 
 --
--- Name: package_type_fun_signature package_type_fun_signature_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: package_type_fun_signature package_type_fun_signature_package_module_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.package_type_fun_signature
-    ADD CONSTRAINT package_type_fun_signature_package_release_id_fkey FOREIGN KEY (package_release_id) REFERENCES public.package_release(id);
+    ADD CONSTRAINT package_type_fun_signature_package_module_id_fkey FOREIGN KEY (package_module_id) REFERENCES public.package_module(id);
 
 
 --
@@ -389,5 +449,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240412154007'),
     ('20240412154008'),
     ('20240412154430'),
+    ('20240412155056'),
     ('20240412155057'),
     ('20240413164020');

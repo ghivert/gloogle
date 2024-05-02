@@ -18,6 +18,7 @@ create table package_type_fun_signature (
   name text not null,
   documentation text not null,
   signature_ text not null,
+  json_signature jsonb not null,
   nature type_nature not null,
   parameters int[] not null,
   metadata jsonb not null,
@@ -25,13 +26,12 @@ create table package_type_fun_signature (
   -- Where is located the signature.
   -- Module is simply the module name from the package.
   -- Package can be retrieved through the package release.
-  module text not null,
-  package_release_id int references package_release(id),
+  package_module_id int references package_module(id),
 
   -- Metadata on the row itself.
   created_at timestamptz default current_timestamp not null,
   updated_at timestamptz default current_timestamp not null,
-  unique (package_release_id, module, name)
+  unique (package_module_id, name)
 );
 
 create trigger package_type_fun_signature_moddatetime

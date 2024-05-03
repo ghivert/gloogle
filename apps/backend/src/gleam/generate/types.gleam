@@ -12,43 +12,42 @@ import gleam/package_interface.{
 import gleam/pair
 import gleam/pgo
 import gleam/result
-import gleam/set
+import gleam/set.{type Set}
 import gleam/verl
 import tom.{type Toml}
 
 type GleamToml =
   Dict(String, Toml)
 
+fn reduce_components(
+  components: List(a),
+  mapper: fn(a) -> Result(#(Json, Set(Int)), error.Error),
+) {
+  let init = Ok(#([], set.new()))
+  use acc, val <- list.fold_right(components, init)
+  use #(constructors, old_ids) <- result.try(acc)
+  use gen <- result.map(mapper(val))
+  let #(constructor, new_ids) = gen
+  #([constructor, ..constructors], set.union(of: new_ids, and: old_ids))
+}
+
 pub fn type_definition_to_json(
   db: pgo.Connection,
   type_name: String,
   type_def: TypeDefinition,
-  gleam_toml: GleamToml,
+  toml: GleamToml,
 ) -> Result(#(Json, List(Int)), error.Error) {
-  use #(constructors, parameters) <- result.try({
-    type_def.constructors
-    |> list.fold_right(Ok(#([], set.new())), fn(acc, val) {
-      use #(jsons, all_params) <- result.try(acc)
-      use #(json, new_params) <- result.try(type_constructor_to_json(
-        db,
-        gleam_toml,
-        val,
-      ))
-      Ok(#([json, ..jsons], set.union(of: new_params, and: all_params)))
-    })
-  })
-  Ok(#(
-    json.object([
-      #("type", json.string("type-definition")),
-      #("name", json.string(type_name)),
-      #("documentation", json.nullable(type_def.documentation, json.string)),
-      #("deprecation", json.nullable(type_def.documentation, json.string)),
-      #("parameters", json.int(type_def.parameters)),
-      #("constructors", json.preprocessed_array(constructors)),
-    ]),
-    parameters
-      |> set.to_list(),
-  ))
+  let mapper = type_constructor_to_json(db, toml, _)
+  use gen <- result.map(reduce_components(type_def.constructors, mapper))
+  use constructors <- pair.map_first(pair.map_second(gen, set.to_list))
+  json.object([
+    #("type", json.string("type-definition")),
+    #("name", json.string(type_name)),
+    #("documentation", json.nullable(type_def.documentation, json.string)),
+    #("deprecation", json.nullable(type_def.documentation, json.string)),
+    #("parameters", json.int(type_def.parameters)),
+    #("constructors", json.preprocessed_array(constructors)),
+  ])
 }
 
 fn type_constructor_to_json(
@@ -56,27 +55,15 @@ fn type_constructor_to_json(
   gleam_toml: GleamToml,
   constructor: TypeConstructor,
 ) {
-  use #(elements, params) <- result.try({
-    constructor.parameters
-    |> list.fold_right(Ok(#([], set.new())), fn(acc, val) {
-      use #(jsons, all_params) <- result.try(acc)
-      use #(json, new_params) <- result.try(parameters_to_json(
-        db,
-        gleam_toml,
-        val,
-      ))
-      Ok(#([json, ..jsons], set.union(of: new_params, and: all_params)))
-    })
-  })
-  Ok(#(
-    json.object([
-      #("type", json.string("type-constructor")),
-      #("documentation", json.nullable(constructor.documentation, json.string)),
-      #("name", json.string(constructor.name)),
-      #("parameters", json.preprocessed_array(elements)),
-    ]),
-    params,
-  ))
+  let mapper = parameters_to_json(db, gleam_toml, _)
+  use gen <- result.map(reduce_components(constructor.parameters, mapper))
+  use parameters <- pair.map_first(gen)
+  json.object([
+    #("type", json.string("type-constructor")),
+    #("documentation", json.nullable(constructor.documentation, json.string)),
+    #("name", json.string(constructor.name)),
+    #("parameters", json.preprocessed_array(parameters)),
+  ])
 }
 
 fn parameters_to_json(
@@ -84,166 +71,141 @@ fn parameters_to_json(
   gleam_toml: GleamToml,
   parameter: Parameter,
 ) {
-  use #(type_, params) <- result.try(type_to_json(
-    db,
-    gleam_toml,
-    parameter.type_,
-  ))
-  Ok(#(
-    json.object([
-      #("type", json.string("parameter")),
-      #("label", json.nullable(parameter.label, json.string)),
-      #("type", type_),
-    ]),
-    params,
-  ))
+  use gen <- result.map(type_to_json(db, gleam_toml, parameter.type_))
+  use type_ <- pair.map_first(gen)
+  json.object([
+    #("type", json.string("parameter")),
+    #("label", json.nullable(parameter.label, json.string)),
+    #("type", type_),
+  ])
 }
 
 fn type_to_json(db: pgo.Connection, gleam_toml: GleamToml, type_: Type) {
   case type_ {
-    package_interface.Tuple(els) -> {
-      use #(elements, params) <- result.try({
-        els
-        |> list.fold_right(Ok(#([], set.new())), fn(acc, val) {
-          use #(jsons, all_params) <- result.try(acc)
-          use #(json, new_params) <- result.try(type_to_json(
-            db,
-            gleam_toml,
-            val,
-          ))
-          Ok(#([json, ..jsons], set.union(of: new_params, and: all_params)))
-        })
-      })
-      Ok(#(
-        json.object([
-          #("type", json.string("tuple")),
-          #("elements", json.preprocessed_array(elements)),
-        ]),
-        params,
-      ))
+    package_interface.Tuple(elements) -> {
+      let mapper = type_to_json(db, gleam_toml, _)
+      use gen <- result.map(reduce_components(elements, mapper))
+      use elements <- pair.map_first(gen)
+      json.object([
+        #("type", json.string("tuple")),
+        #("elements", json.preprocessed_array(elements)),
+      ])
     }
     package_interface.Fn(params, return) -> {
-      use #(elements, params) <- result.try({
-        params
-        |> list.fold_right(Ok(#([], set.new())), fn(acc, val) {
-          use #(jsons, all_params) <- result.try(acc)
-          use #(json, new_params) <- result.try(type_to_json(
-            db,
-            gleam_toml,
-            val,
-          ))
-          Ok(#([json, ..jsons], set.union(of: new_params, and: all_params)))
-        })
-      })
-      use #(return_json, return_params) <- result.try(type_to_json(
+      let mapper = type_to_json(db, gleam_toml, _)
+      use #(elements, params) <- result.try(reduce_components(params, mapper))
+      use gen <- result.map(type_to_json(db, gleam_toml, return))
+      let new_params = set.union(of: params, and: gen.1)
+      json.object([
+        #("type", json.string("fn")),
+        #("params", json.preprocessed_array(elements)),
+        #("return", gen.0),
+      ])
+      |> pair.new(new_params)
+    }
+    package_interface.Variable(id) -> {
+      let json =
+        json.object([#("type", json.string("variable")), #("id", json.int(id))])
+      Ok(#(json, set.new()))
+    }
+    package_interface.Named(name, package, module, parameters) -> {
+      let mapper = type_to_json(db, gleam_toml, _)
+      use gen <- result.try(reduce_components(parameters, mapper))
+      use ref <- result.map(extract_parameters_relation(
         db,
         gleam_toml,
-        return,
+        name,
+        package,
+        module,
       ))
-      Ok(#(
-        json.object([
-          #("type", json.string("fn")),
-          #("params", json.preprocessed_array(elements)),
-          #("return", return_json),
-        ]),
-        set.union(of: params, and: return_params),
-      ))
-    }
-    package_interface.Variable(id) ->
-      Ok(#(
-        json.object([#("type", json.string("variable")), #("id", json.int(id))]),
-        set.new(),
-      ))
-    package_interface.Named(name, package, module, parameters) -> {
-      use #(elements, params) <- result.try({
-        parameters
-        |> list.fold_right(Ok(#([], set.new())), fn(acc, val) {
-          use #(jsons, all_params) <- result.try(acc)
-          use #(json, new_params) <- result.try(type_to_json(
-            db,
-            gleam_toml,
-            val,
-          ))
-          Ok(#([json, ..jsons], set.union(of: new_params, and: all_params)))
-        })
-      })
-      use ref <- result.map(case is_prelude(package, module) {
-        True -> Ok(-1)
-        False -> {
-          use requirement <- result.try(get_toml_requirement(
-            gleam_toml,
-            package,
-          ))
-          use release <- result.try({
-            "SELECT package_release.id, package_release.version
-             FROM package
-             JOIN package_release
-               ON package.id = package_release.package_id
-             WHERE package.name = $1"
-            |> pgo.execute(
-              db,
-              [pgo.text(package)],
-              dynamic.tuple2(dynamic.int, dynamic.string),
-            )
-            |> result.map_error(error.DatabaseError)
-            |> result.try(fn(r) {
-              r.rows
-              |> list.fold(None, fn(acc, val) {
-                let requirement = bit_array.from_string(requirement)
-                let bit_version =
-                  val
-                  |> pair.second()
-                  |> bit_array.from_string()
-                let is_matching =
-                  verl.is_match(version: bit_version, requirement: requirement)
-                use <- bool.guard(when: !is_matching, return: acc)
-                acc
-                |> option.map(fn(saved) {
-                  case
-                    verl.gte(
-                      version: saved
-                        |> pair.second()
-                        |> bit_array.from_string(),
-                      with: bit_version,
-                    )
-                  {
-                    True -> saved
-                    False -> val
-                  }
-                })
-                |> option.or(Some(val))
-              })
-              |> option.map(fn(v) { pair.first(v) })
-              |> option.to_result(error.UnknownError("Release not found"))
-            })
-          })
-          use module <- result.try({
-            "SELECT signature.id FROM package_type_fun_signature signature JOIN package_module ON signature.package_module_id = package_module.id WHERE package_module.name = $1 AND package_module.package_release_id = $2"
-            |> pgo.execute(
-              db,
-              [pgo.text(module), pgo.int(release)],
-              dynamic.element(0, dynamic.int),
-            )
-            |> result.map_error(error.DatabaseError)
-          })
-          module.rows
-          |> list.first()
-          |> result.replace_error(error.UnknownError("No type defined"))
-        }
-      })
-      #(
-        json.object([
-          #("type", json.string("named")),
-          #("ref", json.int(ref)),
-          #("name", json.string(name)),
-          #("package", json.string(package)),
-          #("module", json.string(module)),
-          #("parameters", json.preprocessed_array(elements)),
-        ]),
-        set.insert(params, ref),
-      )
+      let new_ids = set.insert(gen.1, ref)
+      json.object([
+        #("type", json.string("named")),
+        #("ref", json.int(ref)),
+        #("name", json.string(name)),
+        #("package", json.string(package)),
+        #("module", json.string(module)),
+        #("parameters", json.preprocessed_array(gen.0)),
+      ])
+      |> pair.new(new_ids)
     }
   }
+}
+
+fn find_package_release(
+  db: pgo.Connection,
+  package: String,
+  requirement: String,
+) {
+  let decoder = dynamic.tuple2(dynamic.int, dynamic.string)
+  use response <- result.try({
+    "SELECT package_release.id, package_release.version
+     FROM package
+     JOIN package_release
+       ON package.id = package_release.package_id
+     WHERE package.name = $1"
+    |> pgo.execute(db, [pgo.text(package)], decoder)
+    |> result.map_error(error.DatabaseError)
+  })
+  response.rows
+  |> keep_highest_release(requirement)
+  |> option.map(fn(v) { pair.first(v) })
+  |> option.to_result(error.UnknownError("Release not found"))
+}
+
+fn keep_highest_release(rows: List(#(Int, String)), requirement: String) {
+  use acc, val <- list.fold(rows, None)
+  let requirement = bit_array.from_string(requirement)
+  let version = bit_array.from_string(val.1)
+  let is_matching = verl.is_match(version: version, requirement: requirement)
+  use <- bool.guard(when: !is_matching, return: acc)
+  acc
+  |> option.map(fn(saved: #(Int, String)) {
+    let saved_version = bit_array.from_string(saved.1)
+    let is_gte = verl.gte(version: saved_version, with: version)
+    use <- bool.guard(when: is_gte, return: saved)
+    val
+  })
+  |> option.or(Some(val))
+}
+
+fn find_type_signature(
+  db: pgo.Connection,
+  name: String,
+  module: String,
+  release: Int,
+) {
+  use response <- result.try({
+    "SELECT signature.id
+     FROM package_type_fun_signature signature
+     JOIN package_module
+       ON signature.package_module_id = package_module.id
+     WHERE signature.name = $1
+       AND package_module.name = $2
+       AND package_module.package_release_id = $3"
+    |> pgo.execute(
+      db,
+      [pgo.text(name), pgo.text(module), pgo.int(release)],
+      dynamic.element(0, dynamic.int),
+    )
+    |> result.map_error(error.DatabaseError)
+  })
+  response.rows
+  |> list.first()
+  |> result.replace_error(error.UnknownError("No type defined"))
+}
+
+fn extract_parameters_relation(
+  db: pgo.Connection,
+  gleam_toml: GleamToml,
+  name: String,
+  package: String,
+  module: String,
+) {
+  use <- bool.guard(when: is_prelude(package, module), return: Ok(-1))
+  use requirement <- result.try(get_toml_requirement(gleam_toml, package))
+  use release <- result.try(find_package_release(db, package, requirement))
+  find_type_signature(db, name, module, release)
 }
 
 fn get_toml_requirement(gleam_toml: GleamToml, package: String) {

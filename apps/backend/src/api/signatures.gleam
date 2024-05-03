@@ -1,10 +1,8 @@
 import backend/index/error
-import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/generate/sources.{type_definition_to_string}
 import gleam/generate/types.{type_definition_to_json}
-import gleam/int
 import gleam/io
 import gleam/json
 import gleam/list

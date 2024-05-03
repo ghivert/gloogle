@@ -1,7 +1,7 @@
 import gleam/bool
 import gleam/iterator
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option
 import gleam/package_interface.{
   type Parameter, type Type, type TypeConstructor, type TypeDefinition,
 }
@@ -42,10 +42,9 @@ fn type_constructors_to_string(constructors: List(TypeConstructor)) {
   |> list.map(fn(c) {
     let params = parameters_to_string(c.parameters)
     let const_ = "  " <> c.name <> params
-    case c.documentation {
-      None -> const_
-      Some(d) -> string.join(["  -- " <> d, const_], "\n")
-    }
+    c.documentation
+    |> option.map(fn(d) { string.join(["  -- " <> d, const_], "\n") })
+    |> option.unwrap(const_)
   })
   |> string.join("\n")
 }
@@ -54,11 +53,10 @@ fn parameters_to_string(parameters: List(Parameter)) {
   use <- bool.guard(when: list.is_empty(parameters), return: "")
   parameters
   |> list.map(fn(s) {
-    let label =
-      s.label
-      |> option.map(string.append(_, ": "))
-      |> option.unwrap("")
-    label <> type_to_string(s.type_)
+    s.label
+    |> option.map(string.append(_, ": "))
+    |> option.unwrap("")
+    |> string.append(type_to_string(s.type_))
   })
   |> string.join(", ")
   |> fn(s) { "(" <> s <> ")" }
@@ -66,25 +64,21 @@ fn parameters_to_string(parameters: List(Parameter)) {
 
 fn type_to_string(type_: Type) {
   case type_ {
-    package_interface.Tuple(elements) -> {
-      let els =
-        elements
-        |> list.map(type_to_string)
-        |> string.join(", ")
-      "#(" <> els <> ")"
-    }
+    package_interface.Tuple(elements) ->
+      elements
+      |> list.map(type_to_string)
+      |> string.join(", ")
+      |> fn(s) { "#(" <> s <> ")" }
     package_interface.Fn(parameters, return) -> {
       let ret = type_to_string(return)
-      let params =
-        parameters
-        |> list.map(type_to_string)
-        |> string.join(", ")
-      "fn(" <> params <> ") -> " <> ret
+      parameters
+      |> list.map(type_to_string)
+      |> string.join(", ")
+      |> fn(s) { "fn(" <> s <> ") -> " <> ret }
     }
     package_interface.Variable(id) -> {
       let assert Ok(utf_a) =
-        "a"
-        |> string.to_utf_codepoints()
+        string.to_utf_codepoints("a")
         |> list.first()
       { string.utf_codepoint_to_int(utf_a) + id }
       |> string.utf_codepoint()

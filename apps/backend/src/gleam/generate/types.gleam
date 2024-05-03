@@ -5,7 +5,8 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/json.{type Json}
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option
+import gleam/order
 import gleam/package_interface.{
   type Constant, type Function, type Implementations, type Parameter, type Type,
   type TypeAlias, type TypeConstructor, type TypeDefinition,
@@ -149,49 +150,65 @@ fn find_package_release(
     |> result.map_error(error.DatabaseError)
   })
   response.rows
-  |> keep_highest_release(requirement)
-  |> option.map(fn(v) { pair.first(v) })
-  |> option.to_result(error.UnknownError(
-    "Release " <> package <> " with conditions " <> requirement <> " not found",
-  ))
+  |> keep_matching_releases(requirement)
 }
 
-fn keep_highest_release(rows: List(#(Int, String)), requirement: String) {
-  use acc, val <- list.fold(rows, None)
+fn keep_matching_releases(rows: List(#(Int, String)), requirement: String) {
   let requirement = bit_array.from_string(requirement)
-  let version = bit_array.from_string(val.1)
-  let is_matching = verl.is_match(version: version, requirement: requirement)
-  use <- bool.guard(when: !is_matching, return: acc)
-  acc
-  |> option.map(fn(saved: #(Int, String)) {
-    let saved_version = bit_array.from_string(saved.1)
-    let is_gte = verl.gte(version: saved_version, with: version)
-    use <- bool.guard(when: is_gte, return: saved)
-    val
+  rows
+  |> list.filter(fn(r) {
+    let version = bit_array.from_string(r.1)
+    let is_matching = verl.is_match(version: version, requirement: requirement)
+    result.unwrap(is_matching, False)
   })
-  |> option.or(Some(val))
+  |> list.sort(fn(a, b) {
+    let a = bit_array.from_string(a.1)
+    let b = bit_array.from_string(b.1)
+    case verl.gte(version: a, with: b) {
+      True -> order.Lt
+      False -> order.Gt
+    }
+  })
+  |> list.map(fn(a) { a.0 })
+  |> Ok()
 }
 
 fn find_type_signature(
   db: pgo.Connection,
   name: String,
+  package: String,
+  requirement: String,
   module: String,
-  release: Int,
+  releases: List(Int),
 ) {
   use response <- result.try({
-    "SELECT signature.id
+    list.fold(releases, option.None, fn(acc, release) {
+      use <- bool.guard(when: option.is_some(acc), return: acc)
+      case
+        "SELECT signature.id
      FROM package_type_fun_signature signature
      JOIN package_module
        ON signature.package_module_id = package_module.id
      WHERE signature.name = $1
        AND package_module.name = $2
        AND package_module.package_release_id = $3"
-    |> pgo.execute(
-      db,
-      [pgo.text(name), pgo.text(module), pgo.int(release)],
-      dynamic.element(0, dynamic.int),
-    )
-    |> result.map_error(error.DatabaseError)
+        |> pgo.execute(
+          db,
+          [pgo.text(name), pgo.text(module), pgo.int(release)],
+          dynamic.element(0, dynamic.int),
+        )
+      {
+        Ok(value) -> option.Some(value)
+        Error(_) -> option.None
+      }
+    })
+    |> option.to_result(error.UnknownError(
+      "Release "
+      <> package
+      <> " with conditions "
+      <> requirement
+      <> " not found",
+    ))
   })
   response.rows
   |> list.first()
@@ -209,8 +226,8 @@ fn extract_parameters_relation(
 ) {
   use <- bool.guard(when: is_prelude(package, module), return: Ok(-1))
   use requirement <- result.try(get_toml_requirement(gleam_toml, package))
-  use release <- result.try(find_package_release(db, package, requirement))
-  find_type_signature(db, name, module, release)
+  use releases <- result.try(find_package_release(db, package, requirement))
+  find_type_signature(db, name, package, requirement, module, releases)
 }
 
 fn get_toml_requirement(gleam_toml: GleamToml, package: String) {

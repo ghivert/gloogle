@@ -1,5 +1,5 @@
 -module(gling_hex_ffi).
--export([extract_tar/3, remove_tar/1]).
+-export([extract_tar/3, remove_tar/1, is_match/2]).
 
 package_interface_path(ContentDest, BaseName) ->
   BuildFolder = <<"/build/dev/docs/">>,
@@ -26,3 +26,9 @@ remove_tar(Slug) ->
   PackagePath = <<"/tmp/", Slug/binary>>,
   Cmd = <<"cd ", PackagePath/binary, " && rm -rf ", PackagePath/binary>>,
   os:cmd(binary_to_list(Cmd)).
+
+is_match(Version, Requirement) ->
+  case verl:is_match(Version, Requirement) of
+    {error, _} -> {error, nil};
+    Bool -> {ok, Bool}
+  end.

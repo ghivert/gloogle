@@ -1,7 +1,7 @@
 import backend/index/error.{type Error}
+import backend/log_error
 import gleam/erlang/process.{type Subject}
 import gleam/function
-import gleam/io
 import gleam/otp/actor
 
 pub opaque type Message {
@@ -44,7 +44,7 @@ fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {
       case state.work() {
         Ok(_) -> actor.Stop(process.Normal)
         Error(e) -> {
-          io.debug(e)
+          log_error.log_error(e)
           enqueue_next_rerun(state)
           actor.continue(state)
         }

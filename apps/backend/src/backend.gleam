@@ -6,13 +6,13 @@ import gleam/otp/supervisor
 import mist
 import periodic
 import setup
-import wisp
 import tasks/hex
+import wisp
 
 pub fn main() {
+  dot_env.load()
   setup.radiate()
   wisp.configure_logger()
-  dot_env.load()
 
   let secret_key_base = config.get_secret_key_base()
   let cnf = config.read_config()
@@ -24,7 +24,11 @@ pub fn main() {
     |> mist.port(3000)
     |> mist.start_http()
 
-  let _ = start_hex_sync(cnf)
+  let assert Ok(_) =
+    supervisor.start(fn(children) {
+      let assert Ok(_) = start_hex_sync(cnf, children)
+      children
+    })
 
   process.sleep_forever()
 }
@@ -37,11 +41,14 @@ fn supervise(start: fn() -> _) {
   })
 }
 
-fn sync_hex(cnf: Config) {
-  hex.sync_new_gleam_releases(cnf)
+fn sync_hex(cnf: Config, children: supervisor.Children(Nil)) {
+  hex.sync_new_gleam_releases(cnf, children)
 }
 
-fn start_hex_sync(cnf: Config) {
+fn start_hex_sync(cnf: Config, children: supervisor.Children(Nil)) {
   use <- supervise()
-  periodic.periodically(do: fn() { sync_hex(cnf) }, waiting: 60 * 1000)
+  periodic.periodically(
+    do: fn() { sync_hex(cnf, children) },
+    waiting: 60 * 1000,
+  )
 }

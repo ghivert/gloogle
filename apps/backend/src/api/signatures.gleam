@@ -49,7 +49,9 @@ fn get_package_release_ids(db: pgo.Connection, package: Package) {
   })
   response.rows
   |> list.first()
-  |> result.replace_error(error.UnknownError("No release"))
+  |> result.replace_error(error.UnknownError(
+    "No release found for " <> package.name <> "@" <> package.version,
+  ))
 }
 
 fn upsert_package_module(
@@ -74,7 +76,9 @@ fn upsert_package_module(
   })
   response.rows
   |> list.first()
-  |> result.replace_error(error.UnknownError("No module"))
+  |> result.replace_error(error.UnknownError(
+    "No module found for " <> module_name,
+  ))
 }
 
 fn upsert_type_definitions(

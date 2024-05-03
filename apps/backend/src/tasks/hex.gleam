@@ -10,6 +10,7 @@ import birl.{type Time}
 import birl/duration
 import gleam/hexpm.{type Package}
 import gleam/list
+import gleam/option
 import gleam/order
 import gleam/otp/supervisor
 import gleam/pgo
@@ -130,7 +131,11 @@ fn insert_package_and_releases(
       retrier.retry(fn() {
         let infos = hex_repo.get_package_infos(package.name, r.version)
         use #(package, gleam_toml) <- result.try(infos)
-        signatures.extract_signatures(state.db, package, gleam_toml)
+        case package {
+          option.None -> Ok([])
+          option.Some(package) ->
+            signatures.extract_signatures(state.db, package, gleam_toml)
+        }
       })
     })
   })

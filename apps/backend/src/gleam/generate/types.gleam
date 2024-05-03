@@ -151,7 +151,9 @@ fn find_package_release(
   response.rows
   |> keep_highest_release(requirement)
   |> option.map(fn(v) { pair.first(v) })
-  |> option.to_result(error.UnknownError("Release not found"))
+  |> option.to_result(error.UnknownError(
+    "Release " <> package <> " with conditions " <> requirement <> " not found",
+  ))
 }
 
 fn keep_highest_release(rows: List(#(Int, String)), requirement: String) {
@@ -193,7 +195,9 @@ fn find_type_signature(
   })
   response.rows
   |> list.first()
-  |> result.replace_error(error.UnknownError("No type defined"))
+  |> result.replace_error(error.UnknownError(
+    "No type found for " <> module <> "." <> name,
+  ))
 }
 
 fn extract_parameters_relation(
@@ -219,7 +223,7 @@ fn get_toml_requirement(gleam_toml: GleamToml, package: String) {
   |> result.try_recover(fn(_) {
     tom.get_string(gleam_toml, ["dependencies", package])
   })
-  |> result.replace_error(error.UnknownError("No dep found"))
+  |> result.replace_error(error.UnknownError("No dep found for " <> package))
 }
 
 fn is_prelude(package: String, module: String) {

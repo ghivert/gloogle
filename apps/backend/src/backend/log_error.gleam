@@ -49,8 +49,9 @@ pub fn log_error(error: error.Error) {
       wisp.log_warning("JSON error")
       log_decode_error(error)
     }
-    error.SimplifileError(error) -> {
+    error.SimplifileError(error, filepath) -> {
       wisp.log_warning("Simplifile error")
+      wisp.log_warning("  filepath: " <> filepath)
       log_simplifile(error)
     }
     error.UnknownError(error) -> {

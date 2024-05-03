@@ -8,7 +8,7 @@ pub type Error {
   DatabaseError(pgo.QueryError)
   FetchError(dynamic.Dynamic)
   JsonError(json.DecodeError)
-  SimplifileError(simplifile.FileError)
+  SimplifileError(simplifile.FileError, String)
   UnknownError(String)
   TomlError(tom.ParseError)
 }

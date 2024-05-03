@@ -4,6 +4,7 @@ import gleam/http
 import gleam/http/request
 import gleam/httpc
 import gleam/json
+import gleam/option
 import gleam/package_interface
 import gleam/result
 import simplifile
@@ -35,16 +36,28 @@ fn get_tarball(name: String, version: String) {
   |> result.map_error(error.FetchError)
 }
 
+fn read_interface(filepath: String) {
+  case simplifile.read(filepath) {
+    Ok(interface) -> Ok(option.Some(interface))
+    Error(_) -> Ok(option.None)
+  }
+}
+
 fn read_file(filepath: String) {
   filepath
   |> simplifile.read()
-  |> result.map_error(error.SimplifileError)
+  |> result.map_error(error.SimplifileError(_, filepath))
 }
 
-fn read_package_interface(blob: String) {
-  blob
-  |> json.decode(using: package_interface.decoder)
-  |> result.map_error(error.JsonError)
+fn read_package_interface(blob: option.Option(String)) {
+  case blob {
+    option.None -> Ok(option.None)
+    option.Some(blob) ->
+      blob
+      |> json.decode(using: package_interface.decoder)
+      |> result.map_error(error.JsonError)
+      |> result.map(option.Some)
+  }
 }
 
 fn read_gleam_toml(blob: String) {
@@ -58,7 +71,7 @@ fn extract_package_infos(name: String, version: String) {
   let req = get_tarball(name, version)
   use res <- result.try(req)
   let #(interface, toml) = extract_tar(res.body, name, slug)
-  use interface_blob <- result.try(read_file(interface))
+  use interface_blob <- result.try(read_interface(interface))
   use toml_blob <- result.try(read_file(toml))
   use interface <- result.try(read_package_interface(interface_blob))
   use toml <- result.map(read_gleam_toml(toml_blob))

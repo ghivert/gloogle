@@ -255,7 +255,7 @@ fn upsert_constants(
        nature = 'constant',
        parameters = $5,
        metadata = $6,
-       deprecation = $8
+       deprecation = $8,
        implementations = $9"
     |> pgo.execute(
       db,
@@ -359,14 +359,17 @@ pub fn extract_signatures(
   package: Package,
   gleam_toml: Dict(String, Toml),
 ) {
-  wisp.log_info("Extracting signatures for " <> package.name)
+  wisp.log_info(
+    "Extracting signatures for " <> package.name <> "@" <> package.version,
+  )
   use #(_pid, rid) <- result.try(get_package_release_ids(db, package))
   use _ <- result.try(add_gleam_constraint(db, package, rid))
   package.modules
   |> dict.to_list()
   |> list.map(fn(mod) {
     let #(mod_name, module) = mod
-    let qualified_name = package.name <> "/" <> mod_name
+    let qualified_name =
+      package.name <> "/" <> mod_name <> "@" <> package.version
     wisp.log_info("Extracting signatures for " <> qualified_name)
     use module_id <- result.try(upsert_package_module(db, mod_name, module, rid))
     wisp.log_info("Extracting " <> qualified_name <> " type definitions")

@@ -233,7 +233,7 @@ pub fn type_alias_to_json(
   gleam_toml: GleamToml,
 ) {
   use gen <- result.map(type_to_json(db, gleam_toml, type_alias.alias))
-  use alias <- pair.map_first(gen)
+  use alias <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
     #("type", json.string("type-alias")),
     #("name", json.string(type_name)),
@@ -262,7 +262,7 @@ pub fn constant_to_json(
   gleam_toml: GleamToml,
 ) {
   use gen <- result.map(type_to_json(db, gleam_toml, constant.type_))
-  use type_ <- pair.map_first(gen)
+  use type_ <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
     #("type", json.string("constant")),
     #("name", json.string(constant_name)),
@@ -283,7 +283,7 @@ pub fn function_to_json(
   use gen <- result.try(reduce_components(function.parameters, mapper))
   use ret <- result.map(type_to_json(db, gleam_toml, function.return))
   gen
-  |> pair.map_second(fn(s) { set.union(s, ret.1) })
+  |> pair.map_second(fn(s) { set.to_list(set.union(s, ret.1)) })
   |> pair.map_first(fn(parameters) {
     json.object([
       #("type", json.string("function")),

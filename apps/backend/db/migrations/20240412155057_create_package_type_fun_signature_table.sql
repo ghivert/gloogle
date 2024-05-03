@@ -22,6 +22,7 @@ create table package_type_fun_signature (
   nature type_nature not null,
   parameters int[] not null,
   deprecation text,
+  implementations text,
   metadata jsonb not null,
 
   -- Where is located the signature.

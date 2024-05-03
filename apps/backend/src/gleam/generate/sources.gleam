@@ -3,14 +3,15 @@ import gleam/iterator
 import gleam/list
 import gleam/option
 import gleam/package_interface.{
-  type Parameter, type Type, type TypeConstructor, type TypeDefinition,
+  type Constant, type Function, type Parameter, type Type, type TypeAlias,
+  type TypeConstructor, type TypeDefinition,
 }
 import gleam/result
 import gleam/string
 import ranger
 
-fn type_definition_parameters_to_string(type_def: TypeDefinition) {
-  use <- bool.guard(when: type_def.parameters == 0, return: "")
+fn int_parameters_to_string(parameters: Int) {
+  use <- bool.guard(when: parameters == 0, return: "")
   let assert Ok(from_a) =
     ranger.create_infinite(
       validate: fn(a) { string.length(a) == 1 },
@@ -24,14 +25,14 @@ fn type_definition_parameters_to_string(type_def: TypeDefinition) {
       compare: string.compare,
     )("a", 1)
   from_a
-  |> iterator.take(type_def.parameters)
+  |> iterator.take(parameters)
   |> iterator.to_list()
   |> string.join(", ")
   |> fn(s) { "(" <> s <> ")" }
 }
 
 pub fn type_definition_to_string(type_name: String, type_def: TypeDefinition) {
-  let params = type_definition_parameters_to_string(type_def)
+  let params = int_parameters_to_string(type_def.parameters)
   let base = type_name <> params
   use <- bool.guard(when: type_def.constructors == [], return: base)
   base <> " {\n" <> type_constructors_to_string(type_def.constructors) <> "\n}"
@@ -101,4 +102,18 @@ fn type_to_string(type_: Type) {
       }
     }
   }
+}
+
+pub fn type_alias_to_string(type_name: String, type_alias: TypeAlias) -> String {
+  let params = int_parameters_to_string(type_alias.parameters)
+  type_name <> params <> " = " <> type_to_string(type_alias.alias)
+}
+
+pub fn constant_to_string(constant_name: String, constant: Constant) -> String {
+  constant_name <> " = " <> type_to_string(constant.type_)
+}
+
+pub fn function_to_string(function_name: String, function: Function) -> String {
+  let params = parameters_to_string(function.parameters)
+  function_name <> params <> " -> " <> type_to_string(function.return)
 }

@@ -1,9 +1,14 @@
 import backend/index/error
 import gleam/dict.{type Dict}
 import gleam/dynamic
-import gleam/generate/sources.{type_definition_to_string}
-import gleam/generate/types.{type_definition_to_json}
-import gleam/io
+import gleam/generate/sources.{
+  constant_to_string, function_to_string, type_alias_to_string,
+  type_definition_to_string,
+}
+import gleam/generate/types.{
+  constant_to_json, function_to_json, implementations_to_json,
+  type_alias_to_json, type_definition_to_json,
+}
 import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
@@ -11,7 +16,6 @@ import gleam/package_interface.{type Module, type Package}
 import gleam/pgo
 import gleam/result
 import gleam/string
-import pprint
 import tom.{type Toml}
 import wisp
 
@@ -81,21 +85,14 @@ fn upsert_type_definitions(
   result.all({
     use #(type_name, type_def) <- list.map(all_types)
     let documentation = string.trim(option.unwrap(type_def.documentation, ""))
+    let deprecation = option.map(type_def.deprecation, fn(d) { d.message })
     let metadata =
-      type_def.deprecation
-      |> option.map(fn(d) { json.string(d.message) })
-      |> option.map(fn(d) { json.object([#("deprecation", d)]) })
-      |> option.map(json.to_string)
-      |> option.unwrap("{}")
+      json.object([#("deprecation", json.nullable(deprecation, json.string))])
+      |> json.to_string()
     let signature = type_definition_to_string(type_name, type_def)
     let type_def_json =
       type_definition_to_json(db, type_name, type_def, gleam_toml)
     use #(json_signature, parameters) <- result.try(type_def_json)
-    pprint.debug(
-      json_signature
-      |> json.to_string(),
-    )
-    let params = parameters
 
     "INSERT INTO package_type_fun_signature (
      name,
@@ -126,12 +123,227 @@ fn upsert_type_definitions(
         json_signature
           |> json.to_string()
           |> pgo.text(),
-        dynamic.unsafe_coerce(dynamic.from(params)),
+        dynamic.unsafe_coerce(dynamic.from(parameters)),
         pgo.text(metadata),
         pgo.int(module_id),
         type_def.deprecation
           |> option.map(fn(d) { d.message })
           |> pgo.nullable(pgo.text, _),
+      ],
+      dynamic.dynamic,
+    )
+    |> result.map_error(error.DatabaseError)
+    |> result.replace(Nil)
+  })
+}
+
+fn upsert_type_aliases(
+  db: pgo.Connection,
+  module_id: Int,
+  module: Module,
+  gleam_toml: Dict(String, Toml),
+) {
+  let all_types = dict.to_list(module.type_aliases)
+  result.all({
+    use #(type_name, type_alias) <- list.map(all_types)
+    let documentation = string.trim(option.unwrap(type_alias.documentation, ""))
+    let deprecation = option.map(type_alias.deprecation, fn(d) { d.message })
+    let metadata =
+      json.object([#("deprecation", json.nullable(deprecation, json.string))])
+      |> json.to_string()
+    let signature = type_alias_to_string(type_name, type_alias)
+    let type_alias_json =
+      type_alias_to_json(db, type_name, type_alias, gleam_toml)
+    use #(json_signature, parameters) <- result.try(type_alias_json)
+
+    "INSERT INTO package_type_fun_signature (
+     name,
+     documentation,
+     signature_,
+     json_signature,
+     nature,
+     parameters,
+     metadata,
+     package_module_id,
+     deprecation
+   ) VALUES ($1, $2, $3, $4, 'type_alias', $5, $6, $7, $8)
+   ON CONFLICT (package_module_id, name) DO UPDATE
+     SET
+       documentation = $2,
+       signature_ = $3,
+       json_signature = $4,
+       nature = 'type_alias',
+       parameters = $5,
+       metadata = $6,
+       deprecation = $8"
+    |> pgo.execute(
+      db,
+      [
+        pgo.text(type_name),
+        pgo.text(documentation),
+        pgo.text(signature),
+        json_signature
+          |> json.to_string()
+          |> pgo.text(),
+        dynamic.unsafe_coerce(dynamic.from(parameters)),
+        pgo.text(metadata),
+        pgo.int(module_id),
+        type_alias.deprecation
+          |> option.map(fn(d) { d.message })
+          |> pgo.nullable(pgo.text, _),
+      ],
+      dynamic.dynamic,
+    )
+    |> result.map_error(error.DatabaseError)
+    |> result.replace(Nil)
+  })
+}
+
+fn implementations_pgo(implementations: package_interface.Implementations) {
+  [
+    #("gleam", implementations.gleam),
+    #("erlang", implementations.uses_erlang_externals),
+    #("javascript", implementations.uses_javascript_externals),
+  ]
+  |> list.filter(fn(t) { t.1 })
+  |> list.map(fn(t) { t.0 })
+  |> string.join(",")
+}
+
+fn upsert_constants(
+  db: pgo.Connection,
+  module_id: Int,
+  module: Module,
+  gleam_toml: Dict(String, Toml),
+) {
+  let all_constants = dict.to_list(module.constants)
+  result.all({
+    use #(constant_name, constant) <- list.map(all_constants)
+    let documentation = string.trim(option.unwrap(constant.documentation, ""))
+    let deprecation = option.map(constant.deprecation, fn(d) { d.message })
+    let impl = constant.implementations
+    let metadata =
+      json.object([
+        #("deprecation", json.nullable(deprecation, json.string)),
+        #("implementations", implementations_to_json(impl)),
+      ])
+      |> json.to_string()
+    let signature = constant_to_string(constant_name, constant)
+    let constant_json =
+      constant_to_json(db, constant_name, constant, gleam_toml)
+    use #(json_signature, parameters) <- result.try(constant_json)
+
+    "INSERT INTO package_type_fun_signature (
+     name,
+     documentation,
+     signature_,
+     json_signature,
+     nature,
+     parameters,
+     metadata,
+     package_module_id,
+     deprecation,
+     implementations
+   ) VALUES ($1, $2, $3, $4, 'constant', $5, $6, $7, $8, $9)
+   ON CONFLICT (package_module_id, name) DO UPDATE
+     SET
+       documentation = $2,
+       signature_ = $3,
+       json_signature = $4,
+       nature = 'constant',
+       parameters = $5,
+       metadata = $6,
+       deprecation = $8
+       implementations = $9"
+    |> pgo.execute(
+      db,
+      [
+        pgo.text(constant_name),
+        pgo.text(documentation),
+        pgo.text(signature),
+        json_signature
+          |> json.to_string()
+          |> pgo.text(),
+        dynamic.unsafe_coerce(dynamic.from(parameters)),
+        pgo.text(metadata),
+        pgo.int(module_id),
+        constant.deprecation
+          |> option.map(fn(d) { d.message })
+          |> pgo.nullable(pgo.text, _),
+        constant.implementations
+          |> implementations_pgo()
+          |> pgo.text(),
+      ],
+      dynamic.dynamic,
+    )
+    |> result.map_error(error.DatabaseError)
+    |> result.replace(Nil)
+  })
+}
+
+fn upsert_functions(
+  db: pgo.Connection,
+  module_id: Int,
+  module: Module,
+  gleam_toml: Dict(String, Toml),
+) {
+  let all_functions = dict.to_list(module.functions)
+  result.all({
+    use #(function_name, function) <- list.map(all_functions)
+    let documentation = string.trim(option.unwrap(function.documentation, ""))
+    let deprecation = option.map(function.deprecation, fn(d) { d.message })
+    let impl = function.implementations
+    let metadata =
+      json.object([
+        #("deprecation", json.nullable(deprecation, json.string)),
+        #("implementations", implementations_to_json(impl)),
+      ])
+      |> json.to_string()
+    let signature = function_to_string(function_name, function)
+    let function_json =
+      function_to_json(db, function_name, function, gleam_toml)
+    use #(json_signature, parameters) <- result.try(function_json)
+
+    "INSERT INTO package_type_fun_signature (
+     name,
+     documentation,
+     signature_,
+     json_signature,
+     nature,
+     parameters,
+     metadata,
+     package_module_id,
+     deprecation,
+     implementations
+   ) VALUES ($1, $2, $3, $4, 'function', $5, $6, $7, $8, $9)
+   ON CONFLICT (package_module_id, name) DO UPDATE
+     SET
+       documentation = $2,
+       signature_ = $3,
+       json_signature = $4,
+       nature = 'function',
+       parameters = $5,
+       metadata = $6,
+       deprecation = $8,
+       implementations = $9"
+    |> pgo.execute(
+      db,
+      [
+        pgo.text(function_name),
+        pgo.text(documentation),
+        pgo.text(signature),
+        json_signature
+          |> json.to_string()
+          |> pgo.text(),
+        dynamic.unsafe_coerce(dynamic.from(parameters)),
+        pgo.text(metadata),
+        pgo.int(module_id),
+        function.deprecation
+          |> option.map(fn(d) { d.message })
+          |> pgo.nullable(pgo.text, _),
+        function.implementations
+          |> implementations_pgo()
+          |> pgo.text(),
       ],
       dynamic.dynamic,
     )
@@ -153,10 +365,15 @@ pub fn extract_signatures(
     let #(mod_name, module) = mod
     wisp.log_info("Inserting " <> mod_name)
     use module_id <- result.try(upsert_package_module(db, mod_name, module, rid))
-    module
-    |> upsert_type_definitions(db, module_id, _, gleam_toml)
-    |> result.replace(Nil)
+    use _ <- result.try(upsert_type_definitions(
+      db,
+      module_id,
+      module,
+      gleam_toml,
+    ))
+    use _ <- result.try(upsert_type_aliases(db, module_id, module, gleam_toml))
+    use _ <- result.try(upsert_constants(db, module_id, module, gleam_toml))
+    upsert_functions(db, module_id, module, gleam_toml)
   })
   |> result.all()
-  |> io.debug()
 }

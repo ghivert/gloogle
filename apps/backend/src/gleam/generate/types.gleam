@@ -7,7 +7,8 @@ import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/package_interface.{
-  type Parameter, type Type, type TypeConstructor, type TypeDefinition,
+  type Constant, type Function, type Implementations, type Parameter, type Type,
+  type TypeAlias, type TypeConstructor, type TypeDefinition,
 }
 import gleam/pair
 import gleam/pgo
@@ -223,4 +224,75 @@ fn get_toml_requirement(gleam_toml: GleamToml, package: String) {
 
 fn is_prelude(package: String, module: String) {
   module == "gleam" && package == ""
+}
+
+pub fn type_alias_to_json(
+  db: pgo.Connection,
+  type_name: String,
+  type_alias: TypeAlias,
+  gleam_toml: GleamToml,
+) {
+  use gen <- result.map(type_to_json(db, gleam_toml, type_alias.alias))
+  use alias <- pair.map_first(gen)
+  json.object([
+    #("type", json.string("type-alias")),
+    #("name", json.string(type_name)),
+    #("documentation", json.nullable(type_alias.documentation, json.string)),
+    #("deprecation", json.nullable(type_alias.documentation, json.string)),
+    #("parameters", json.int(type_alias.parameters)),
+    #("alias", alias),
+  ])
+}
+
+pub fn implementations_to_json(implementations: Implementations) {
+  json.object([
+    #("gleam", json.bool(implementations.gleam)),
+    #("uses_erlang_externals", json.bool(implementations.uses_erlang_externals)),
+    #(
+      "uses_javascript_externals",
+      json.bool(implementations.uses_javascript_externals),
+    ),
+  ])
+}
+
+pub fn constant_to_json(
+  db: pgo.Connection,
+  constant_name: String,
+  constant: Constant,
+  gleam_toml: GleamToml,
+) {
+  use gen <- result.map(type_to_json(db, gleam_toml, constant.type_))
+  use type_ <- pair.map_first(gen)
+  json.object([
+    #("type", json.string("constant")),
+    #("name", json.string(constant_name)),
+    #("documentation", json.nullable(constant.documentation, json.string)),
+    #("deprecation", json.nullable(constant.documentation, json.string)),
+    #("implementations", implementations_to_json(constant.implementations)),
+    #("type", type_),
+  ])
+}
+
+pub fn function_to_json(
+  db: pgo.Connection,
+  function_name: String,
+  function: Function,
+  gleam_toml: GleamToml,
+) {
+  let mapper = parameters_to_json(db, gleam_toml, _)
+  use gen <- result.try(reduce_components(function.parameters, mapper))
+  use ret <- result.map(type_to_json(db, gleam_toml, function.return))
+  gen
+  |> pair.map_second(fn(s) { set.union(s, ret.1) })
+  |> pair.map_first(fn(parameters) {
+    json.object([
+      #("type", json.string("function")),
+      #("name", json.string(function_name)),
+      #("documentation", json.nullable(function.documentation, json.string)),
+      #("deprecation", json.nullable(function.documentation, json.string)),
+      #("implementations", implementations_to_json(function.implementations)),
+      #("parameters", json.preprocessed_array(parameters)),
+      #("return", ret.0),
+    ])
+  })
 }

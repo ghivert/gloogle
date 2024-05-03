@@ -1,6 +1,8 @@
 import backend/index/error
+import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
+import gleam/function
 import gleam/generate/sources.{
   constant_to_string, function_to_string, type_alias_to_string,
   type_definition_to_string,
@@ -357,23 +359,33 @@ pub fn extract_signatures(
   package: Package,
   gleam_toml: Dict(String, Toml),
 ) {
+  wisp.log_info("Extracting signatures for " <> package.name)
   use #(_pid, rid) <- result.try(get_package_release_ids(db, package))
   use _ <- result.try(add_gleam_constraint(db, package, rid))
   package.modules
   |> dict.to_list()
   |> list.map(fn(mod) {
     let #(mod_name, module) = mod
-    wisp.log_info("Inserting " <> mod_name)
+    let qualified_name = package.name <> "/" <> mod_name
+    wisp.log_info("Extracting signatures for " <> qualified_name)
     use module_id <- result.try(upsert_package_module(db, mod_name, module, rid))
+    wisp.log_info("Extracting " <> qualified_name <> " type definitions")
     use _ <- result.try(upsert_type_definitions(
       db,
       module_id,
       module,
       gleam_toml,
     ))
+    wisp.log_info("Extracting " <> qualified_name <> " type aliases")
     use _ <- result.try(upsert_type_aliases(db, module_id, module, gleam_toml))
+    wisp.log_info("Extracting " <> qualified_name <> " constants")
     use _ <- result.try(upsert_constants(db, module_id, module, gleam_toml))
+    wisp.log_info("Extracting " <> qualified_name <> " functions")
     upsert_functions(db, module_id, module, gleam_toml)
+    |> function.tap(fn(r) {
+      use <- bool.guard(when: result.is_error(r), return: Nil)
+      wisp.log_info("Extracting " <> qualified_name <> " finished")
+    })
   })
   |> result.all()
 }

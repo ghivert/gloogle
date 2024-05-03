@@ -37,6 +37,7 @@ packages = [
   { name = "simplifile", version = "1.7.0", build_tools = ["gleam"], requirements = ["filepath", "gleam_stdlib"], otp_app = "simplifile", source = "hex", outer_checksum = "1D5DFA3A2F9319EC85825F6ED88B8E449F381B0D55A62F5E61424E748E7DDEB0" },
   { name = "thoas", version = "0.4.1", build_tools = ["rebar3"], requirements = [], otp_app = "thoas", source = "hex", outer_checksum = "4918D50026C073C4AB1388437132C77A6F6F7C8AC43C60C13758CC0ADCE2134E" },
   { name = "tom", version = "0.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "tom", source = "hex", outer_checksum = "0831C73E45405A2153091226BF98FB485ED16376988602CC01A5FD086B82D577" },
+  { name = "verl", version = "1.1.1", build_tools = ["rebar3"], requirements = [], otp_app = "verl", source = "hex", outer_checksum = "0925E51CD92A0A8BE271765B02430B2E2CFF8AC30EF24D123BD0D58511E8FB18" },
   { name = "wisp", version = "0.14.0", build_tools = ["gleam"], requirements = ["exception", "gleam_crypto", "gleam_erlang", "gleam_http", "gleam_json", "gleam_stdlib", "logging", "marceau", "mist", "simplifile"], otp_app = "wisp", source = "hex", outer_checksum = "9F5453AF1F9275E6F8707BC815D6A6A9DF41551921B16FBDBA52883773BAE684" },
 ]
 
@@ -57,7 +58,8 @@ mist = { version = "1.0.0-rc2" }
 pgo = { version = "~> 0.14" }
 pprint = { version = ">= 1.0.3 and < 2.0.0" }
 radiate = { path = "../../packages/gleam-radiate" }
-ranger = { version = ">= 1.2.0 and < 2.0.0"}
+ranger = { version = ">= 1.2.0 and < 2.0.0" }
 simplifile = { version = ">= 1.7.0 and < 2.0.0" }
 tom = { version = ">= 0.3.0 and < 1.0.0" }
+verl = { version = ">= 1.1.1 and < 2.0.0"}
 wisp = { version = "~> 0.14" }

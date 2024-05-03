@@ -218,6 +218,7 @@ CREATE TABLE public.package_type_fun_signature (
     json_signature jsonb NOT NULL,
     nature public.type_nature NOT NULL,
     parameters integer[] NOT NULL,
+    deprecation text,
     metadata jsonb NOT NULL,
     package_module_id integer,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,

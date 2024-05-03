@@ -2,21 +2,20 @@ import backend/index/error
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
+import gleam/generate/sources.{type_definition_to_string}
+import gleam/generate/types.{type_definition_to_json}
 import gleam/int
-import gleam/iterator
-import gleam/json.{type Json}
+import gleam/io
+import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
-import gleam/package_interface.{
-  type Module, type Package, type Parameter, type Type, type TypeConstructor,
-  type TypeDefinition,
-}
+import gleam/package_interface.{type Module, type Package}
 import gleam/pgo
 import gleam/result
 import gleam/string
 import pprint
-import ranger
 import tom.{type Toml}
+import wisp
 
 fn add_gleam_constraint(db: pgo.Connection, package: Package, release_id: Int) {
   case package.gleam_version_constraint {
@@ -74,175 +73,92 @@ fn upsert_package_module(
   |> result.replace_error(error.UnknownError("No module"))
 }
 
-fn generate_type_definition_signature(
-  type_name: String,
-  type_def: TypeDefinition,
+fn upsert_type_definitions(
+  db: pgo.Connection,
+  module_id: Int,
+  module: Module,
+  gleam_toml: Dict(String, Toml),
 ) {
-  let params = case type_def.parameters {
-    0 -> ""
-    _ -> {
-      let range =
-        ranger.create_infinite(
-          validate: fn(a) { string.length(a) == 1 },
-          add: fn(a: String, b: Int) {
-            let assert [code] = string.to_utf_codepoints(a)
-            let int_code = string.utf_codepoint_to_int(code)
-            let new_int_code = int_code + b
-            let assert Ok(new_code) = string.utf_codepoint(new_int_code)
-            string.from_utf_codepoints([new_code])
-          },
-          compare: string.compare,
-        )
-      let assert Ok(from_a) = range("a", 1)
-      from_a
-      |> iterator.take(type_def.parameters)
-      |> iterator.to_list()
-      |> string.join(", ")
-      |> fn(s) { "(" <> s <> ")" }
-    }
-  }
-  let base = type_name <> params
-  case type_def.constructors {
-    [] -> base
-    items -> base <> " {\n" <> generate_type_constructors(items) <> "\n}"
-  }
-}
+  let all_types = dict.to_list(module.types)
+  result.all({
+    use #(type_name, type_def) <- list.map(all_types)
+    let documentation = string.trim(option.unwrap(type_def.documentation, ""))
+    let metadata =
+      type_def.deprecation
+      |> option.map(fn(d) { json.string(d.message) })
+      |> option.map(fn(d) { json.object([#("deprecation", d)]) })
+      |> option.map(json.to_string)
+      |> option.unwrap("{}")
+    let signature = type_definition_to_string(type_name, type_def)
+    let type_def_json =
+      type_definition_to_json(db, type_name, type_def, gleam_toml)
+    use #(json_signature, parameters) <- result.try(type_def_json)
+    pprint.debug(
+      json_signature
+      |> json.to_string(),
+    )
+    let params = parameters
 
-fn generate_type_constructors(constructors: List(TypeConstructor)) {
-  constructors
-  |> list.map(fn(c) {
-    let parameters = generate_parameters(c.parameters)
-    let const_ = "  " <> c.name <> parameters
-    case c.documentation {
-      None -> const_
-      Some(d) -> string.join(["  -- " <> d, const_], "\n")
-    }
+    "INSERT INTO package_type_fun_signature (
+     name,
+     documentation,
+     signature_,
+     json_signature,
+     nature,
+     parameters,
+     metadata,
+     package_module_id,
+     deprecation
+   ) VALUES ($1, $2, $3, $4, 'type_definition', $5, $6, $7, $8)
+   ON CONFLICT (package_module_id, name) DO UPDATE
+     SET
+       documentation = $2,
+       signature_ = $3,
+       json_signature = $4,
+       nature = 'type_definition',
+       parameters = $5,
+       metadata = $6,
+       deprecation = $8"
+    |> pgo.execute(
+      db,
+      [
+        pgo.text(type_name),
+        pgo.text(documentation),
+        pgo.text(signature),
+        json_signature
+          |> json.to_string()
+          |> pgo.text(),
+        dynamic.unsafe_coerce(dynamic.from(params)),
+        pgo.text(metadata),
+        pgo.int(module_id),
+        type_def.deprecation
+          |> option.map(fn(d) { d.message })
+          |> pgo.nullable(pgo.text, _),
+      ],
+      dynamic.dynamic,
+    )
+    |> result.map_error(error.DatabaseError)
+    |> result.replace(Nil)
   })
-  |> string.join("\n")
-}
-
-fn generate_parameters(parameters: List(Parameter)) {
-  use <- bool.guard(when: list.is_empty(parameters), return: "")
-  parameters
-  |> list.map(fn(s) {
-    let label =
-      s.label
-      |> option.map(string.append(_, ": "))
-      |> option.unwrap("")
-    label <> generate_type(s.type_)
-  })
-  |> string.join(", ")
-  |> fn(s) { "(" <> s <> ")" }
-}
-
-fn generate_type(type_: Type) {
-  case type_ {
-    package_interface.Tuple(elements) -> {
-      let els =
-        elements
-        |> list.map(generate_type)
-        |> string.join(", ")
-      "#(" <> els <> ")"
-    }
-    package_interface.Fn(parameters, return) -> {
-      let ret = generate_type(return)
-      let params =
-        parameters
-        |> list.map(generate_type)
-        |> string.join(", ")
-      "fn(" <> params <> ") -> " <> ret
-    }
-    package_interface.Variable(id) -> {
-      let assert Ok(utf_a) =
-        "a"
-        |> string.to_utf_codepoints()
-        |> list.first()
-      { string.utf_codepoint_to_int(utf_a) + id }
-      |> string.utf_codepoint()
-      |> result.map(list.prepend([], _))
-      |> result.map(string.from_utf_codepoints)
-      |> result.unwrap("a")
-    }
-    package_interface.Named(name, package, module, parameters) -> {
-      let params =
-        parameters
-        |> list.map(generate_type)
-        |> string.join(", ")
-        |> fn(s) {
-          use <- bool.guard(when: string.is_empty(s), return: s)
-          "(" <> s <> ")"
-        }
-      case package {
-        "" -> name <> params
-        _ -> module <> "." <> name <> params
-      }
-    }
-  }
-}
-
-fn generate_type_definition_json_signature(
-  type_name: String,
-  type_def: TypeDefinition,
-) -> Result(#(Json, List(Int)), error.Error) {
-  Ok(#(json.object([]), []))
 }
 
 pub fn extract_signatures(
   db: pgo.Connection,
   package: Package,
-  toml: Dict(String, Toml),
+  gleam_toml: Dict(String, Toml),
 ) {
   use #(_pid, rid) <- result.try(get_package_release_ids(db, package))
   use _ <- result.try(add_gleam_constraint(db, package, rid))
   package.modules
-  |> dict.map_values(fn(mod_name, module) {
-    pprint.debug("Inserting " <> mod_name)
+  |> dict.to_list()
+  |> list.map(fn(mod) {
+    let #(mod_name, module) = mod
+    wisp.log_info("Inserting " <> mod_name)
     use module_id <- result.try(upsert_package_module(db, mod_name, module, rid))
-    module.types
-    |> dict.map_values(fn(type_name, type_def) {
-      let documentation =
-        option.unwrap(type_def.documentation, "")
-        |> string.trim()
-      let metadata =
-        type_def.deprecation
-        |> option.map(fn(d) {
-          json.object([#("deprecation", json.string(d.message))])
-        })
-        |> option.map(json.to_string)
-        |> option.unwrap("{}")
-      let signature = generate_type_definition_signature(type_name, type_def)
-      use #(json_signature, parameters) <- result.try(
-        generate_type_definition_json_signature(type_name, type_def),
-      )
-      let params =
-        parameters
-        |> list.map(int.to_string)
-        |> string.join(", ")
-        |> fn(v) { "[" <> v <> "]" }
-      pprint.debug(signature)
-      Ok(Nil)
-    }// "INSERT INTO package_type_fun_signature (name, documentation, signature_, json_signature, nature, parameters, metadata, package_module_id)
-    //  VALUES ($1, $2, $3, $4, 'type_definition', $5, $6, $7)
-    //  ON CONFLICT (package_module_id, name) DO UPDATE
-    //    SET documentation = $2, signature_ = $3, json_signature = $4, nature = 'type_definition', parameters = $5, metadata = $6"
-    // |> pgo.execute(
-    //   db,
-    //   [
-    //     pgo.text(type_name),
-    //     pgo.text(documentation),
-    //     pgo.text(signature),
-    //     json_signature
-    //       |> json.to_string()
-    //       |> pgo.text(),
-    //     pgo.text(params),
-    //     pgo.text(metadata),
-    //     pgo.int(module_id),
-    //   ],
-    //   dynamic.dynamic,
-    // )
-    // |> result.map_error(error.DatabaseError)
-    )
-    Ok(Nil)
+    module
+    |> upsert_type_definitions(db, module_id, _, gleam_toml)
+    |> result.replace(Nil)
   })
-  Ok(Nil)
+  |> result.all()
+  |> io.debug()
 }

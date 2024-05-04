@@ -1,4 +1,4 @@
-import backend/index/error
+import backend/error
 import gleam/bit_array
 import gleam/http
 import gleam/http/request
@@ -63,7 +63,7 @@ fn read_package_interface(blob: option.Option(String)) {
 fn read_gleam_toml(blob: String) {
   blob
   |> tom.parse()
-  |> result.map_error(error.TomlError)
+  |> result.map_error(error.ParseTomlError)
 }
 
 fn extract_package_infos(name: String, version: String) {

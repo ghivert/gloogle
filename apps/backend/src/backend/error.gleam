@@ -1,4 +1,3 @@
-import backend/index/error
 import gleam/dynamic
 import gleam/int
 import gleam/json
@@ -9,6 +8,16 @@ import gleam/string
 import simplifile
 import tom
 import wisp
+
+pub type Error {
+  DatabaseError(pgo.QueryError)
+  FetchError(dynamic.Dynamic)
+  JsonError(json.DecodeError)
+  SimplifileError(simplifile.FileError, String)
+  UnknownError(String)
+  ParseTomlError(tom.ParseError)
+  GetTomlError(tom.GetError)
+}
 
 pub fn log_dynamic_error(error: dynamic.DecodeError) {
   wisp.log_warning("Dynamic Decode Error")
@@ -38,34 +47,38 @@ pub fn log_decode_error(error: json.DecodeError) {
   }
 }
 
-pub fn log_error(error: error.Error) {
+pub fn log(error: Error) {
   case error {
-    error.FetchError(_dyn) -> wisp.log_warning("Fetch error")
-    error.DatabaseError(error) -> {
+    FetchError(_dyn) -> wisp.log_warning("Fetch error")
+    DatabaseError(error) -> {
       wisp.log_warning("Query error")
       log_pgo_error(error)
     }
-    error.JsonError(error) -> {
+    JsonError(error) -> {
       wisp.log_warning("JSON error")
       log_decode_error(error)
     }
-    error.SimplifileError(error, filepath) -> {
+    SimplifileError(error, filepath) -> {
       wisp.log_warning("Simplifile error")
       wisp.log_warning("  filepath: " <> filepath)
       log_simplifile(error)
     }
-    error.UnknownError(error) -> {
+    UnknownError(error) -> {
       wisp.log_warning("Unknown error")
       wisp.log_warning("  error: " <> error)
     }
-    error.TomlError(error) -> {
-      wisp.log_warning("Toml Error")
-      log_tom_error(error)
+    ParseTomlError(error) -> {
+      wisp.log_warning("Parse Toml Error")
+      log_parse_tom_error(error)
+    }
+    GetTomlError(error) -> {
+      wisp.log_warning("Get Toml Error")
+      log_get_tom_error(error)
     }
   }
 }
 
-pub fn log_tom_error(error: tom.ParseError) {
+pub fn log_parse_tom_error(error: tom.ParseError) {
   case error {
     tom.Unexpected(got, expected) -> {
       wisp.log_warning("Unexpected TOML error")
@@ -75,6 +88,21 @@ pub fn log_tom_error(error: tom.ParseError) {
     tom.KeyAlreadyInUse(key) -> {
       wisp.log_warning("Key already in use")
       wisp.log_warning("  key: " <> string.join(key, "/"))
+    }
+  }
+}
+
+pub fn log_get_tom_error(error: tom.GetError) {
+  case error {
+    tom.NotFound(key) -> {
+      wisp.log_warning("Key not found")
+      wisp.log_warning("  key: " <> string.join(key, "/"))
+    }
+    tom.WrongType(key, expected, got) -> {
+      wisp.log_warning("Wrong type")
+      wisp.log_warning("  key: " <> string.join(key, "/"))
+      wisp.log_warning("  got: " <> got)
+      wisp.log_warning("  expected: " <> expected)
     }
   }
 }

@@ -1,5 +1,4 @@
-import backend/index/error.{type Error}
-import backend/log_error
+import backend/error.{type Error}
 import gleam/erlang/process.{type Subject}
 import gleam/function
 import gleam/otp/actor
@@ -44,7 +43,7 @@ fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {
       case state.work() {
         Ok(_) -> actor.Stop(process.Normal)
         Error(e) -> {
-          log_error.log_error(e)
+          error.log(e)
           enqueue_next_rerun(state)
           actor.continue(state)
         }

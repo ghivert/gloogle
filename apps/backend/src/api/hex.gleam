@@ -1,4 +1,4 @@
-import backend/index/error
+import backend/error
 import gleam/dynamic
 import gleam/hexpm
 import gleam/http/request

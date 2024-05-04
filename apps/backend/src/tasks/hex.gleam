@@ -3,9 +3,10 @@ import api/hex_repo
 import api/signatures
 import backend/config.{type Config}
 import backend/data/hex_read.{type HexRead}
-import backend/index/connect as postgres
-import backend/index/error.{type Error}
-import backend/index/queries as index
+import backend/error.{type Error}
+import backend/gleam/context
+import backend/postgres/postgres
+import backend/postgres/queries
 import birl.{type Time}
 import birl/duration
 import gleam/hexpm.{type Package}
@@ -36,7 +37,7 @@ pub fn sync_new_gleam_releases(
 ) -> Result(HexRead, Error) {
   let ctx = postgres.connect(cnf)
   wisp.log_info("Syncing new releases from Hex")
-  use limit <- result.try(index.get_last_hex_date(ctx.connection))
+  use limit <- result.try(queries.get_last_hex_date(ctx.connection))
   use latest <- result.try(sync_packages(
     State(
       page: 1,
@@ -48,7 +49,7 @@ pub fn sync_new_gleam_releases(
     ),
     children,
   ))
-  let latest = index.upsert_most_recent_hex_timestamp(ctx.connection, latest)
+  let latest = queries.upsert_most_recent_hex_timestamp(ctx.connection, latest)
   wisp.log_info("\nUp to date!")
   latest
 }
@@ -119,13 +120,13 @@ fn insert_package_and_releases(
     |> list.map(fn(release) { release.version })
     |> string.join(", v")
   wisp.log_info("Saving " <> package.name <> " v" <> versions)
-  use id <- result.try(index.upsert_package(state.db, package))
+  use id <- result.try(queries.upsert_package(state.db, package))
   wisp.log_info("Saving owners for " <> package.name)
   use owners <- result.try(api.get_package_owners(package.name, secret: secret))
-  use _ <- result.try(index.sync_package_owners(state.db, id, owners))
+  use _ <- result.try(queries.sync_package_owners(state.db, id, owners))
   wisp.log_info("Saving releases for " <> package.name)
   list.try_each(releases, fn(r) {
-    use _ <- result.map(index.upsert_release(state.db, id, r))
+    use _ <- result.map(queries.upsert_release(state.db, id, r))
     supervisor.add(children, {
       use _ <- supervisor.worker()
       retrier.retry(fn() {
@@ -133,8 +134,10 @@ fn insert_package_and_releases(
         use #(package, gleam_toml) <- result.try(infos)
         case package {
           option.None -> Ok([])
-          option.Some(package) ->
-            signatures.extract_signatures(state.db, package, gleam_toml)
+          option.Some(package) -> {
+            let ctx = context.Context(state.db, package, gleam_toml)
+            signatures.extract_signatures(ctx)
+          }
         }
       })
     })

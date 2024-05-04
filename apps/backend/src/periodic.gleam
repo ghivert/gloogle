@@ -1,9 +1,9 @@
+import backend/error.{type Error}
 import gleam/erlang/process.{type Subject}
-import gleam/io
 import gleam/function
+import gleam/io
 import gleam/otp/actor
 import gleam/result
-import backend/index/error.{type Error}
 
 pub opaque type Message {
   Rerun

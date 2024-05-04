@@ -83,6 +83,7 @@ fn upsert_package_module(
 
 fn upsert_type_definitions(
   db: pgo.Connection,
+  package_interface: Package,
   module_id: Int,
   module: Module,
   gleam_toml: Dict(String, Toml),
@@ -97,7 +98,13 @@ fn upsert_type_definitions(
       |> json.to_string()
     let signature = type_definition_to_string(type_name, type_def)
     let type_def_json =
-      type_definition_to_json(db, type_name, type_def, gleam_toml)
+      type_definition_to_json(
+        db,
+        package_interface,
+        type_name,
+        type_def,
+        gleam_toml,
+      )
     use #(json_signature, parameters) <- result.try(type_def_json)
 
     "INSERT INTO package_type_fun_signature (
@@ -145,6 +152,7 @@ fn upsert_type_definitions(
 
 fn upsert_type_aliases(
   db: pgo.Connection,
+  package_interface: Package,
   module_id: Int,
   module: Module,
   gleam_toml: Dict(String, Toml),
@@ -159,7 +167,13 @@ fn upsert_type_aliases(
       |> json.to_string()
     let signature = type_alias_to_string(type_name, type_alias)
     let type_alias_json =
-      type_alias_to_json(db, type_name, type_alias, gleam_toml)
+      type_alias_to_json(
+        db,
+        package_interface,
+        type_name,
+        type_alias,
+        gleam_toml,
+      )
     use #(json_signature, parameters) <- result.try(type_alias_json)
 
     "INSERT INTO package_type_fun_signature (
@@ -218,6 +232,7 @@ fn implementations_pgo(implementations: package_interface.Implementations) {
 
 fn upsert_constants(
   db: pgo.Connection,
+  package_interface: Package,
   module_id: Int,
   module: Module,
   gleam_toml: Dict(String, Toml),
@@ -236,7 +251,13 @@ fn upsert_constants(
       |> json.to_string()
     let signature = constant_to_string(constant_name, constant)
     let constant_json =
-      constant_to_json(db, constant_name, constant, gleam_toml)
+      constant_to_json(
+        db,
+        package_interface,
+        constant_name,
+        constant,
+        gleam_toml,
+      )
     use #(json_signature, parameters) <- result.try(constant_json)
 
     "INSERT INTO package_type_fun_signature (
@@ -289,6 +310,7 @@ fn upsert_constants(
 
 fn upsert_functions(
   db: pgo.Connection,
+  package_interface: Package,
   module_id: Int,
   module: Module,
   gleam_toml: Dict(String, Toml),
@@ -307,7 +329,13 @@ fn upsert_functions(
       |> json.to_string()
     let signature = function_to_string(function_name, function)
     let function_json =
-      function_to_json(db, function_name, function, gleam_toml)
+      function_to_json(
+        db,
+        package_interface,
+        function_name,
+        function,
+        gleam_toml,
+      )
     use #(json_signature, parameters) <- result.try(function_json)
 
     "INSERT INTO package_type_fun_signature (
@@ -379,16 +407,29 @@ pub fn extract_signatures(
     wisp.log_info("Extracting " <> qualified_name <> " type definitions")
     use _ <- result.try(upsert_type_definitions(
       db,
+      package,
       module_id,
       module,
       gleam_toml,
     ))
     wisp.log_info("Extracting " <> qualified_name <> " type aliases")
-    use _ <- result.try(upsert_type_aliases(db, module_id, module, gleam_toml))
+    use _ <- result.try(upsert_type_aliases(
+      db,
+      package,
+      module_id,
+      module,
+      gleam_toml,
+    ))
     wisp.log_info("Extracting " <> qualified_name <> " constants")
-    use _ <- result.try(upsert_constants(db, module_id, module, gleam_toml))
+    use _ <- result.try(upsert_constants(
+      db,
+      package,
+      module_id,
+      module,
+      gleam_toml,
+    ))
     wisp.log_info("Extracting " <> qualified_name <> " functions")
-    upsert_functions(db, module_id, module, gleam_toml)
+    upsert_functions(db, package, module_id, module, gleam_toml)
     |> function.tap(fn(r) {
       use <- bool.guard(when: result.is_error(r), return: Nil)
       wisp.log_info("Extracting " <> qualified_name <> " finished")

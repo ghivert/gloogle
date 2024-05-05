@@ -20,7 +20,7 @@ fn enqueue_next_rerun(state: State(a)) {
 pub fn retry(
   do work: fn() -> Result(a, Error),
 ) -> Result(Subject(Message), actor.StartError) {
-  fn() { init(60_000, work) }
+  fn() { init(120_000, work) }
   |> actor.Spec(loop: loop, init_timeout: 100)
   |> actor.start_spec()
 }

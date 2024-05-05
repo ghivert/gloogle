@@ -11,6 +11,7 @@ import backend/gleam/generate/types.{
 import backend/postgres/queries
 import gleam/bool
 import gleam/dict
+import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/package_interface
@@ -30,6 +31,21 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
   let all_types = dict.to_list(module.module.types)
   result.all({
     use #(type_name, type_def) <- list.map(all_types)
+    // Insert type upfront to achieve recursive types.
+    let _ =
+      queries.upsert_package_type_fun_signature(
+        db: ctx.db,
+        nature: queries.TypeDefinition,
+        name: type_name,
+        documentation: option.None,
+        metadata: json.null(),
+        signature: "",
+        json_signature: json.null(),
+        parameters: [],
+        module_id: module.id,
+        deprecation: option.None,
+        implementations: None,
+      )
     use gen <- result.try(type_definition_to_json(ctx, type_name, type_def))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -53,6 +69,21 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
   let all_types = dict.to_list(module.module.type_aliases)
   result.all({
     use #(type_name, type_alias) <- list.map(all_types)
+    // Insert type upfront to achieve recursive types.
+    let _ =
+      queries.upsert_package_type_fun_signature(
+        db: ctx.db,
+        nature: queries.TypeAlias,
+        name: type_name,
+        documentation: option.None,
+        metadata: json.null(),
+        signature: "",
+        json_signature: json.null(),
+        parameters: [],
+        module_id: module.id,
+        deprecation: option.None,
+        implementations: None,
+      )
     use gen <- result.try(type_alias_to_json(ctx, type_name, type_alias))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,

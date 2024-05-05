@@ -195,7 +195,14 @@ fn find_type_signature(
         // Not the same package, coming from an external package, should wait
         // for it to be extracted. It's impossible to get a type hidden by the
         // package, should it should work in the long run.
-        False -> Error(error.UnknownError("No release found for " <> slug))
+        False ->
+          Error(error.UnknownError(
+            "Inside "
+            <> ctx.package_interface.name
+            <> ", needs to access "
+            <> slug
+            <> ". Not found.",
+          ))
         True ->
           case dict.get(ctx.package_interface.modules, module) {
             // Module is hidden, everything is correct, type is hidden.
@@ -205,13 +212,29 @@ fn find_type_signature(
               case dict.get(mod.type_aliases, name) {
                 // Type is not hidden, returning an error to restart the extraction.
                 Ok(_) ->
-                  Error(error.UnknownError("No release found for " <> slug))
+                  Error(error.UnknownError(
+                    "Inside type aliases "
+                    <> ctx.package_interface.name
+                    <> ", looking for "
+                    <> slug
+                    <> "."
+                    <> name
+                    <> ". Not found.",
+                  ))
                 // Type is hidden, should check if type defed.
                 Error(_) ->
                   case dict.get(mod.types, name) {
                     // Type is not hidden, returning an error to restart the extraction.
                     Ok(_) ->
-                      Error(error.UnknownError("No release found for " <> slug))
+                      Error(error.UnknownError(
+                        "Inside types "
+                        <> ctx.package_interface.name
+                        <> ", looking for "
+                        <> slug
+                        <> "."
+                        <> name
+                        <> ". Not found.",
+                      ))
                     // Type is hidden, returning None because it can't be extracted.
                     Error(_) -> Ok(option.None)
                   }

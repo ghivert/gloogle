@@ -190,17 +190,29 @@ fn find_type_signature(
     })
   {
     option.None -> {
+      let slug = package <> "/" <> module
       case ctx.package_interface.name == package {
-        False -> Error(error.UnknownError("No release found"))
+        // Not the same package, coming from an external package, should wait
+        // for it to be extracted. It's impossible to get a type hidden by the
+        // package, should it should work in the long run.
+        False -> Error(error.UnknownError("No release found for " <> slug))
         True ->
           case dict.get(ctx.package_interface.modules, module) {
-            Error(_) -> Error(error.UnknownError("No module found"))
+            // Module is hidden, everything is correct, type is hidden.
+            Error(_) -> Ok(option.None)
+            // Module is not hidden, checking if type is hidden by itself.
             Ok(mod) ->
               case dict.get(mod.type_aliases, name) {
-                Ok(_) -> Error(error.UnknownError("No release found"))
+                // Type is not hidden, returning an error to restart the extraction.
+                Ok(_) ->
+                  Error(error.UnknownError("No release found for " <> slug))
+                // Type is hidden, should check if type defed.
                 Error(_) ->
                   case dict.get(mod.types, name) {
-                    Ok(_) -> Error(error.UnknownError("No release found"))
+                    // Type is not hidden, returning an error to restart the extraction.
+                    Ok(_) ->
+                      Error(error.UnknownError("No release found for " <> slug))
+                    // Type is hidden, returning None because it can't be extracted.
                     Error(_) -> Ok(option.None)
                   }
               }

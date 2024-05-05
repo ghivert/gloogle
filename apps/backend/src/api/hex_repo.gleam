@@ -37,13 +37,22 @@ fn create_archives_directory() {
   archives_path
 }
 
-fn read_archive(archives_path: String, slug: String) {
-  let filepath = archives_path <> "/" <> slug
-  simplifile.read_bits(filepath)
+fn read_archive(archives_path: String, name: String, version: String) {
+  let slug = package_slug(name, version) <> ".tar"
+  let filepath = archives_path <> "/" <> name <> "/" <> slug
+  use content <- result.map(simplifile.read_bits(filepath))
+  wisp.log_info("Using filesystem for " <> slug)
+  content
 }
 
-fn create_archive(archives_path: String, slug: String, archive: BitArray) {
-  let filepath = archives_path <> "/" <> slug
+fn create_archive(
+  archives_path: String,
+  name: String,
+  version: String,
+  archive: BitArray,
+) {
+  let slug = package_slug(name, version) <> ".tar"
+  let filepath = archives_path <> "/" <> name <> "/" <> slug
   let _ = simplifile.write_bits(filepath, archive)
   archive
 }
@@ -51,7 +60,7 @@ fn create_archive(archives_path: String, slug: String, archive: BitArray) {
 fn get_tarball(name: String, version: String) {
   let slug = package_slug(name, version) <> ".tar"
   use archives_path <- result.try(create_archives_directory())
-  use _ <- result.try_recover(read_archive(archives_path, slug))
+  use _ <- result.try_recover(read_archive(archives_path, name, version))
   wisp.log_info("Querying hex for " <> slug)
   request.new()
   |> request.set_host("repo.hex.pm")
@@ -61,7 +70,9 @@ fn get_tarball(name: String, version: String) {
   |> request.set_scheme(http.Https)
   |> httpc.send_bits()
   |> result.map_error(error.FetchError)
-  |> result.map(fn(res) { create_archive(archives_path, slug, res.body) })
+  |> result.map(fn(res) {
+    create_archive(archives_path, name, version, res.body)
+  })
 }
 
 fn read_interface(filepath: String) {

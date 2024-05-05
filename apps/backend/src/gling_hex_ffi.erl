@@ -1,5 +1,5 @@
 -module(gling_hex_ffi).
--export([extract_tar/3, remove_tar/1, is_match/2]).
+-export([extract_tar/3, remove_tar/1, is_match/2, get_home/0]).
 
 package_interface_path(ContentDest, BaseName) ->
   BuildFolder = <<"/build/dev/docs/">>,
@@ -31,4 +31,10 @@ is_match(Version, Requirement) ->
   case verl:is_match(Version, Requirement) of
     {error, _} -> {error, nil};
     Bool -> {ok, Bool}
+  end.
+
+get_home() ->
+  case init:get_argument(home) of
+    {ok, Content} -> {ok, unicode:characters_to_binary(Content)};
+    error -> {error, nil}
   end.

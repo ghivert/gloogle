@@ -9,6 +9,10 @@ import gleam/package_interface
 import gleam/result
 import simplifile
 import tom
+import wisp
+
+@external(erlang, "gling_hex_ffi", "get_home")
+pub fn get_home() -> Result(String, Nil)
 
 @external(erlang, "gling_hex_ffi", "extract_tar")
 fn extract_tar(
@@ -24,8 +28,31 @@ fn package_slug(name: String, version: String) {
   name <> "-" <> version
 }
 
+fn create_archives_directory() {
+  let home_error = error.UnknownError("home not found")
+  let home = result.replace_error(get_home(), home_error)
+  use home <- result.map(home)
+  let archives_path = home <> "/archives/gleam"
+  let _ = simplifile.create_directory_all(archives_path)
+  archives_path
+}
+
+fn read_archive(archives_path: String, slug: String) {
+  let filepath = archives_path <> "/" <> slug
+  simplifile.read_bits(filepath)
+}
+
+fn create_archive(archives_path: String, slug: String, archive: BitArray) {
+  let filepath = archives_path <> "/" <> slug
+  let _ = simplifile.write_bits(filepath, archive)
+  archive
+}
+
 fn get_tarball(name: String, version: String) {
   let slug = package_slug(name, version) <> ".tar"
+  use archives_path <- result.try(create_archives_directory())
+  use _ <- result.try_recover(read_archive(archives_path, slug))
+  wisp.log_info("Querying hex for " <> slug)
   request.new()
   |> request.set_host("repo.hex.pm")
   |> request.set_path("/tarballs/" <> slug)
@@ -34,6 +61,7 @@ fn get_tarball(name: String, version: String) {
   |> request.set_scheme(http.Https)
   |> httpc.send_bits()
   |> result.map_error(error.FetchError)
+  |> result.map(fn(res) { create_archive(archives_path, slug, res.body) })
 }
 
 fn read_interface(filepath: String) {
@@ -69,8 +97,8 @@ fn read_gleam_toml(blob: String) {
 fn extract_package_infos(name: String, version: String) {
   let slug = package_slug(name, version)
   let req = get_tarball(name, version)
-  use res <- result.try(req)
-  let #(interface, toml) = extract_tar(res.body, name, slug)
+  use body <- result.try(req)
+  let #(interface, toml) = extract_tar(body, name, slug)
   use interface_blob <- result.try(read_interface(interface))
   use toml_blob <- result.try(read_file(toml))
   use interface <- result.try(read_package_interface(interface_blob))

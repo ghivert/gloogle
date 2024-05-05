@@ -1,5 +1,5 @@
 import backend/config.{type Config}
-import backend/index/connect as postgres
+import backend/postgres/postgres
 import backend/web.{type Handler}
 import gleam/string_builder
 import wisp.{type Request, type Response}

@@ -52,7 +52,9 @@ fn create_archive(
   archive: BitArray,
 ) {
   let slug = package_slug(name, version) <> ".tar"
-  let filepath = archives_path <> "/" <> name <> "/" <> slug
+  let package_path = archives_path <> "/" <> name
+  let _ = simplifile.create_directory_all(package_path)
+  let filepath = package_path <> "/" <> slug
   let _ = simplifile.write_bits(filepath, archive)
   archive
 }

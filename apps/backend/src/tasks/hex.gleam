@@ -127,20 +127,40 @@ fn insert_package_and_releases(
   wisp.log_info("Saving releases for " <> package.name)
   list.try_each(releases, fn(r) {
     use _ <- result.map(queries.upsert_release(state.db, id, r))
-    supervisor.add(children, {
-      use _ <- supervisor.worker()
-      retrier.retry(fn() {
-        let infos = hex_repo.get_package_infos(package.name, r.version)
-        use #(package, gleam_toml) <- result.try(infos)
-        case package {
-          option.None -> Ok([])
-          option.Some(package) -> {
-            let ctx = context.Context(state.db, package, gleam_toml)
-            signatures.extract_signatures(ctx)
-          }
+    case r.retirement {
+      option.Some(retirement) -> {
+        let release = package.name <> " v" <> r.version
+        wisp.log_info("Release " <> release <> " is retired. Skipping.")
+        case retirement.message {
+          option.None -> Nil
+          option.Some(m) -> wisp.log_info("  Retired because " <> m)
         }
-      })
-    })
+        case retirement.reason {
+          hexpm.OtherReason -> wisp.log_info("  Retired for an other reason")
+          hexpm.Invalid -> wisp.log_info("  Retired because it was invalid")
+          hexpm.Security -> wisp.log_info("  Retired for security reasons")
+          hexpm.Deprecated -> wisp.log_info("  Retired because it's deprecated")
+          hexpm.Renamed -> wisp.log_info("  Retired because it's renamed")
+        }
+      }
+      option.None -> {
+        supervisor.add(children, {
+          use _ <- supervisor.worker()
+          retrier.retry(fn() {
+            let infos = hex_repo.get_package_infos(package.name, r.version)
+            use #(package, gleam_toml) <- result.try(infos)
+            case package {
+              option.None -> Ok([])
+              option.Some(package) -> {
+                let ctx = context.Context(state.db, package, gleam_toml)
+                signatures.extract_signatures(ctx)
+              }
+            }
+          })
+        })
+        Nil
+      }
+    }
   })
 }
 

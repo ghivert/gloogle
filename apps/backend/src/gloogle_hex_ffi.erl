@@ -1,4 +1,4 @@
--module(gling_hex_ffi).
+-module(gloogle_hex_ffi).
 -export([extract_tar/3, remove_tar/1, is_match/2, get_home/0, set_level/1]).
 
 package_interface_path(ContentDest, BaseName) ->

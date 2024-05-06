@@ -2,31 +2,31 @@ import * as dotenv from 'https://deno.land/std@0.222.1/dotenv/mod.ts'
 import * as path from 'https://deno.land/std@0.222.1/path/mod.ts'
 import * as thread from './thread.ts'
 
-export const NAME = 'gling-postgres'
+export const NAME = 'gloogle-postgres'
 
 export const createDatabases = async () => {
-  const runPg = ['run', '--name', NAME, '-e', 'POSTGRES_PASSWORD=gling', '-p', '5432:5432', '-d', 'postgres']
+  const runPg = ['run', '--name', NAME, '-e', 'POSTGRES_PASSWORD=gloogle', '-p', '5432:5432', '-d', 'postgres']
   await new Deno.Command('docker', { args: runPg }).output()
   await thread.sleep()
   console.info('🎉  Postgres container successfully created!')
   const id = await getDatabaseID()
   if (id) {
-    await new Deno.Command('docker', { args: ['exec', id, 'createdb', '-U', 'postgres', 'gling_development'] }).output()
-    await new Deno.Command('docker', { args: ['exec', id, 'createdb', '-U', 'postgres', 'gling_test'] }).output()
+    await new Deno.Command('docker', { args: ['exec', id, 'createdb', '-U', 'postgres', 'gloogle_development'] }).output()
+    await new Deno.Command('docker', { args: ['exec', id, 'createdb', '-U', 'postgres', 'gloogle_test'] }).output()
     await thread.sleep()
   }
-  console.info('🥳  Database gling_development successfully created!')
-  console.info('🥳  Database gling_test successfully created!')
+  console.info('🥳  Database gloogle_development successfully created!')
+  console.info('🥳  Database gloogle_test successfully created!')
 }
 
 export const writeDotEnv = async () => {
   const dirname = path.fromFileUrl(import.meta.url)
   const envPath = path.resolve(dirname, '../../.env')
   const envPathTest = path.resolve(dirname, '../../.env.test')
-  const envs = [[envPath, 'gling_development'], [envPathTest, 'gling_test']]
+  const envs = [[envPath, 'gloogle_development'], [envPathTest, 'gloogle_test']]
   await Promise.all(envs.map(async ([envPath, dbName]) => {
     const content = await dotenv.load({ envPath })
-    const dbUrl = ['postgres://postgres:gling@localhost:5432', dbName].join('/')
+    const dbUrl = ['postgres://postgres:gloogle@localhost:5432', dbName].join('/')
     const sslDisabled = [dbUrl, 'sslmode=disable'].join('?')
     const newContent: Record<string, string> = { ...content, DATABASE_URL: sslDisabled }
     await Deno.writeTextFile(envPath, dotenv.stringify(newContent))

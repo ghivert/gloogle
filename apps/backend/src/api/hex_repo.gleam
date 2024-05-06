@@ -11,17 +11,17 @@ import simplifile
 import tom
 import wisp
 
-@external(erlang, "gling_hex_ffi", "get_home")
+@external(erlang, "gloogle_hex_ffi", "get_home")
 pub fn get_home() -> Result(String, Nil)
 
-@external(erlang, "gling_hex_ffi", "extract_tar")
+@external(erlang, "gloogle_hex_ffi", "extract_tar")
 fn extract_tar(
   tarbin: BitArray,
   base_name: String,
   slug: String,
 ) -> Result(#(String, String, String), Nil)
 
-@external(erlang, "gling_hex_ffi", "remove_tar")
+@external(erlang, "gloogle_hex_ffi", "remove_tar")
 fn remove_tar(slug: String) -> Nil
 
 fn package_slug(name: String, version: String) {

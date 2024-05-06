@@ -11,7 +11,7 @@ import tardis
 pub fn main() {
   let init = fn(_) { #(model.init(), effect.none()) }
 
-  let assert Ok(debugger_) = tardis.single("gling")
+  let assert Ok(debugger_) = tardis.single("gloogle")
 
   let assert Ok(cache) =
     sketch_options.node()

@@ -15,7 +15,7 @@ pub fn view() {
       })
     }),
     h.div([s.footer_built()], [
-      h.text("Gling is proudly built with 💜 in gleam for gleamlins"),
+      h.text("Gloogle is proudly built with 💜 in gleam for gleamlins"),
     ]),
   ])
 }

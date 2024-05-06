@@ -18,10 +18,10 @@ pub const links = [
     ],
   ),
   #(
-    "Gling",
+    "Gloogle",
     [
       #("https://github.com/sponsors/ghivert", "Sponsor"),
-      #("https://github.com/ghivert/gling", "Code"),
+      #("https://github.com/ghivert/gloogle", "Code"),
     ],
   ),
 ]

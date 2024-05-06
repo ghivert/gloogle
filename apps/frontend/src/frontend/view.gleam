@@ -33,10 +33,10 @@ fn body(model: Model) {
       h.div([s.search_title_wrapper()], [
         h.div([s.search_title()], [
           h.img([a.src("/images/lucy.svg"), s.search_lucy()]),
-          h.text("Gling"),
+          h.text("Gloogle"),
         ]),
         h.text(
-          "Gling can search through all public gleam packages, to help you find the function you're looking for! Enter a type or a function name to get some results.",
+          "Gloogle can search through all public gleam packages, to help you find the function you're looking for! Enter a type or a function name to get some results.",
         ),
       ]),
       h.input([

@@ -255,7 +255,13 @@ fn extract_parameters_relation(
   use <- bool.guard(when: is_prelude(package, module), return: Ok(option.None))
   use requirement <- result.try(toml.find_package_requirement(ctx, package))
   use releases <- result.try(find_package_release(ctx, package, requirement))
-  find_type_signature(ctx, name, package, module, releases)
+  use error <- result.try_recover({
+    find_type_signature(ctx, name, package, module, releases)
+  })
+  case ctx.ignore_parameters_errors {
+    False -> Error(error)
+    True -> Ok(option.None)
+  }
 }
 
 fn is_prelude(package: String, module: String) {

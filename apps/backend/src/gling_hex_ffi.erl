@@ -1,5 +1,5 @@
 -module(gling_hex_ffi).
--export([extract_tar/3, remove_tar/1, is_match/2, get_home/0]).
+-export([extract_tar/3, remove_tar/1, is_match/2, get_home/0, set_level/1]).
 
 package_interface_path(ContentDest, BaseName) ->
   BuildFolder = <<"/build/dev/docs/">>,
@@ -13,13 +13,16 @@ extract_tar(Binary, BaseName, Slug) ->
   PackagePath = <<"/tmp/", Slug/binary>>,
   ContentDest = <<PackagePath/binary, "/contents">>,
   Content = <<PackagePath/binary, "/contents.tar.gz">>,
-  erl_tar:extract({binary, Binary}, [{cwd, PackagePath}]),
-  erl_tar:extract(Content, [{cwd, ContentDest}, compressed]),
-  BuildCmd = <<"cd ", ContentDest/binary, " && gleam docs build">>,
-  os:cmd(binary_to_list(BuildCmd)),
-  PackageInterface = package_interface_path(ContentDest, BaseName),
-  GleamToml = unicode:characters_to_binary(<<ContentDest/binary, "/gleam.toml">>),
-  {PackageInterface, GleamToml}.
+  case erl_tar:extract({binary, Binary}, [{cwd, PackagePath}]) of
+    {error, _} -> {error, nil};
+    _ ->
+      erl_tar:extract(Content, [{cwd, ContentDest}, compressed]),
+      BuildCmd = <<"cd ", ContentDest/binary, " && gleam docs build">>,
+      Result = os:cmd(binary_to_list(BuildCmd)),
+      PackageInterface = package_interface_path(ContentDest, BaseName),
+      GleamToml = unicode:characters_to_binary(<<ContentDest/binary, "/gleam.toml">>),
+      {ok, {PackageInterface, GleamToml, unicode:characters_to_binary(Result)}}
+  end.
 
 % Suppress the tarball.
 remove_tar(Slug) ->
@@ -38,3 +41,6 @@ get_home() ->
     {ok, Content} -> {ok, unicode:characters_to_binary(Content)};
     error -> {error, nil}
   end.
+
+set_level(Level) ->
+  logger:set_primary_config(level, Level).

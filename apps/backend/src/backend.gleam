@@ -8,11 +8,13 @@ import periodic
 import setup
 import tasks/hex
 import wisp
+import wisp/logger
 
 pub fn main() {
   dot_env.load()
   setup.radiate()
   wisp.configure_logger()
+  logger.set_level(logger.Debug)
 
   let secret_key_base = config.get_secret_key_base()
   let cnf = config.read_config()

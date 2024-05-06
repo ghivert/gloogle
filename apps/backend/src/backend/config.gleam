@@ -3,7 +3,7 @@ import gleam/pgo
 import wisp
 
 pub type Context {
-  Context(connection: pgo.Connection)
+  Context(db: pgo.Connection)
 }
 
 pub type Config {

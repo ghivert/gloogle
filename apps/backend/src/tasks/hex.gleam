@@ -37,7 +37,7 @@ pub fn sync_new_gleam_releases(
 ) -> Result(HexRead, Error) {
   let ctx = postgres.connect(cnf)
   wisp.log_info("Syncing new releases from Hex")
-  use limit <- result.try(queries.get_last_hex_date(ctx.connection))
+  use limit <- result.try(queries.get_last_hex_date(ctx.db))
   use latest <- result.try(sync_packages(
     State(
       page: 1,
@@ -45,11 +45,11 @@ pub fn sync_new_gleam_releases(
       newest: limit,
       hex_api_key: cnf.hex_api_key,
       last_logged: birl.now(),
-      db: ctx.connection,
+      db: ctx.db,
     ),
     children,
   ))
-  let latest = queries.upsert_most_recent_hex_timestamp(ctx.connection, latest)
+  let latest = queries.upsert_most_recent_hex_timestamp(ctx.db, latest)
   wisp.log_info("\nUp to date!")
   latest
 }
@@ -108,6 +108,21 @@ fn sync_package(children: supervisor.Children(Nil)) {
   }
 }
 
+fn log_retirement_data(release: String, retirement: hexpm.ReleaseRetirement) {
+  wisp.log_info("Release " <> release <> " is retired. Skipping.")
+  case retirement.message {
+    option.Some(m) -> wisp.log_debug("  Retired because " <> m)
+    option.None -> Nil
+  }
+  case retirement.reason {
+    hexpm.OtherReason -> wisp.log_debug("  Retired for an other reason")
+    hexpm.Invalid -> wisp.log_debug("  Retired because it was invalid")
+    hexpm.Security -> wisp.log_debug("  Retired for security reasons")
+    hexpm.Deprecated -> wisp.log_debug("  Retired because it's deprecated")
+    hexpm.Renamed -> wisp.log_debug("  Retired because it's renamed")
+  }
+}
+
 fn insert_package_and_releases(
   package: hexpm.Package,
   releases: List(hexpm.Release),
@@ -121,42 +136,23 @@ fn insert_package_and_releases(
     |> string.join(", v")
   wisp.log_info("Saving " <> package.name <> " v" <> versions)
   use id <- result.try(queries.upsert_package(state.db, package))
-  wisp.log_info("Saving owners for " <> package.name)
+  wisp.log_debug("Saving owners for " <> package.name)
   use owners <- result.try(api.get_package_owners(package.name, secret: secret))
   use _ <- result.try(queries.sync_package_owners(state.db, id, owners))
-  wisp.log_info("Saving releases for " <> package.name)
+  wisp.log_debug("Saving releases for " <> package.name)
   list.try_each(releases, fn(r) {
+    let release = package.name <> " v" <> r.version
     use _ <- result.map(queries.upsert_release(state.db, id, r))
     case r.retirement {
-      option.Some(retirement) -> {
-        let release = package.name <> " v" <> r.version
-        wisp.log_info("Release " <> release <> " is retired. Skipping.")
-        case retirement.message {
-          option.None -> Nil
-          option.Some(m) -> wisp.log_info("  Retired because " <> m)
-        }
-        case retirement.reason {
-          hexpm.OtherReason -> wisp.log_info("  Retired for an other reason")
-          hexpm.Invalid -> wisp.log_info("  Retired because it was invalid")
-          hexpm.Security -> wisp.log_info("  Retired for security reasons")
-          hexpm.Deprecated -> wisp.log_info("  Retired because it's deprecated")
-          hexpm.Renamed -> wisp.log_info("  Retired because it's renamed")
-        }
-      }
+      option.Some(retirement) -> log_retirement_data(release, retirement)
       option.None -> {
         supervisor.add(children, {
           use _ <- supervisor.worker()
-          retrier.retry(fn() {
-            let infos = hex_repo.get_package_infos(package.name, r.version)
-            use #(package, gleam_toml) <- result.try(infos)
-            case package {
-              option.None -> Ok([])
-              option.Some(package) -> {
-                let ctx = context.Context(state.db, package, gleam_toml)
-                signatures.extract_signatures(ctx)
-              }
-            }
-          })
+          use iterations <- retrier.retry()
+          let infos = hex_repo.get_package_infos(package.name, r.version)
+          use #(package, gleam_toml) <- result.try(infos)
+          context.Context(state.db, package, gleam_toml, iterations == 0)
+          |> signatures.extract_signatures()
         })
         Nil
       }

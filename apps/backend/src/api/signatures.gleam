@@ -27,7 +27,7 @@ fn add_gleam_constraint(ctx: Context, release_id: Int) {
 
 fn upsert_type_definitions(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_info("Extracting " <> name <> " type definitions")
+  wisp.log_debug("Extracting " <> name <> " type definitions")
   let all_types = dict.to_list(module.module.types)
   result.all({
     use #(type_name, type_def) <- list.map(all_types)
@@ -65,7 +65,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
 
 fn upsert_type_aliases(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_info("Extracting " <> name <> " type aliases")
+  wisp.log_debug("Extracting " <> name <> " type aliases")
   let all_types = dict.to_list(module.module.type_aliases)
   result.all({
     use #(type_name, type_alias) <- list.map(all_types)
@@ -103,7 +103,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
 
 fn upsert_constants(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_info("Extracting " <> name <> " constants")
+  wisp.log_debug("Extracting " <> name <> " constants")
   let all_constants = dict.to_list(module.module.constants)
   result.all({
     use #(constant_name, constant) <- list.map(all_constants)
@@ -127,7 +127,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
 
 fn upsert_functions(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_info("Extracting " <> name <> " functions")
+  wisp.log_debug("Extracting " <> name <> " functions")
   let all_functions = dict.to_list(module.module.functions)
   result.all({
     use #(function_name, function) <- list.map(all_functions)
@@ -156,7 +156,7 @@ fn extract_module_signatures(
 ) {
   let module = context.Module(module.1, -1, module.0, release_id)
   let name = context.qualified_name(ctx, module)
-  wisp.log_info("Extracting " <> name <> " signatures")
+  wisp.log_debug("Extracting " <> name <> " signatures")
   use module_id <- result.try(queries.upsert_package_module(ctx.db, module))
   let module = context.Module(..module, id: module_id)
   use _ <- result.try(upsert_type_definitions(ctx, module))
@@ -164,14 +164,14 @@ fn extract_module_signatures(
   use _ <- result.try(upsert_constants(ctx, module))
   let res = upsert_functions(ctx, module)
   use <- bool.guard(when: result.is_error(res), return: res)
-  wisp.log_info("Extracting " <> name <> " finished")
+  wisp.log_debug("Extracting " <> name <> " finished")
   res
 }
 
 pub fn extract_signatures(ctx: Context) {
   let package = ctx.package_interface
   let package_slug = package.name <> "@" <> package.version
-  wisp.log_info("Extracting signatures for " <> package_slug)
+  wisp.log_debug("Extracting signatures for " <> package_slug)
   let res = queries.get_package_release_ids(ctx.db, ctx.package_interface)
   use #(_pid, release_id) <- result.try(res)
   use _ <- result.try(add_gleam_constraint(ctx, release_id))

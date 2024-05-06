@@ -37,7 +37,7 @@ fn init(
   process.new_selector()
   |> process.selecting(subject, function.identity)
   |> actor.Ready(state, _)
-  |> function.tap(fn(_) { enqueue_next_rerun(state) })
+  |> function.tap(fn(_) { process.send(state.self, Rerun) })
 }
 
 fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {

@@ -4,7 +4,6 @@ import gleam/http
 import gleam/http/request
 import gleam/httpc
 import gleam/json
-import gleam/option
 import gleam/package_interface
 import gleam/result
 import simplifile
@@ -19,7 +18,7 @@ fn extract_tar(
   tarbin: BitArray,
   base_name: String,
   slug: String,
-) -> #(String, String)
+) -> Result(#(String, String, String), Nil)
 
 @external(erlang, "gling_hex_ffi", "remove_tar")
 fn remove_tar(slug: String) -> Nil
@@ -41,7 +40,7 @@ fn read_archive(archives_path: String, name: String, version: String) {
   let slug = package_slug(name, version) <> ".tar"
   let filepath = archives_path <> "/" <> name <> "/" <> slug
   use content <- result.map(simplifile.read_bits(filepath))
-  wisp.log_info("Using filesystem for " <> slug)
+  wisp.log_debug("Using filesystem for " <> slug)
   content
 }
 
@@ -63,7 +62,7 @@ fn get_tarball(name: String, version: String) {
   let slug = package_slug(name, version) <> ".tar"
   use archives_path <- result.try(create_archives_directory())
   use _ <- result.try_recover(read_archive(archives_path, name, version))
-  wisp.log_info("Querying hex for " <> slug)
+  wisp.log_debug("Querying hex for " <> slug)
   request.new()
   |> request.set_host("repo.hex.pm")
   |> request.set_path("/tarballs/" <> slug)
@@ -77,45 +76,52 @@ fn get_tarball(name: String, version: String) {
   })
 }
 
-fn read_interface(filepath: String) {
-  case simplifile.read(filepath) {
-    Ok(interface) -> Ok(option.Some(interface))
-    Error(_) -> Ok(option.None)
-  }
+fn read_interface(filepath: String, artifacts: String) {
+  filepath
+  |> simplifile.read()
+  |> result.map_error(fn(error) {
+    wisp.log_warning("Unable to read " <> filepath)
+    wisp.log_warning("Compilation artifacts:")
+    wisp.log_warning(artifacts)
+    error.SimplifileError(error, filepath)
+  })
 }
 
-fn read_file(filepath: String) {
+fn read_toml_file(filepath: String) {
   filepath
   |> simplifile.read()
   |> result.map_error(error.SimplifileError(_, filepath))
 }
 
-fn read_package_interface(blob: option.Option(String)) {
-  case blob {
-    option.None -> Ok(option.None)
-    option.Some(blob) ->
-      blob
-      |> json.decode(using: package_interface.decoder)
-      |> result.map_error(error.JsonError)
-      |> result.map(option.Some)
-  }
+fn read_package_interface(blob: String) {
+  blob
+  |> json.decode(using: package_interface.decoder)
+  |> result.map_error(error.JsonError)
 }
 
-fn read_gleam_toml(blob: String) {
-  blob
-  |> tom.parse()
+fn parse_toml(toml_blob: String) {
+  tom.parse(toml_blob)
   |> result.map_error(error.ParseTomlError)
 }
 
 fn extract_package_infos(name: String, version: String) {
+  let package_name = name <> "@" <> version
   let slug = package_slug(name, version)
   let req = get_tarball(name, version)
   use body <- result.try(req)
-  let #(interface, toml) = extract_tar(body, name, slug)
-  use interface_blob <- result.try(read_interface(interface))
-  use toml_blob <- result.try(read_file(toml))
+  use #(interface, toml, res) <- result.try({
+    body
+    |> extract_tar(name, slug)
+    |> result.map_error(fn(_) {
+      let content = "Impossible to extract tar for " <> package_name
+      wisp.log_warning(content)
+      error.UnknownError(content)
+    })
+  })
+  use interface_blob <- result.try(read_interface(interface, res))
+  use toml_blob <- result.try(read_toml_file(toml))
   use interface <- result.try(read_package_interface(interface_blob))
-  use toml <- result.map(read_gleam_toml(toml_blob))
+  use toml <- result.map(parse_toml(toml_blob))
   #(interface, toml)
 }
 

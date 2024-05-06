@@ -47,7 +47,7 @@ pub fn log_decode_error(error: json.DecodeError) {
   }
 }
 
-pub fn log(error: Error) {
+pub fn log_error(error: Error) {
   case error {
     FetchError(_dyn) -> wisp.log_warning("Fetch error")
     DatabaseError(error) -> {

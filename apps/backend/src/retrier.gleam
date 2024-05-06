@@ -28,7 +28,7 @@ fn enqueue_next_rerun(state: State(a)) {
 pub fn retry(
   do work: fn(Int) -> Result(a, Error),
 ) -> Result(Subject(Message), actor.StartError) {
-  fn() { init(ten_minutes, work) }
+  fn() { init(2 * ten_minutes, work) }
   |> actor.Spec(loop: loop, init_timeout: 100)
   |> actor.start_spec()
 }
@@ -38,7 +38,7 @@ fn init(
   work: fn(Int) -> Result(a, Error),
 ) -> actor.InitResult(State(a), Message) {
   let subject = process.new_subject()
-  let state = State(subject, work, interval, 20)
+  let state = State(subject, work, interval, 10)
   process.new_selector()
   |> process.selecting(subject, function.identity)
   |> actor.Ready(state, _)

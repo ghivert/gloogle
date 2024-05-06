@@ -1,5 +1,4 @@
 import backend/config
-import backend/request
 import cors_builder as cors
 import gleam/http
 import wisp.{type Request, type Response}
@@ -12,14 +11,6 @@ pub fn foundations(req: Request, handler: Handler) -> Response {
   use <- wisp.rescue_crashes()
   use req <- wisp.handle_head(req)
   handler(req)
-}
-
-pub fn reroute_non_json_request(req: Request, handler: Handler) -> Response {
-  case req.method, request.is_json_request(req) {
-    http.Get, True -> handler(req)
-    http.Get, False -> wisp.ok()
-    _, _ -> handler(req)
-  }
 }
 
 pub fn cors() {

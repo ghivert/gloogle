@@ -5,18 +5,12 @@ import gleam/option.{Some}
 import gleam/pgo.{Config}
 import gleam/regex
 import gleam/result
-import wisp.{type Response}
 
 pub fn connect(cnf: Config) {
   let assert Ok(config) = parse_database_url(cnf.database_url)
   config
   |> pgo.connect()
   |> fn(db) { Context(db: db, hex_api_key: cnf.hex_api_key) }
-}
-
-pub fn middleware(cnf: Config, handler: fn(Context) -> Response) {
-  connect(cnf)
-  |> handler()
 }
 
 fn database_url_matcher() {

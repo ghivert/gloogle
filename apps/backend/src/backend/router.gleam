@@ -1,7 +1,6 @@
 import api/hex
-import backend/config.{type Config, type Context}
+import backend/config.{type Context}
 import backend/error
-import backend/postgres/postgres
 import backend/postgres/queries
 import backend/web
 import cors_builder as cors
@@ -50,10 +49,9 @@ pub fn handle_post(req: Request, ctx: Context) {
   }
 }
 
-pub fn handle_request(req: Request, cnf: Config) -> Response {
+pub fn handle_request(req: Request, ctx: Context) -> Response {
   use req <- cors.wisp_handle(req, web.cors())
   use req <- web.foundations(req)
-  use ctx <- postgres.middleware(cnf)
   case req.method {
     http.Get -> handle_get(req, ctx)
     http.Post -> handle_post(req, ctx)

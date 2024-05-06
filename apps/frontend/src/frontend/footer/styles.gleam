@@ -10,6 +10,7 @@ pub fn footer() {
     s.padding(px(24)),
     s.align_items("center"),
     s.gap(px(48)),
+    s.margin_top(px(48)),
   ])
   |> s.memo()
   |> s.to_lustre()

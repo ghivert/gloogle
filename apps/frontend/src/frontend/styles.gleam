@@ -1,5 +1,4 @@
 import frontend/colors/palette
-import gleam/int
 import sketch as s
 import sketch/size.{px, vh}
 
@@ -23,6 +22,8 @@ pub fn layout() {
 
 pub fn navbar() {
   s.class([
+    s.position("sticky"),
+    s.top(px(0)),
     s.display("flex"),
     s.align_items("baseline"),
     s.justify_content("end"),
@@ -75,6 +76,7 @@ pub fn main_wrapper() {
   s.class([
     s.grid_area("main"),
     s.display("flex"),
+    s.flex_direction("column"),
     s.align_items("center"),
     s.justify_content("center"),
   ])
@@ -217,5 +219,18 @@ pub fn foot_title() {
 
 pub fn foot_lk() {
   s.class([s.font_size(size.rem_(0.9))])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn flex() {
+  s.class([s.display("flex")])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn signature() {
+  s.class([s.display("flex"), s.white_space("pre-wrap")])
+  |> s.memo()
   |> s.to_lustre()
 }

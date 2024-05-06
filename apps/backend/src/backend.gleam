@@ -1,4 +1,5 @@
 import backend/config.{type Config}
+import backend/postgres/postgres
 import backend/router
 import dot_env
 import gleam/erlang/process
@@ -18,9 +19,10 @@ pub fn main() {
 
   let secret_key_base = config.get_secret_key_base()
   let cnf = config.read_config()
+  let ctx = postgres.connect(cnf)
 
   let assert Ok(_) =
-    router.handle_request(_, cnf)
+    router.handle_request(_, ctx)
     |> wisp.mist_handler(secret_key_base)
     |> mist.new()
     |> mist.port(3000)

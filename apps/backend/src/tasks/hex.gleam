@@ -10,6 +10,7 @@ import backend/postgres/queries
 import birl.{type Time}
 import birl/duration
 import gleam/hexpm.{type Package}
+import gleam/int
 import gleam/list
 import gleam/option
 import gleam/order
@@ -149,10 +150,16 @@ fn insert_package_and_releases(
         supervisor.add(children, {
           use _ <- supervisor.worker()
           use iterations <- retrier.retry()
+          let it = int.to_string(iterations)
+          wisp.log_notice("Trying iteration " <> it <> " for " <> release)
           let infos = hex_repo.get_package_infos(package.name, r.version)
           use #(package, gleam_toml) <- result.try(infos)
           context.Context(state.db, package, gleam_toml, iterations == 0)
           |> signatures.extract_signatures()
+          |> result.map(fn(content) {
+            wisp.log_notice("Finished extracting " <> release <> "!")
+            content
+          })
         })
         Nil
       }

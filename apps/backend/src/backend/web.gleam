@@ -1,5 +1,6 @@
 import backend/config
 import backend/request
+import cors_builder as cors
 import gleam/http
 import wisp.{type Request, type Response}
 
@@ -20,4 +21,18 @@ pub fn reroute_non_json_request(req: Request, handler: Handler) -> Response {
     http.Get, False, False -> wisp.ok()
     _, _, _ -> handler(req)
   }
+}
+
+pub fn cors() {
+  let origin = case config.is_dev() {
+    True -> "http://localhost:5173"
+    False -> "https://api.gloogle.run"
+  }
+  cors.new()
+  |> cors.allow_origin(origin)
+  |> cors.allow_method(http.Get)
+  |> cors.allow_method(http.Post)
+  |> cors.allow_method(http.Put)
+  |> cors.allow_method(http.Patch)
+  |> cors.max_age(86_400)
 }

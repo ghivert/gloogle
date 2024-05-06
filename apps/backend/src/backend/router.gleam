@@ -2,6 +2,7 @@ import api/hex
 import backend/config.{type Config, type Context}
 import backend/postgres/postgres
 import backend/web
+import cors_builder as cors
 import gleam/http
 import gleam/io
 import gleam/result
@@ -37,6 +38,7 @@ pub fn handle_post(req: Request, ctx: Context) {
 }
 
 pub fn handle_request(req: Request, cnf: Config) -> Response {
+  use req <- cors.wisp_handle(req, web.cors())
   use req <- web.foundations(req)
   use req <- web.reroute_non_json_request(req)
   use ctx <- postgres.middleware(cnf)

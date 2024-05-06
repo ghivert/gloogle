@@ -38,7 +38,7 @@ fn init(
   work: fn(Int) -> Result(a, Error),
 ) -> actor.InitResult(State(a), Message) {
   let subject = process.new_subject()
-  let state = State(subject, work, interval, 10)
+  let state = State(subject, work, interval, 20)
   process.new_selector()
   |> process.selecting(subject, function.identity)
   |> actor.Ready(state, _)

@@ -23,3 +23,14 @@ pub fn get_secret_key_base() {
 pub fn is_dev() {
   os.get_env("GLEAM_ENV") == Ok("development")
 }
+
+pub fn bucket_uri() {
+  let assert Ok(content) = os.get_env("BUCKET_URI")
+  content
+}
+
+pub fn scaleway_keys() {
+  let assert Ok(access_key) = os.get_env("SCALEWAY_ACCESS_KEY")
+  let assert Ok(secret_key) = os.get_env("SCALEWAY_SECRET_KEY")
+  #(access_key, secret_key)
+}

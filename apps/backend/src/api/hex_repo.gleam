@@ -6,6 +6,7 @@ import gleam/httpc
 import gleam/json
 import gleam/package_interface
 import gleam/result
+import s3
 import simplifile
 import tom
 import wisp
@@ -40,6 +41,7 @@ fn read_archive(archives_path: String, name: String, version: String) {
   let slug = package_slug(name, version) <> ".tar"
   let filepath = archives_path <> "/" <> name <> "/" <> slug
   use content <- result.map(simplifile.read_bits(filepath))
+  let _ = put_s3(name, slug, content)
   wisp.log_debug("Using filesystem for " <> slug)
   content
 }
@@ -55,6 +57,21 @@ fn create_archive(
   let _ = simplifile.create_directory_all(package_path)
   let filepath = package_path <> "/" <> slug
   let _ = simplifile.write_bits(filepath, archive)
+  let _ = put_s3(name, slug, archive)
+  archive
+}
+
+fn read_s3(name: String, slug: String) {
+  let full_slug = name <> "/" <> slug
+  use archive <- result.map(s3.get(full_slug))
+  wisp.log_debug("Using S3 for " <> slug)
+  archive
+}
+
+fn put_s3(name: String, slug: String, archive: BitArray) {
+  let full_slug = name <> "/" <> slug
+  use _ <- result.map(s3.put(full_slug, archive))
+  wisp.log_debug("Put on S3 for " <> slug)
   archive
 }
 
@@ -62,6 +79,7 @@ fn get_tarball(name: String, version: String) {
   let slug = package_slug(name, version) <> ".tar"
   use archives_path <- result.try(create_archives_directory())
   use _ <- result.try_recover(read_archive(archives_path, name, version))
+  use _ <- result.try_recover(read_s3(name, slug))
   wisp.log_debug("Querying hex for " <> slug)
   request.new()
   |> request.set_host("repo.hex.pm")

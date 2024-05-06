@@ -17,6 +17,7 @@ pub type Error {
   UnknownError(String)
   ParseTomlError(tom.ParseError)
   GetTomlError(tom.GetError)
+  EmptyError
 }
 
 pub fn log_dynamic_error(error: dynamic.DecodeError) {
@@ -49,6 +50,7 @@ pub fn log_decode_error(error: json.DecodeError) {
 
 pub fn log_error(error: Error) {
   case error {
+    EmptyError -> Nil
     FetchError(_dyn) -> wisp.log_warning("Fetch error")
     DatabaseError(error) -> {
       wisp.log_warning("Query error")

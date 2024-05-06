@@ -8,10 +8,11 @@ import gleam/pair
 import gleam/pgo
 import gleam/result
 
-pub fn convert_time(time: Time) {
+pub fn convert_time(time: Time) -> pgo.Value {
   time
-  |> birl.to_iso8601()
-  |> pgo.text()
+  |> birl.to_erlang_universal_datetime()
+  |> dynamic.from()
+  |> dynamic.unsafe_coerce()
 }
 
 pub fn decode_time(data: Dynamic) {

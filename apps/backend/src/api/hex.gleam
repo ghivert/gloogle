@@ -24,6 +24,22 @@ pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
   |> result.map_error(error.JsonError)
 }
 
+pub fn get_package(package_name: String, secret hex_api_key: String) {
+  use response <- result.try(
+    request.new()
+    |> request.set_host("hex.pm")
+    |> request.set_path("/api/packages/" <> package_name)
+    |> request.prepend_header("authorization", hex_api_key)
+    |> request.prepend_header("user-agent", "gling / 0.0.0")
+    |> httpc.send()
+    |> result.map_error(error.FetchError),
+  )
+
+  response.body
+  |> json.decode(using: hexpm.decode_package)
+  |> result.map_error(error.JsonError)
+}
+
 fn decode_hex_owner(data) {
   dynamic.decode3(
     hexpm.PackageOwner,

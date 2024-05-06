@@ -1,7 +1,7 @@
 import api/hex as api
 import api/hex_repo
 import api/signatures
-import backend/config.{type Config}
+import backend/config.{type Config, type Context}
 import backend/data/hex_read.{type HexRead}
 import backend/error.{type Error}
 import backend/gleam/context
@@ -81,7 +81,7 @@ fn sync_packages(
   use state <- result.try(list.try_fold(
     new_packages,
     state,
-    sync_package(children),
+    do_sync_package(Some(children)),
   ))
   case list.length(all_packages) == list.length(new_packages) {
     _ if all_packages == [] -> Ok(state.newest)
@@ -90,7 +90,7 @@ fn sync_packages(
   }
 }
 
-fn sync_package(children: supervisor.Children(Nil)) {
+fn do_sync_package(children: Option(supervisor.Children(Nil))) {
   fn(state: State, package: hexpm.Package) -> Result(State, Error) {
     let secret = state.hex_api_key
     use releases <- result.try(lookup_gleam_releases(package, secret: secret))
@@ -107,6 +107,22 @@ fn sync_package(children: supervisor.Children(Nil)) {
       }
     }
   }
+}
+
+pub fn sync_package(ctx: Context, package: hexpm.Package) {
+  do_sync_package(None)(
+    State(
+      page: -1,
+      limit: birl.now(),
+      newest: birl.now(),
+      hex_api_key: ctx.hex_api_key,
+      last_logged: birl.now(),
+      db: ctx.db,
+    ),
+    package,
+  )
+  |> result.replace_error(error.EmptyError)
+  |> result.replace(Nil)
 }
 
 fn log_retirement_data(release: String, retirement: hexpm.ReleaseRetirement) {
@@ -177,7 +193,7 @@ fn insert_package_and_releases(
   package: hexpm.Package,
   releases: List(hexpm.Release),
   state: State,
-  children: supervisor.Children(Nil),
+  children: Option(supervisor.Children(Nil)),
 ) {
   let secret = state.hex_api_key
   let versions =
@@ -198,24 +214,52 @@ fn insert_package_and_releases(
     case r.retirement {
       option.Some(retirement) -> log_retirement_data(release, retirement)
       option.None -> {
-        supervisor.add(children, {
-          use _ <- supervisor.worker()
-          use iterations <- retrier.retry()
-          let it = int.to_string(iterations)
-          wisp.log_notice("Trying iteration " <> it <> " for " <> release)
-          use #(package, gleam_toml) <- result.try({
-            extract_release_interfaces(state, id, package, r, interfaces)
-          })
-          context.Context(state.db, package, gleam_toml, iterations == 0)
-          |> signatures.extract_signatures()
-          |> result.map(fn(content) {
-            wisp.log_notice("Finished extracting " <> release <> "!")
-            content
-          })
-        })
+        case children {
+          None -> {
+            let _ = do_extract_package(state, id, r, package, interfaces, False)
+            Nil
+          }
+          Some(children) -> {
+            supervisor.add(children, {
+              use _ <- supervisor.worker()
+              use iterations <- retrier.retry()
+              let it = int.to_string(iterations)
+              wisp.log_notice("Trying iteration " <> it <> " for " <> release)
+              do_extract_package(
+                state,
+                id,
+                r,
+                package,
+                interfaces,
+                iterations == 0,
+              )
+            })
+            Nil
+          }
+        }
         Nil
       }
     }
+  })
+}
+
+fn do_extract_package(
+  state: State,
+  id: Int,
+  release: hexpm.Release,
+  package: hexpm.Package,
+  interfaces: #(Option(String), Option(String)),
+  ignore_errors: Bool,
+) {
+  use #(package, gleam_toml) <- result.try({
+    extract_release_interfaces(state, id, package, release, interfaces)
+  })
+  context.Context(state.db, package, gleam_toml, ignore_errors)
+  |> signatures.extract_signatures()
+  |> result.map(fn(content) {
+    let release = package.name <> " v" <> release.version
+    wisp.log_notice("Finished extracting " <> release <> "!")
+    content
   })
 }
 

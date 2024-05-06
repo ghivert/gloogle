@@ -39,6 +39,7 @@ pub fn get_last_hex_date(db: pgo.Connection) {
 pub fn upsert_most_recent_hex_timestamp(db: pgo.Connection, latest: Time) {
   let timestamp = helpers.convert_time(latest)
   "INSERT INTO hex_read
+   OVERRIDING SYSTEM VALUE
    VALUES (1, $1)
    ON CONFLICT (id) DO UPDATE
      SET last_check = $1

@@ -11,7 +11,7 @@ pub fn connect(cnf: Config) {
   let assert Ok(config) = parse_database_url(cnf.database_url)
   config
   |> pgo.connect()
-  |> Context
+  |> fn(db) { Context(db: db, hex_api_key: cnf.hex_api_key) }
 }
 
 pub fn middleware(cnf: Config, handler: fn(Context) -> Response) {

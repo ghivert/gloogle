@@ -156,6 +156,30 @@ fn keep_matching_releases(rows: List(#(Int, String)), requirement: String) {
   |> Ok()
 }
 
+fn find_signature_from_release(
+  ctx: Context,
+  name: String,
+  module: String,
+  releases: List(Int),
+) {
+  use acc, release <- list.fold(releases, Error(Nil))
+  use <- bool.guard(when: result.is_ok(acc), return: acc)
+  let args = [pgo.text(name), pgo.text(module), pgo.int(release)]
+  use t <- result.try({
+    "SELECT signature.id
+     FROM package_type_fun_signature signature
+     JOIN package_module
+       ON signature.package_module_id = package_module.id
+     WHERE signature.name = $1
+       AND package_module.name = $2
+       AND package_module.package_release_id = $3"
+    |> pgo.execute(ctx.db, args, dynamic.element(0, dynamic.int))
+    |> result.nil_error()
+  })
+  list.first(t.rows)
+  |> result.nil_error()
+}
+
 fn find_type_signature(
   ctx: Context,
   name: String,
@@ -163,86 +187,50 @@ fn find_type_signature(
   module: String,
   releases: List(Int),
 ) -> Result(option.Option(Int), error.Error) {
-  case
-    list.fold(releases, option.None, fn(acc, release) {
-      use <- bool.guard(when: option.is_some(acc), return: acc)
-      case
-        "SELECT signature.id
-     FROM package_type_fun_signature signature
-     JOIN package_module
-       ON signature.package_module_id = package_module.id
-     WHERE signature.name = $1
-       AND package_module.name = $2
-       AND package_module.package_release_id = $3"
-        |> pgo.execute(
-          ctx.db,
-          [pgo.text(name), pgo.text(module), pgo.int(release)],
-          dynamic.element(0, dynamic.int),
-        )
-      {
-        Ok(value) ->
-          case list.first(value.rows) {
-            Ok(v) -> option.Some(v)
-            Error(_) -> option.None
-          }
-        Error(_) -> option.None
-      }
-    })
-  {
-    option.None -> {
+  case find_signature_from_release(ctx, name, module, releases) {
+    Ok(value) -> Ok(option.Some(value))
+    Error(_) -> {
       let slug = package <> "/" <> module
+      let package_name = ctx.package_interface.name
       case ctx.package_interface.name == package {
         // Not the same package, coming from an external package, should wait
         // for it to be extracted. It's impossible to get a type hidden by the
         // package, should it should work in the long run.
-        False ->
-          Error(error.UnknownError(
-            "Inside "
-            <> ctx.package_interface.name
-            <> ", needs to access "
-            <> slug
-            <> ". Not found.",
-          ))
+        False -> {
+          let content = package_name <> ", needs to access " <> slug
+          Error(error.UnknownError("Inside " <> content <> ". Not found."))
+        }
         True ->
           case dict.get(ctx.package_interface.modules, module) {
             // Module is hidden, everything is correct, type is hidden.
             Error(_) -> Ok(option.None)
             // Module is not hidden, checking if type is hidden by itself.
-            Ok(mod) ->
+            Ok(mod) -> {
+              let slug = slug <> "." <> name
               case dict.get(mod.type_aliases, name) {
                 // Type is not hidden, returning an error to restart the extraction.
-                Ok(_) ->
-                  Error(error.UnknownError(
-                    "Inside type aliases "
-                    <> ctx.package_interface.name
-                    <> ", looking for "
-                    <> slug
-                    <> "."
-                    <> name
-                    <> ". Not found.",
-                  ))
+                Ok(_) -> {
+                  let id = package_name <> ", looking for " <> slug
+                  let msg = "Inside type aliases " <> id <> ". Not found."
+                  Error(error.UnknownError(msg))
+                }
                 // Type is hidden, should check if type defed.
                 Error(_) ->
                   case dict.get(mod.types, name) {
-                    // Type is not hidden, returning an error to restart the extraction.
-                    Ok(_) ->
-                      Error(error.UnknownError(
-                        "Inside types "
-                        <> ctx.package_interface.name
-                        <> ", looking for "
-                        <> slug
-                        <> "."
-                        <> name
-                        <> ". Not found.",
-                      ))
                     // Type is hidden, returning None because it can't be extracted.
                     Error(_) -> Ok(option.None)
+                    // Type is not hidden, returning an error to restart the extraction.
+                    Ok(_) -> {
+                      let id = package_name <> ", looking for " <> slug
+                      let msg = "Inside types " <> id <> ". Not found."
+                      Error(error.UnknownError(msg))
+                    }
                   }
               }
+            }
           }
       }
     }
-    option.Some(value) -> Ok(option.Some(value))
   }
 }
 

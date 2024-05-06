@@ -1,7 +1,6 @@
 import data/model.{type Model}
 import data/msg.{type Msg}
 import frontend/view
-import gleam/io
 import lustre
 import lustre/effect
 import lustre/update

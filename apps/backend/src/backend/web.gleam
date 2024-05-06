@@ -15,11 +15,10 @@ pub fn foundations(req: Request, handler: Handler) -> Response {
 }
 
 pub fn reroute_non_json_request(req: Request, handler: Handler) -> Response {
-  case req.method, request.is_json_request(req), config.is_dev() {
-    http.Get, True, _ -> handler(req)
-    http.Get, False, True -> wisp.redirect("http://localhost:5173")
-    http.Get, False, False -> wisp.ok()
-    _, _, _ -> handler(req)
+  case req.method, request.is_json_request(req) {
+    http.Get, True -> handler(req)
+    http.Get, False -> wisp.ok()
+    _, _ -> handler(req)
   }
 }
 

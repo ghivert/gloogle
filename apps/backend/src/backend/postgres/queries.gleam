@@ -184,14 +184,50 @@ pub fn upsert_release(
   db: pgo.Connection,
   package_id: Int,
   release: hexpm.Release,
+  package_interface: Option(String),
+  gleam_toml: Option(String),
 ) {
   let package_id = pgo.int(package_id)
   let version = pgo.text(release.version)
   let url = pgo.text(release.url)
-  "INSERT INTO package_release (package_id, version, url)
-   VALUES ($1, $2, $3)
-   ON CONFLICT (package_id, version) DO NOTHING"
-  |> pgo.execute(db, [package_id, version, url], dynamic.dynamic)
+  let package_interface = pgo.nullable(pgo.text, package_interface)
+  let gleam_toml = pgo.nullable(pgo.text, gleam_toml)
+  let args = [package_id, version, url, package_interface, gleam_toml]
+  "INSERT INTO package_release (
+    package_id,
+    version,
+    url,
+    package_interface,
+    gleam_toml
+  ) VALUES ($1, $2, $3, $4, $5)
+   ON CONFLICT (package_id, version) DO UPDATE
+     SET
+       url = $3,
+       package_interface = $4,
+       gleam_toml = $5"
+  |> pgo.execute(db, args, dynamic.dynamic)
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn lookup_release(
+  db: pgo.Connection,
+  package_id: Int,
+  release: hexpm.Release,
+) {
+  let package_id = pgo.int(package_id)
+  let version = pgo.text(release.version)
+  let args = [package_id, version]
+  "SELECT package_interface, gleam_toml
+   FROM package_release
+   WHERE package_id = $1 AND version = $2"
+  |> pgo.execute(
+    db,
+    args,
+    dynamic.tuple2(
+      dynamic.optional(dynamic.string),
+      dynamic.optional(dynamic.string),
+    ),
+  )
   |> result.map_error(error.DatabaseError)
 }
 

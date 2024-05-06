@@ -109,7 +109,7 @@ fn extract_package_infos(name: String, version: String) {
   let slug = package_slug(name, version)
   let req = get_tarball(name, version)
   use body <- result.try(req)
-  use #(interface, toml, res) <- result.try({
+  use #(interface_s, toml_s, res) <- result.try({
     body
     |> extract_tar(name, slug)
     |> result.map_error(fn(_) {
@@ -118,10 +118,15 @@ fn extract_package_infos(name: String, version: String) {
       error.UnknownError(content)
     })
   })
-  use interface_blob <- result.try(read_interface(interface, res))
-  use toml_blob <- result.try(read_toml_file(toml))
-  use interface <- result.try(read_package_interface(interface_blob))
-  use toml <- result.map(parse_toml(toml_blob))
+  use interface_blob <- result.try(read_interface(interface_s, res))
+  use toml_blob <- result.try(read_toml_file(toml_s))
+  use #(i, t) <- result.map(parse_files(interface_blob, toml_blob))
+  #(i, t, interface_blob, toml_blob)
+}
+
+pub fn parse_files(interface: String, toml: String) {
+  use interface <- result.try(read_package_interface(interface))
+  use toml <- result.map(parse_toml(toml))
   #(interface, toml)
 }
 

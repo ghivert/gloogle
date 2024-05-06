@@ -12,7 +12,7 @@ import birl/duration
 import gleam/hexpm.{type Package}
 import gleam/int
 import gleam/list
-import gleam/option
+import gleam/option.{type Option, None, Some}
 import gleam/order
 import gleam/otp/supervisor
 import gleam/pgo
@@ -124,6 +124,55 @@ fn log_retirement_data(release: String, retirement: hexpm.ReleaseRetirement) {
   }
 }
 
+fn extract_release_interfaces_from_db(
+  state: State,
+  id: Int,
+  release: hexpm.Release,
+) {
+  use _ <- result.try_recover({
+    use res <- result.try(queries.lookup_release(state.db, id, release))
+    res.rows
+    |> list.first()
+    |> result.replace_error(error.UnknownError(""))
+  })
+  queries.upsert_release(state.db, id, release, None, None)
+  |> result.replace(#(None, None))
+}
+
+fn extract_release_interfaces_from_hex(
+  state: State,
+  id: Int,
+  package: hexpm.Package,
+  release: hexpm.Release,
+) {
+  use data <- result.map({
+    hex_repo.get_package_infos(package.name, release.version)
+  })
+  let interface = Some(data.2)
+  let toml = Some(data.3)
+  let _ = queries.upsert_release(state.db, id, release, interface, toml)
+  #(data.0, data.1)
+}
+
+fn extract_release_interfaces(
+  state: State,
+  id: Int,
+  package: hexpm.Package,
+  release: hexpm.Release,
+  interfaces: #(Option(String), Option(String)),
+) {
+  use _ <- result.try_recover(case interfaces {
+    #(Some(interface), Some(toml)) ->
+      hex_repo.parse_files(interface, toml)
+      |> result.map(fn(content) {
+        wisp.log_debug("Using interfaces from database")
+        content
+      })
+    _ -> Error(error.UnknownError("No release data"))
+  })
+  extract_release_interfaces_from_hex(state, id, package, release)
+}
+
 fn insert_package_and_releases(
   package: hexpm.Package,
   releases: List(hexpm.Release),
@@ -143,7 +192,9 @@ fn insert_package_and_releases(
   wisp.log_debug("Saving releases for " <> package.name)
   list.try_each(releases, fn(r) {
     let release = package.name <> " v" <> r.version
-    use _ <- result.map(queries.upsert_release(state.db, id, r))
+    use interfaces <- result.map({
+      extract_release_interfaces_from_db(state, id, r)
+    })
     case r.retirement {
       option.Some(retirement) -> log_retirement_data(release, retirement)
       option.None -> {
@@ -152,8 +203,9 @@ fn insert_package_and_releases(
           use iterations <- retrier.retry()
           let it = int.to_string(iterations)
           wisp.log_notice("Trying iteration " <> it <> " for " <> release)
-          let infos = hex_repo.get_package_infos(package.name, r.version)
-          use #(package, gleam_toml) <- result.try(infos)
+          use #(package, gleam_toml) <- result.try({
+            extract_release_interfaces(state, id, package, r, interfaces)
+          })
           context.Context(state.db, package, gleam_toml, iterations == 0)
           |> signatures.extract_signatures()
           |> result.map(fn(content) {

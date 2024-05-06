@@ -188,7 +188,9 @@ CREATE TABLE public.package_release (
     url text NOT NULL,
     gleam_constraint text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    package_interface text,
+    gleam_toml text
 );
 
 
@@ -453,4 +455,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240412154430'),
     ('20240412155056'),
     ('20240412155057'),
-    ('20240413164020');
+    ('20240413164020'),
+    ('20240506110519');

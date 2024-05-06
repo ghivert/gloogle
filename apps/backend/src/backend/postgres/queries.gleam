@@ -376,3 +376,51 @@ pub fn upsert_package_type_fun_signature(
   |> result.map_error(error.DatabaseError)
   |> result.replace(Nil)
 }
+
+pub fn search(db: pgo.Connection, q: String) {
+  let query = pgo.text("'" <> q <> "'")
+  "SELECT
+     s.name,
+     s.documentation,
+     s.nature,
+     s.metadata,
+     s.json_signature,
+     m.name,
+     p.name,
+     r.version
+   FROM package_type_fun_signature s
+   JOIN package_module m
+     ON m.id = s.package_module_id
+   JOIN package_release r
+     ON r.id = m.package_release_id
+   JOIN package p
+     ON p.id = r.package_id
+   WHERE to_tsvector(s.signature_) @@ to_tsquery($1)
+   LIMIT 100"
+  |> pgo.execute(
+    db,
+    [query],
+    dynamic.decode7(
+      fn(a, b, c, d, e, f, g) {
+        json.object([
+          #("name", json.string(a)),
+          #("documentation", json.string(b)),
+          #("nature", json.string(c)),
+          #("metadata", dynamic.unsafe_coerce(d)),
+          #("json_signature", dynamic.unsafe_coerce(e)),
+          #("module_name", json.string(f)),
+          #("package_name", json.string(g)),
+        ])
+      },
+      dynamic.element(0, dynamic.string),
+      dynamic.element(1, dynamic.string),
+      dynamic.element(2, dynamic.string),
+      dynamic.element(3, dynamic.dynamic),
+      dynamic.element(4, dynamic.dynamic),
+      dynamic.element(5, dynamic.string),
+      dynamic.element(6, dynamic.string),
+    ),
+  )
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}

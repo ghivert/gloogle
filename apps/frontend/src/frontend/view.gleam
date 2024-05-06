@@ -2,14 +2,7 @@ import data/model.{type Model}
 import data/msg
 import frontend/footer/view as footer
 import frontend/styles as s
-import gleam/dict
-import gleam/dynamic
-import gleam/io
-import gleam/json
-import gleam/list
-import gleam/result
 import lustre/attribute as a
-import lustre/element
 import lustre/element/html as h
 import lustre/event as e
 

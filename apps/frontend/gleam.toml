@@ -11,11 +11,11 @@ typescript_declarations = true
 [dependencies]
 gleam_javascript = "~> 0.8"
 gleam_stdlib = "~> 0.34 or ~> 1.0"
-lustre = {path = "../../../lustre"}
 lustre_http = "~> 0.5"
-plinth = {path = "../../../plinth"}
-sketch = {path = "../../../sketch"}
-tardis = {path = "../../packages/tardis"}
+plinth = ">= 0.2.0 and < 1.0.0"
+sketch = ">= 2.2.0 and < 3.0.0"
+tardis = ">= 0.1.0 and < 1.0.0"
+lustre = ">= 4.2.0 and < 5.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

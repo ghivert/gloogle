@@ -1,24 +1,27 @@
 import data/model.{type Model}
 import data/msg.{type Msg}
+import frontend/view
+import gleam/io
 import lustre
 import lustre/effect
-import lustre/element/html as h
 import lustre/update
 import sketch/lustre as sketch
 import sketch/options as sketch_options
 import tardis
 
 pub fn main() {
-  let assert Ok(debugger_) = tardis.singleton("gling")
+  let init = fn(_) { #(model.init(), effect.none()) }
+
+  let assert Ok(debugger_) = tardis.single("gling")
 
   let assert Ok(cache) =
-    sketch_options.document()
+    sketch_options.node()
     |> sketch.setup()
 
   let assert Ok(_) =
-    fn(_) { #(model.init(), effect.none()) }
-    |> lustre.application(update, view)
-    |> sketch.wrap(cache)
+    view.view
+    |> sketch.compose(cache)
+    |> lustre.application(init, update, _)
     |> tardis.wrap(debugger_)
     |> lustre.start("#app", Nil)
     |> tardis.activate(debugger_)
@@ -26,10 +29,11 @@ pub fn main() {
 
 fn update(model: Model, msg: Msg) {
   case msg {
+    msg.UpdateInput(content) ->
+      model
+      |> model.update_input(content)
+      |> update.none()
+    msg.SubmitSearch -> update.none(model)
     msg.None -> update.none(model)
   }
-}
-
-fn view(_model: Model) {
-  h.div([], [])
 }

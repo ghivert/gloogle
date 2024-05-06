@@ -1,7 +1,11 @@
 pub type Model {
-  Model
+  Model(input: String)
 }
 
 pub fn init() {
-  Model
+  Model(input: "")
+}
+
+pub fn update_input(model: Model, content: String) {
+  Model(..model, input: content)
 }

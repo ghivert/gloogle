@@ -2,7 +2,7 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: Lexend, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
 :root {
@@ -16,7 +16,7 @@ body {
   --green: #01FF70;
   --purple: #8C3A96;
   --white: white;
---orange: #FF851B;
+  --orange: #FF851B;
   --link: #0074D9;
   --disabled: #ddd;
   --text-disabled: #333;
@@ -36,15 +36,21 @@ body {
   }
 }
 
-@keyframes progress_bar {
-  from { width: 100%; }
-  to { width: 0%; }
-}
-
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
 }
 
 * {
   box-sizing: border-box;
+}
+
+@font-face {
+  font-family: Lexend;
+  src: url("/Lexend-VariableFont_wght.ttf") format("woff2-variations");
+  font-weight: 100 1000;
+  font-stretch: 25% 151%;
+}
+
+a {
+  color: var(--a-color);
 }

@@ -106,11 +106,11 @@ fn type_to_json(ctx: Context, type_: Type) {
       use ref <- result.map(res)
       let new_ids = case ref {
         option.None -> gen.1
-        option.Some(ref) -> set.insert(gen.1, ref)
+        option.Some(ref) -> set.insert(gen.1, ref.1)
       }
       json.object([
         #("type", json.string("named")),
-        #("ref", json.nullable(ref, json.int)),
+        #("ref", json.nullable(option.map(ref, fn(r) { r.0 }), json.string)),
         #("name", json.string(name)),
         #("package", json.string(package)),
         #("module", json.string(module)),
@@ -166,14 +166,16 @@ fn find_signature_from_release(
   use <- bool.guard(when: result.is_ok(acc), return: acc)
   let args = [pgo.text(name), pgo.text(module), pgo.int(release)]
   use t <- result.try({
-    "SELECT signature.id
-     FROM package_type_fun_signature signature
-     JOIN package_module
-       ON signature.package_module_id = package_module.id
+    "SELECT release.version, signature.id
+     FROM package_release release
+     JOIN package_module module
+       ON module.package_release_id = release.id
+     JOIN package_type_fun_signature signature
+       ON signature.package_module_id = module.id
      WHERE signature.name = $1
-       AND package_module.name = $2
-       AND package_module.package_release_id = $3"
-    |> pgo.execute(ctx.db, args, dynamic.element(0, dynamic.int))
+       AND module.name = $2
+       AND module.package_release_id = $3"
+    |> pgo.execute(ctx.db, args, dynamic.tuple2(dynamic.string, dynamic.int))
     |> result.nil_error()
   })
   list.first(t.rows)
@@ -186,7 +188,7 @@ fn find_type_signature(
   package: String,
   module: String,
   releases: List(Int),
-) -> Result(option.Option(Int), error.Error) {
+) -> Result(option.Option(#(String, Int)), error.Error) {
   case find_signature_from_release(ctx, name, module, releases) {
     Ok(value) -> Ok(option.Some(value))
     Error(_) -> {
@@ -239,7 +241,7 @@ fn extract_parameters_relation(
   name: String,
   package: String,
   module: String,
-) -> Result(option.Option(Int), error.Error) {
+) -> Result(option.Option(#(String, Int)), error.Error) {
   use <- bool.guard(when: is_prelude(package, module), return: Ok(option.None))
   use requirement <- result.try(toml.find_package_requirement(ctx, package))
   use releases <- result.try(find_package_release(ctx, package, requirement))

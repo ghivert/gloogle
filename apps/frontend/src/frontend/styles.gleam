@@ -254,7 +254,12 @@ pub fn search_result() {
 }
 
 pub fn search_details() {
-  s.class([s.background(palette.dark.unexpected_aubergine)])
+  s.class([
+    s.background(palette.dark.unexpected_aubergine),
+    s.display("flex"),
+    s.gap(px(12)),
+    s.justify_content("space-between"),
+  ])
   |> s.memo()
   |> s.to_lustre()
 }

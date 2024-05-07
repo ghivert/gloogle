@@ -1,3 +1,4 @@
+import data/decoders/nature
 import data/decoders/search_result
 import data/decoders/signature.{type Parameter, type Type, Parameter}
 import data/model.{type Model}
@@ -289,7 +290,16 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
   element.fragment({
     use item <- list.map(search_results)
     h.div([s.search_result()], [
-      h.div([s.search_details()], [h.text("Function")]),
+      h.div([s.search_details()], [
+        h.div([], [h.text(nature.display_nature(item.nature))]),
+        h.div([], [
+          t.dark_white(item.package_name <> "@" <> item.version),
+          t.dark_white("."),
+          t.keyword(item.module_name),
+          t.dark_white("#"),
+          t.fun(item.name),
+        ]),
+      ]),
       h.div([s.search_body()], [
         h.code([s.signature()], view_signature(item)),
         case item.documentation == "" {

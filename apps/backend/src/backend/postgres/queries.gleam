@@ -400,8 +400,8 @@ pub fn search(db: pgo.Connection, q: String) {
   |> pgo.execute(
     db,
     [query],
-    dynamic.decode7(
-      fn(a, b, c, d, e, f, g) {
+    dynamic.decode8(
+      fn(a, b, c, d, e, f, g, h) {
         json.object([
           #("name", json.string(a)),
           #("documentation", json.string(b)),
@@ -410,6 +410,7 @@ pub fn search(db: pgo.Connection, q: String) {
           #("json_signature", dynamic.unsafe_coerce(e)),
           #("module_name", json.string(f)),
           #("package_name", json.string(g)),
+          #("version", json.string(h)),
         ])
       },
       dynamic.element(0, dynamic.string),
@@ -419,6 +420,7 @@ pub fn search(db: pgo.Connection, q: String) {
       dynamic.element(4, dynamic.dynamic),
       dynamic.element(5, dynamic.string),
       dynamic.element(6, dynamic.string),
+      dynamic.element(7, dynamic.string),
     ),
   )
   |> result.map_error(error.DatabaseError)

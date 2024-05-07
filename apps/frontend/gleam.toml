@@ -18,6 +18,7 @@ plinth = ">= 0.2.0 and < 1.0.0"
 sketch = ">= 2.2.0 and < 3.0.0"
 tardis = ">= 0.1.0 and < 1.0.0"
 gleam_json = ">= 1.0.1 and < 2.0.0"
+jot = ">= 0.5.0 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

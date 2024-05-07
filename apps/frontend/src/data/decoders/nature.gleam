@@ -18,3 +18,12 @@ pub fn decode_nature(dyn) {
     _ -> Error([dynamic.DecodeError("", "", [])])
   }
 }
+
+pub fn display_nature(nature) {
+  case nature {
+    Function -> "Function"
+    TypeDefinition -> "Type"
+    TypeAlias -> "Type Alias"
+    Constant -> "Constant"
+  }
+}

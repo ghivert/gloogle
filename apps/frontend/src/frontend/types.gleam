@@ -1,3 +1,4 @@
+import frontend/colors/palette
 import gleam/list
 import lustre/element/html as h
 import sketch as s
@@ -36,6 +37,14 @@ pub fn type_(text: String) {
 
 pub fn variable(text: String) {
   s.class([s.color("#98c379")])
+  |> s.memo()
+  |> s.to_lustre()
+  |> list.prepend([], _)
+  |> h.span([h.text(text)])
+}
+
+pub fn dark_white(text: String) {
+  s.class([s.color(palette.dark.dark_white)])
   |> s.memo()
   |> s.to_lustre()
   |> list.prepend([], _)

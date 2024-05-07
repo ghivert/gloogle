@@ -42,11 +42,12 @@ pub type SearchResult {
     package_name: String,
     json_signature: Signature,
     metadata: Metadata,
+    version: String,
   )
 }
 
 pub fn decode_search_result(dyn) {
-  dynamic.decode7(
+  dynamic.decode8(
     SearchResult,
     dynamic.field("documentation", dynamic.string),
     dynamic.field("module_name", dynamic.string),
@@ -55,6 +56,7 @@ pub fn decode_search_result(dyn) {
     dynamic.field("package_name", dynamic.string),
     dynamic.field("json_signature", signature.decode_signature),
     dynamic.field("metadata", decode_metadata),
+    dynamic.field("version", dynamic.string),
   )(dyn)
 }
 

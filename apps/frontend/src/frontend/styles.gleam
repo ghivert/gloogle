@@ -132,7 +132,6 @@ pub fn search_title_() {
 
 pub fn search_title() {
   s.class([s.compose(search_title_()), s.font_size(size.rem_(2.5))])
-  search_title_()
   |> s.memo()
   |> s.to_lustre()
 }

@@ -67,7 +67,7 @@ fn parameters_to_json(ctx: Context, parameter: Parameter) {
   json.object([
     #("type", json.string("parameter")),
     #("label", json.nullable(parameter.label, json.string)),
-    #("type", type_),
+    #("params_type", type_),
   ])
 }
 

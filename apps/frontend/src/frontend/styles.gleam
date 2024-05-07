@@ -64,8 +64,6 @@ pub fn search_wrapper() {
        \".     .     submit\"",
     ),
     s.padding(px(48)),
-    s.width(size.percent(100)),
-    s.max_width(px(700)),
     s.gap(px(24)),
   ])
   |> s.memo()
@@ -77,8 +75,11 @@ pub fn main_wrapper() {
     s.grid_area("main"),
     s.display("flex"),
     s.flex_direction("column"),
-    s.align_items("center"),
     s.justify_content("center"),
+    s.max_width(px(700)),
+    s.width(size.percent(100)),
+    s.margin_("auto"),
+    s.gap(px(24)),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -229,8 +230,58 @@ pub fn flex() {
   |> s.to_lustre()
 }
 
+pub fn search_body() {
+  s.class([
+    s.background(palette.dark.black),
+    s.border_radius(px(12)),
+    s.margin(px(-12)),
+    s.margin_top(px(12)),
+    s.padding(px(12)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn search_result() {
+  s.class([
+    s.background(palette.dark.unexpected_aubergine),
+    s.border_radius(px(14)),
+    s.overflow("hidden"),
+    s.padding(px(12)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn search_details() {
+  s.class([s.background(palette.dark.unexpected_aubergine)])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
 pub fn signature() {
-  s.class([s.display("flex"), s.white_space("pre-wrap")])
+  s.class([s.white_space("pre-wrap"), s.display("block"), s.line_height("1.6")])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn documentation() {
+  s.class([
+    s.background(palette.dark.charcoal),
+    s.padding(px(12)),
+    s.border_radius(px(10)),
+    s.margin(px(-12)),
+    s.margin_top(px(12)),
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(6)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn documentation_title() {
+  s.class([s.color(palette.dark.dark_white)])
   |> s.memo()
   |> s.to_lustre()
 }

@@ -1,5 +1,6 @@
 import gleam/dynamic
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{Some}
@@ -36,7 +37,7 @@ pub fn describe_json_error(error: json.DecodeError) {
 }
 
 pub fn describe_http_error(error: http.HttpError) {
-  case error {
+  case io.debug(error) {
     http.BadUrl(url) -> Some("Bad URL: " <> url)
     http.InternalServerError(error) ->
       Some({ "Internal server error. Please try again later. " <> error })

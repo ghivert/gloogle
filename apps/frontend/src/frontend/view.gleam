@@ -3,12 +3,12 @@ import data/decoders/search_result
 import data/decoders/signature.{type Parameter, type Type, Parameter}
 import data/model.{type Model}
 import data/msg
+import frontend/documentation
 import frontend/footer/view as footer
 import frontend/styles as s
 import frontend/types as t
 import gleam/bool
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
@@ -28,15 +28,35 @@ pub fn idt(indent: Int) {
 pub const gloogle_description = "Gloogle can search through all public gleam packages, to help you find the function you're looking for! Enter a type or a function name to get some results."
 
 pub fn view(model: Model) {
-  h.div([s.layout()], [navbar(), body(model), footer.view()])
+  h.div([s.layout()], [navbar(model), body(model), footer.view()])
 }
 
-fn navbar() {
+fn navbar(model: Model) {
   h.div([s.navbar()], [
-    h.div([], [h.text("Packages")]),
-    h.div([s.trending()], [
-      h.text("Trending"),
-      h.span([s.coming_soon()], [h.text(" (coming soon…)")]),
+    case model.search_results {
+      [] -> h.div([], [])
+      _ ->
+        h.div([s.navbar_search()], [
+          h.a([s.navbar_search_title(), e.on_click(msg.Reset)], [
+            h.img([a.src("/images/lucy.svg"), s.search_lucy()]),
+            h.text("Gloogle"),
+          ]),
+          h.form([s.search_input_wrapper(), e.on_submit(msg.SubmitSearch)], [
+            h.input([
+              s.search_input(),
+              a.placeholder("Search for a function, or a type"),
+              e.on_input(msg.UpdateInput),
+              a.value(model.input),
+            ]),
+          ]),
+        ])
+    },
+    h.div([s.nav_links()], [
+      h.div([], [h.text("Packages")]),
+      h.div([s.trending()], [
+        h.text("Trending"),
+        h.span([s.coming_soon()], [h.text(" (coming soon…)")]),
+      ]),
     ]),
   ])
 }
@@ -302,13 +322,13 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
       ]),
       h.div([s.search_body()], [
         h.code([s.signature()], view_signature(item)),
-        case item.documentation == "" {
-          False ->
+        case item.documentation {
+          "" -> element.none()
+          _ ->
             h.div([s.documentation()], [
               h.div([s.documentation_title()], [h.text("Documentation")]),
-              h.text(item.documentation),
+              documentation.view(item.documentation),
             ])
-          True -> element.none()
         },
       ]),
     ])

@@ -18,3 +18,7 @@ pub fn update_input(model: Model, content: String) {
 pub fn update_search_results(model: Model, search_results: List(SearchResult)) {
   Model(..model, search_results: search_results)
 }
+
+pub fn reset(_model: Model) {
+  Model(search_results: [], input: "")
+}

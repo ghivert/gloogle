@@ -66,6 +66,10 @@ fn update(model: Model, msg: Msg) {
       |> http.get("http://localhost:3000/search?q=" <> model.input, _)
       |> pair.new(model, _)
     }
+    msg.Reset ->
+      model
+      |> model.reset()
+      |> update.none()
     msg.SearchResults(search_results) -> {
       let toast =
         search_results

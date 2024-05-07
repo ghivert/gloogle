@@ -1,5 +1,6 @@
 import gleam/dynamic
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{type Option}
 import gleam/result
@@ -172,7 +173,7 @@ fn decode_type_alias(dyn) {
       TypeAlias(width, a, b)
     },
     dynamic.field("parameters", dynamic.int),
-    dynamic.field("type", decode_type),
+    dynamic.field("alias", decode_type),
   )(dyn)
 }
 

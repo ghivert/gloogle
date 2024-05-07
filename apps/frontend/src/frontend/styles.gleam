@@ -25,11 +25,34 @@ pub fn navbar() {
     s.position("sticky"),
     s.top(px(0)),
     s.display("flex"),
-    s.align_items("baseline"),
-    s.justify_content("end"),
+    s.align_items("center"),
+    s.justify_content("space-between"),
     s.grid_area("navbar"),
-    s.padding(px(48)),
+    s.padding_left(px(48)),
     s.gap(px(48)),
+    s.background(palette.dark.underwater_blue),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn nav_links() {
+  s.class([
+    s.display("flex"),
+    s.align_items("baseline"),
+    s.gap(px(48)),
+    s.padding(px(48)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn navbar_search() {
+  s.class([
+    s.display("flex"),
+    s.gap(px(48)),
+    s.align_items("center"),
+    s.flex("1"),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -48,6 +71,7 @@ pub fn trending() {
     s.gap(px(3)),
     s.align_items("end"),
     s.color(palette.dark.dark_white),
+    s.white_space("nowrap"),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -85,15 +109,30 @@ pub fn main_wrapper() {
   |> s.to_lustre()
 }
 
-pub fn search_title() {
+pub fn navbar_search_title() {
+  s.class([
+    s.font_size(size.rem_(1.2)),
+    s.compose(search_title_()),
+    s.text_decoration("none"),
+    s.cursor("pointer"),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn search_title_() {
   s.class([
     s.font_family("Lexend"),
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(12)),
-    s.font_size(size.rem_(2.5)),
     s.color(palette.dark.white),
   ])
+}
+
+pub fn search_title() {
+  s.class([s.compose(search_title_()), s.font_size(size.rem_(2.5))])
+  search_title_()
   |> s.memo()
   |> s.to_lustre()
 }
@@ -125,7 +164,14 @@ pub fn search_input() {
     s.color(palette.dark.charcoal),
     s.active([s.outline("2px solid " <> palette.dark.faff_pink)]),
     s.focus([s.outline("2px solid " <> palette.dark.faff_pink)]),
+    s.width(size.percent(100)),
   ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn search_input_wrapper() {
+  s.class([s.width_("100%")])
   |> s.memo()
   |> s.to_lustre()
 }

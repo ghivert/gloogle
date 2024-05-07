@@ -6,4 +6,5 @@ pub type Msg {
   SubmitSearch
   SearchResults(Result(List(SearchResult), http.HttpError))
   UpdateInput(String)
+  Reset
 }

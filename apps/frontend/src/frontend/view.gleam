@@ -4,6 +4,7 @@ import data/model.{type Model}
 import data/msg
 import frontend/footer/view as footer
 import frontend/styles as s
+import frontend/types as t
 import gleam/bool
 import gleam/int
 import gleam/io
@@ -65,7 +66,7 @@ fn view_type(type_: Type, indent: Int) -> List(element.Element(msg.Msg)) {
     signature.Fn(width, parameters, return) -> {
       let inline = width + indent <= 80
       list.concat([
-        [idt(indent), h.text("fn"), h.text("(")],
+        [idt(indent), t.keyword("fn"), h.text("(")],
         case inline {
           True ->
             list.map(parameters, view_type(_, 0))
@@ -94,7 +95,6 @@ fn view_type(type_: Type, indent: Int) -> List(element.Element(msg.Msg)) {
       ])
     }
     signature.Variable(_, id) -> {
-      io.debug(id)
       [
         h.span([], {
           let assert Ok(utf_a) =
@@ -103,7 +103,7 @@ fn view_type(type_: Type, indent: Int) -> List(element.Element(msg.Msg)) {
           let assert Ok(letter) =
             { string.utf_codepoint_to_int(utf_a) + id - 1 }
             |> string.utf_codepoint()
-          [idt(indent), h.text(string.from_utf_codepoints([letter]))]
+          [idt(indent), t.variable(string.from_utf_codepoints([letter]))]
         }),
       ]
     }
@@ -113,7 +113,7 @@ fn view_type(type_: Type, indent: Int) -> List(element.Element(msg.Msg)) {
       list.concat([
         [
           idt(indent),
-          h.text(name),
+          t.type_(name),
           case is_params {
             True -> h.text("(")
             False -> element.none()
@@ -150,7 +150,7 @@ fn view_parameter(parameter: Parameter, indent: Int) {
   list.concat([
     case label {
       None -> [element.none()]
-      Some(label) -> [idt(indent), h.text(label), h.text(": ")]
+      Some(label) -> [idt(indent), t.label(label), h.text(": ")]
     },
     case width > 80, label {
       False, _ -> view_type(type_, 0)
@@ -160,7 +160,7 @@ fn view_parameter(parameter: Parameter, indent: Int) {
   ])
 }
 
-fn do_render_parameters(from: Int, to: Int, acc: List(String)) {
+fn do_render_parameters(from: Int, to: Int, acc: List(element.Element(a))) {
   use <- bool.guard(when: from == to, return: acc)
   let assert Ok(utf_a) =
     string.to_utf_codepoints("a")
@@ -169,26 +169,26 @@ fn do_render_parameters(from: Int, to: Int, acc: List(String)) {
     { string.utf_codepoint_to_int(utf_a) + from }
     |> string.utf_codepoint()
   do_render_parameters(from + 1, to, [
-    string.from_utf_codepoints([letter]),
+    t.variable(string.from_utf_codepoints([letter])),
     ..acc
   ])
 }
 
 fn render_parameters(count: Int) {
   case count {
-    0 -> h.text("")
+    0 -> []
     count ->
       do_render_parameters(0, int.max(count - 1, 0), [])
       |> list.reverse()
-      |> string.join(", ")
-      |> fn(t) { h.text("(" <> t <> ")") }
+      |> list.intersperse(h.text(", "))
+      |> fn(t) { list.concat([[h.text("(")], t, [h.text(")")]]) }
   }
 }
 
 fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
   let inline = constructor.params_width <= 70
   list.concat([
-    [idt(indent), h.text(constructor.name), h.text("(")],
+    [idt(indent), t.type_(constructor.name), h.text("(")],
     case inline {
       False ->
         list.concat([
@@ -216,7 +216,7 @@ fn view_signature(
   case item.json_signature {
     signature.TypeDefinition(parameters, constructors) ->
       list.concat([
-        [h.text("type "), h.text(item.name), render_parameters(parameters)],
+        [t.keyword("type "), t.fun(item.name), ..render_parameters(parameters)],
         case constructors {
           [] -> []
           _ -> [h.text(" {"), newline()]
@@ -236,7 +236,7 @@ fn view_signature(
       ])
     signature.Constant(width, type_) ->
       list.concat([
-        [h.text("const "), h.text(item.name), h.text(" = ")],
+        [t.keyword("const "), t.fun(item.name), h.text(" = ")],
         case width > 80 {
           True -> [newline(), ..view_type(type_, 2)]
           False -> view_type(type_, 0)
@@ -245,11 +245,11 @@ fn view_signature(
     signature.TypeAlias(width, parameters, alias) -> {
       list.concat([
         [
-          h.text("type "),
-          h.text(item.name),
-          render_parameters(parameters),
-          h.text(" = "),
+          t.keyword("type "),
+          t.type_(item.name),
+          ..render_parameters(parameters)
         ],
+        [h.text(" = ")],
         case width > 80 {
           True -> [newline(), ..view_type(alias, 2)]
           False -> view_type(alias, 0)
@@ -258,7 +258,7 @@ fn view_signature(
     }
     signature.Function(_width, params_width, name, return, parameters) -> {
       list.concat([
-        [h.text("fn "), h.text(name), h.text("(")],
+        [t.keyword("fn "), t.fun(name), h.text("(")],
         case params_width > 70 {
           True ->
             list.concat([

@@ -230,6 +230,11 @@ pub fn lookup_release(
     ),
   )
   |> result.map_error(error.DatabaseError)
+  |> result.try(fn(res) {
+    res.rows
+    |> list.first()
+    |> result.replace_error(error.UnknownError(""))
+  })
 }
 
 pub fn add_package_gleam_constraint(

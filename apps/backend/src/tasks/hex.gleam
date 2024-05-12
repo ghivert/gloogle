@@ -9,6 +9,7 @@ import backend/postgres/postgres
 import backend/postgres/queries
 import birl.{type Time}
 import birl/duration
+import gleam/function
 import gleam/hexpm.{type Package}
 import gleam/int
 import gleam/list
@@ -51,7 +52,8 @@ pub fn sync_new_gleam_releases(
     children,
   ))
   let latest = queries.upsert_most_recent_hex_timestamp(ctx.db, latest)
-  wisp.log_info("\nUp to date!")
+  wisp.log_info("")
+  wisp.log_info("Up to date!")
   latest
 }
 
@@ -81,7 +83,7 @@ fn sync_packages(
   use state <- result.try(list.try_fold(
     new_packages,
     state,
-    do_sync_package(Some(children)),
+    do_sync_package(Some(children), force: False),
   ))
   case list.length(all_packages) == list.length(new_packages) {
     _ if all_packages == [] -> Ok(state.newest)
@@ -90,7 +92,10 @@ fn sync_packages(
   }
 }
 
-fn do_sync_package(children: Option(supervisor.Children(Nil))) {
+fn do_sync_package(
+  children: Option(supervisor.Children(Nil)),
+  force force_old_release_update: Bool,
+) {
   fn(state: State, package: hexpm.Package) -> Result(State, Error) {
     let secret = state.hex_api_key
     use releases <- result.try(lookup_gleam_releases(package, secret: secret))
@@ -102,6 +107,7 @@ fn do_sync_package(children: Option(supervisor.Children(Nil))) {
           releases,
           state,
           children,
+          force_old_release_update,
         ))
         State(..state, last_logged: birl.now())
       }
@@ -110,7 +116,7 @@ fn do_sync_package(children: Option(supervisor.Children(Nil))) {
 }
 
 pub fn sync_package(ctx: Context, package: hexpm.Package) {
-  do_sync_package(None)(
+  do_sync_package(None, force: True)(
     State(
       page: -1,
       limit: birl.now(),
@@ -145,12 +151,7 @@ fn extract_release_interfaces_from_db(
   id: Int,
   release: hexpm.Release,
 ) {
-  use _ <- result.try_recover({
-    use res <- result.try(queries.lookup_release(state.db, id, release))
-    res.rows
-    |> list.first()
-    |> result.replace_error(error.UnknownError(""))
-  })
+  use _ <- result.try_recover(queries.lookup_release(state.db, id, release))
   queries.upsert_release(state.db, id, release, None, None)
   |> result.replace(#(None, None))
 }
@@ -194,6 +195,7 @@ fn insert_package_and_releases(
   releases: List(hexpm.Release),
   state: State,
   children: Option(supervisor.Children(Nil)),
+  force_old_release_update: Bool,
 ) {
   let secret = state.hex_api_key
   let versions =
@@ -208,6 +210,15 @@ fn insert_package_and_releases(
   wisp.log_debug("Saving releases for " <> package.name)
   list.try_each(releases, fn(r) {
     let release = package.name <> " v" <> r.version
+    use _ <- result.try_recover({
+      queries.lookup_release(state.db, id, r)
+      |> result.replace(Nil)
+      |> case force_old_release_update {
+        True -> result.try(_, fn(_) { Error(error.EmptyError) })
+        False -> function.identity
+      }
+    })
+    wisp.log_debug("Handling release " <> r.version)
     use interfaces <- result.map({
       extract_release_interfaces_from_db(state, id, r)
     })

@@ -46,6 +46,12 @@ pub type SearchResult {
   )
 }
 
+pub type SearchResults {
+  Start
+  SearchResults(exact_matches: List(SearchResult), matches: List(SearchResult))
+  NoSearchResults
+}
+
 pub fn decode_search_result(dyn) {
   dynamic.decode8(
     SearchResult,
@@ -61,5 +67,14 @@ pub fn decode_search_result(dyn) {
 }
 
 pub fn decode_search_results(dyn) {
-  dynamic.list(decode_search_result)(dyn)
+  dynamic.any([
+    dynamic.decode1(fn(_) { NoSearchResults }, {
+      dynamic.field("error", dynamic.string)
+    }),
+    dynamic.decode2(
+      SearchResults,
+      dynamic.field("exact-matches", dynamic.list(decode_search_result)),
+      dynamic.field("matches", dynamic.list(decode_search_result)),
+    ),
+  ])(dyn)
 }

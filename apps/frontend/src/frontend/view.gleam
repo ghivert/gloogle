@@ -5,10 +5,12 @@ import data/model.{type Model}
 import data/msg
 import frontend/documentation
 import frontend/footer/view as footer
+import frontend/strings as frontend_strings
 import frontend/styles as s
 import frontend/types as t
 import gleam/bool
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
@@ -25,8 +27,6 @@ pub fn idt(indent: Int) {
   h.text(string.repeat(" ", indent))
 }
 
-pub const gloogle_description = "Gloogle can search through all public gleam packages, to help you find the function you're looking for! Enter a type or a function name to get some results."
-
 pub fn view(model: Model) {
   h.div([s.layout()], [navbar(model), body(model), footer.view()])
 }
@@ -34,8 +34,8 @@ pub fn view(model: Model) {
 fn navbar(model: Model) {
   h.div([s.navbar()], [
     case model.search_results {
-      [] -> h.div([], [])
-      _ ->
+      search_result.Start -> h.div([], [])
+      search_result.NoSearchResults | search_result.SearchResults(_, _) ->
         h.div([s.navbar_search()], [
           h.a([s.navbar_search_title(), e.on_click(msg.Reset)], [
             h.img([a.src("/images/lucy.svg"), s.search_lucy()]),
@@ -208,8 +208,16 @@ fn render_parameters(count: Int) {
 
 fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
   let inline = constructor.params_width <= 70
+  let has_params = !list.is_empty(constructor.parameters)
   list.concat([
-    [idt(indent), t.type_(constructor.name), h.text("(")],
+    [
+      idt(indent),
+      t.type_(constructor.name),
+      case has_params {
+        True -> h.text("(")
+        False -> element.none()
+      },
+    ],
     case inline {
       False ->
         list.concat([
@@ -224,9 +232,10 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
         |> list.intersperse([h.text(", ")])
         |> list.concat()
     },
-    case inline {
-      True -> [h.text(")")]
-      False -> [idt(indent), h.text(")")]
+    case has_params, inline {
+      False, _ -> []
+      True, True -> [h.text(")")]
+      True, False -> [idt(indent), h.text(")")]
     },
   ])
 }
@@ -342,7 +351,7 @@ fn view_search_input(model: Model) {
         h.img([a.src("/images/lucy.svg"), s.search_lucy()]),
         h.text("Gloogle"),
       ]),
-      h.text(gloogle_description),
+      h.text(frontend_strings.gloogle_description),
     ]),
     h.input([
       s.search_input(),
@@ -354,9 +363,46 @@ fn view_search_input(model: Model) {
   ])
 }
 
+fn match_title(results: List(a), title: String) {
+  use <- bool.guard(when: list.is_empty(results), return: element.none())
+  h.div([s.matches_titles()], [
+    h.div([s.matches_title()], [h.text("Exact matches")]),
+    h.div([], [h.text(title)]),
+  ])
+}
+
+fn empty_state(image: String, title: String, content: String) {
+  h.div([s.empty_state()], [
+    h.img([a.src(image), s.empty_state_lucy()]),
+    h.div([s.empty_state_titles()], [
+      h.div([], [h.text(title)]),
+      h.div([s.empty_state_subtitle()], [h.text(content)]),
+    ]),
+  ])
+}
+
 fn body(model: Model) {
-  h.main([s.main_wrapper()], case model.search_results {
-    [] -> [view_search_input(model)]
-    _ -> [view_search_results(model.search_results)]
+  h.main([s.main_wrapper()], case io.debug(model.search_results) {
+    search_result.Start -> [view_search_input(model)]
+    search_result.NoSearchResults -> [
+      empty_state(
+        "/images/internal_error.png",
+        "Internal server error",
+        frontend_strings.internal_server_error,
+      ),
+    ]
+    search_result.SearchResults([], []) -> [
+      empty_state(
+        "/images/shadow_lucy.png",
+        "No match found!",
+        frontend_strings.retry_query,
+      ),
+    ]
+    search_result.SearchResults(exact, others) -> [
+      match_title(exact, frontend_strings.exact_match),
+      view_search_results(exact),
+      match_title(others, frontend_strings.partial_match),
+      view_search_results(others),
+    ]
   })
 }

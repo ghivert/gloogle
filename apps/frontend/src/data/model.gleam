@@ -1,26 +1,21 @@
-import data/decoders/search_result.{type SearchResult}
-import data/model/mock
-import gleam/result
+import data/decoders/search_result.{type SearchResults}
 
 pub type Model {
-  Model(input: String, search_results: List(SearchResult))
+  Model(input: String, search_results: SearchResults)
 }
 
 pub fn init() {
-  let search_results =
-    mock.mock()
-    |> result.unwrap([])
-  Model(input: "", search_results: search_results)
+  Model(input: "", search_results: search_result.Start)
 }
 
 pub fn update_input(model: Model, content: String) {
   Model(..model, input: content)
 }
 
-pub fn update_search_results(model: Model, search_results: List(SearchResult)) {
+pub fn update_search_results(model: Model, search_results: SearchResults) {
   Model(..model, search_results: search_results)
 }
 
 pub fn reset(_model: Model) {
-  Model(search_results: [], input: "")
+  Model(search_results: search_result.Start, input: "")
 }

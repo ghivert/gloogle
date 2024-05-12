@@ -473,7 +473,7 @@ pub fn content_search(db: pgo.Connection, query: String) {
       OR replace(s.signature_, ' ', '') ILIKE '%' || replace($1, ' ', '') || '%'
     )
    ORDER BY s.name, s.kind, m.name, ordering DESC
-   LIMIT 100"
+   LIMIT 20"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -523,7 +523,7 @@ pub fn search(db: pgo.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector(s.signature_) @@ to_tsquery($1)
-   LIMIT 100"
+   LIMIT 20"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })

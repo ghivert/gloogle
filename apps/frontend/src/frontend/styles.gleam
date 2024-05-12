@@ -335,3 +335,58 @@ pub fn documentation_title() {
   |> s.memo()
   |> s.to_lustre()
 }
+
+pub fn matches_titles() {
+  s.class([
+    s.line_height("1.3"),
+    s.color(palette.dark.dark_white),
+    s.display("flex"),
+    s.align_items("baseline"),
+    s.gap(px(6)),
+    s.font_size(px(12)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn matches_title() {
+  s.class([s.color(palette.dark.white), s.font_size(px(18))])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn empty_state() {
+  s.class([
+    s.display("flex"),
+    s.align_items("center"),
+    s.gap(px(24)),
+    s.justify_content("center"),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn empty_state_lucy() {
+  s.class([s.width(px(100))])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn empty_state_titles() {
+  s.class([
+    s.font_size(px(20)),
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(9)),
+    s.line_height("1.3"),
+    s.max_width(px(400)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn empty_state_subtitle() {
+  s.class([s.font_size(px(16)), s.color(palette.dark.dark_white)])
+  |> s.memo()
+  |> s.to_lustre()
+}

@@ -1,10 +1,10 @@
-import data/decoders/search_result.{type SearchResult}
+import data/decoders/search_result.{type SearchResults}
 import lustre_http as http
 
 pub type Msg {
   None
   SubmitSearch
-  SearchResults(Result(List(SearchResult), http.HttpError))
+  SearchResults(Result(SearchResults, http.HttpError))
   UpdateInput(String)
   Reset
 }

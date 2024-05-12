@@ -48,7 +48,7 @@ pub type Signature {
 }
 
 pub fn decode_signature(dyn) {
-  use res <- result.try(dynamic.field("type", dynamic.string)(dyn))
+  use res <- result.try(dynamic.field("nature", dynamic.string)(dyn))
   case res {
     "constant" -> decode_constant(dyn)
     "function" -> decode_function(dyn)

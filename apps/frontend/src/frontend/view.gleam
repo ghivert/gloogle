@@ -122,7 +122,7 @@ fn view_type(type_: Type, indent: Int) -> List(element.Element(msg.Msg)) {
             string.to_utf_codepoints("a")
             |> list.first()
           let assert Ok(letter) =
-            { string.utf_codepoint_to_int(utf_a) + id - 1 }
+            { string.utf_codepoint_to_int(utf_a) + id }
             |> string.utf_codepoint()
           [idt(indent), t.variable(string.from_utf_codepoints([letter]))]
         }),
@@ -283,9 +283,9 @@ fn view_signature(
         case params_width > 70 {
           True ->
             list.concat([
-              [newline()],
+              [newline(), idt(2)],
               list.map(parameters, view_parameter(_, 2))
-                |> list.intersperse([h.text(","), newline()])
+                |> list.intersperse([h.text(","), newline(), idt(2)])
                 |> list.concat(),
               [h.text(","), newline()],
             ])

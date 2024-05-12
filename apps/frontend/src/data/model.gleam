@@ -7,7 +7,9 @@ pub type Model {
 }
 
 pub fn init() {
-  let search_results = result.unwrap(mock.mock(), [])
+  let search_results =
+    mock.mock()
+    |> result.unwrap([])
   Model(input: "", search_results: search_results)
 }
 

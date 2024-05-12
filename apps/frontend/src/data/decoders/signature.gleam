@@ -70,7 +70,7 @@ fn decode_type(dyn) {
 }
 
 fn decode_variable(dyn) {
-  dynamic.decode1(fn(a) { Variable(a, 1) }, dynamic.field("id", dynamic.int))(
+  dynamic.decode1(fn(a) { Variable(1, a) }, dynamic.field("id", dynamic.int))(
     dyn,
   )
 }
@@ -134,7 +134,7 @@ fn decode_parameter(dyn) {
       Parameter(width, a, b)
     },
     dynamic.field("label", dynamic.optional(dynamic.string)),
-    dynamic.field("type", decode_type),
+    dynamic.field("params_type", decode_type),
   )(dyn)
 }
 

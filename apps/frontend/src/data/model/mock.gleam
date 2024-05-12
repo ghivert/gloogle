@@ -4,26 +4,7 @@ import gleam/json
 pub fn mock() {
   "[
     {
-        \"name\": \"App\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \"\\n\",
-            \"constructors\": [],
-            \"documentation\": \"\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"3.1.1\"
-    },
-    {
-        \"name\": \"bg_app_subtle\",
+        \"name\": \"decode_application\",
         \"documentation\": \"\",
         \"nature\": \"function\",
         \"metadata\": {
@@ -35,22 +16,47 @@ pub fn mock() {
             }
         },
         \"json_signature\": {
-            \"name\": \"bg_app_subtle\",
+            \"name\": \"decode_application\",
             \"type\": \"function\",
             \"return\": {
-                \"ref\": \"3.1.4\",
-                \"name\": \"Attribute\",
+                \"ref\": null,
+                \"name\": \"Result\",
                 \"type\": \"named\",
-                \"module\": \"lustre/attribute\",
-                \"package\": \"lustre\",
+                \"module\": \"gleam\",
+                \"package\": \"\",
                 \"parameters\": [
                     {
-                        \"id\": 0,
-                        \"type\": \"variable\"
+                        \"ref\": \"0.0.1\",
+                        \"name\": \"Application\",
+                        \"type\": \"named\",
+                        \"module\": \"models/api\",
+                        \"package\": \"glyph\",
+                        \"parameters\": []
+                    },
+                    {
+                        \"ref\": \"1.0.1\",
+                        \"name\": \"DecodeError\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam/json\",
+                        \"package\": \"gleam_json\",
+                        \"parameters\": []
                     }
                 ]
             },
-            \"parameters\": [],
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"ref\": null,
+                        \"name\": \"String\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam\",
+                        \"package\": \"\",
+                        \"parameters\": []
+                    }
+                }
+            ],
             \"deprecation\": null,
             \"documentation\": null,
             \"implementations\": {
@@ -59,1021 +65,606 @@ pub fn mock() {
                 \"uses_javascript_externals\": true
             }
         },
-        \"module_name\": \"lustre/ui/classes\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.3.0\"
+        \"module_name\": \"network/rest\",
+        \"package_name\": \"glyph\",
+        \"version\": \"0.0.1\"
     },
     {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
+        \"name\": \"application\",
+        \"documentation\": \"Creates the application debugger from the tardis. Should be run once,\\n at the start of the application. It can be skipped when using [`single`](#single).\",
+        \"nature\": \"function\",
         \"metadata\": {
-            \"deprecation\": null
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
         },
         \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"0.1.0\",
+                \"name\": \"Instance\",
+                \"type\": \"named\",
+                \"module\": \"tardis\",
+                \"package\": \"tardis\",
+                \"parameters\": []
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"ref\": \"0.1.0\",
+                        \"name\": \"Tardis\",
+                        \"type\": \"named\",
+                        \"module\": \"tardis\",
+                        \"package\": \"tardis\",
+                        \"parameters\": []
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"ref\": null,
+                        \"name\": \"String\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam\",
+                        \"package\": \"\",
+                        \"parameters\": []
+                    }
+                }
+            ],
+            \"deprecation\": \" Creates the application debugger from the tardis. Should be run once,\\n at the start of the application. It can be skipped when using [`single`](#single).\",
+            \"documentation\": \" Creates the application debugger from the tardis. Should be run once,\\n at the start of the application. It can be skipped when using [`single`](#single).\",
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"module_name\": \"tardis\",
+        \"package_name\": \"tardis\",
+        \"version\": \"0.1.0\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.3\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.3\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.3\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
         },
         \"module_name\": \"lustre\",
         \"package_name\": \"lustre\",
         \"version\": \"4.1.3\"
     },
     {
-        \"name\": \"Scale\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
         \"metadata\": {
-            \"deprecation\": null
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
         },
         \"json_signature\": {
-            \"name\": \"Scale\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.2\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
                 {
-                    \"name\": \"Scale\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_border\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_high_contrast\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_low_contrast\"
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.2\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
                         }
-                    ],
-                    \"documentation\": null
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.2\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
                 }
             ],
-            \"documentation\": null
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
         },
-        \"module_name\": \"lustre/ui/colour\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.2.1\"
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.2\"
     },
     {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
         \"metadata\": {
-            \"deprecation\": null
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
         },
         \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.0.0\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.0.0\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.0.0\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
         },
         \"module_name\": \"lustre\",
         \"package_name\": \"lustre\",
         \"version\": \"4.0.0\"
     },
     {
-        \"name\": \"Scale\",
-        \"documentation\": \"\",
+        \"name\": \"Body\",
+        \"documentation\": \"The body of a HTTP response, to be sent to the client.\",
         \"nature\": \"type_definition\",
         \"metadata\": {
             \"deprecation\": null
         },
         \"json_signature\": {
-            \"name\": \"Scale\",
+            \"name\": \"Body\",
             \"type\": \"type-definition\",
             \"parameters\": 0,
-            \"deprecation\": null,
+            \"deprecation\": \" The body of a HTTP response, to be sent to the client.\\n\",
             \"constructors\": [
                 {
-                    \"name\": \"Scale\",
+                    \"name\": \"Text\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"StringBuilder\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam/string_builder\",
+                                \"package\": \"gleam_stdlib\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_border\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_high_contrast\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_low_contrast\"
+                            }
                         }
                     ],
-                    \"documentation\": null
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"lustre/ui/colour\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.5.0\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.6\"
-    },
-    {
-        \"name\": \"Scale\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"Scale\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
+                    \"documentation\": \" A body of unicode text.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
                 {
-                    \"name\": \"Scale\",
+                    \"name\": \"Bytes\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"BytesBuilder\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam/bytes_builder\",
+                                \"package\": \"gleam_stdlib\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_border\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_high_contrast\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_low_contrast\"
+                            }
                         }
                     ],
-                    \"documentation\": null
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"lustre/ui/colour\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.3.0\"
-    },
-    {
-        \"name\": \"KeyboardButton\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"KeyboardButton\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
+                    \"documentation\": \" A body of binary data.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
                 {
-                    \"name\": \"KeyboardButton\",
+                    \"name\": \"File\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"path\",
+                            \"params_type\": {
                                 \"ref\": null,
                                 \"name\": \"String\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"text\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"KeyboardButtonRequestUsers\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_users\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"KeyboardButtonRequestChat\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_contact\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_location\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"KeyboardButtonPollType\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_poll\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"WebAppInfo\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"web_app\"
+                            }
                         }
                     ],
-                    \"documentation\": \" This object represents one button of the reply keyboard. For simple text buttons, String can be used instead of this object to specify the button text. The optional fields _web_app_, _request_users_, _request_chat_, _request_contact_, _request_location_, and _request_poll_ are mutually exclusive.\\n\\n **Official reference:** https://core.telegram.org/bots/api#keyboardbutton\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"border_app\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"border_app\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": \"3.1.4\",
-                \"name\": \"Attribute\",
-                \"type\": \"named\",
-                \"module\": \"lustre/attribute\",
-                \"package\": \"lustre\",
-                \"parameters\": [
-                    {
-                        \"id\": 0,
-                        \"type\": \"variable\"
-                    }
-                ]
-            },
-            \"parameters\": [],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"lustre/ui/classes\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.2.2\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.1\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"A Vue App\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": \" A Vue App\",
-            \"constructors\": [],
-            \"documentation\": \" A Vue App\"
-        },
-        \"module_name\": \"vleam/vue\",
-        \"package_name\": \"vleam\",
-        \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element.html#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element.html#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element.html#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.2.0\"
-    },
-    {
-        \"name\": \"bg_app\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"bg_app\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": \"3.1.4\",
-                \"name\": \"Attribute\",
-                \"type\": \"named\",
-                \"module\": \"lustre/attribute\",
-                \"package\": \"lustre\",
-                \"parameters\": [
-                    {
-                        \"id\": 0,
-                        \"type\": \"variable\"
-                    }
-                ]
-            },
-            \"parameters\": [],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"lustre/ui/classes\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.2.2\"
-    },
-    {
-        \"name\": \"Scale\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"Scale\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
+                    \"documentation\": \" A body of the contents of a file.\\n\\n This will be sent efficiently using the `send_file` function of the\\n underlying HTTP server. The file will not be read into memory so it is\\n safe to send large files this way.\\n\"
+                },
                 {
-                    \"name\": \"Scale\",
+                    \"name\": \"Empty\",
                     \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_border\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_high_contrast\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_low_contrast\"
-                        }
-                    ],
-                    \"documentation\": null
+                    \"parameters\": [],
+                    \"documentation\": \" An empty body. This may be returned by the `require_*` middleware\\n functions in the event of a failure, invalid request, or other situation\\n in which the request cannot be processed.\\n\\n Your application may wish to use a middleware to provide default responses\\n in place of any with an empty body.\\n\"
                 }
             ],
-            \"documentation\": null
+            \"documentation\": \" The body of a HTTP response, to be sent to the client.\\n\"
         },
-        \"module_name\": \"lustre/ui/colour\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.4.0\"
+        \"module_name\": \"wisp\",
+        \"package_name\": \"wisp\",
+        \"version\": \"0.13.0\"
     },
     {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.7\"
-    },
-    {
-        \"name\": \"border_app\",
+        \"name\": \"application\",
         \"documentation\": \"\",
         \"nature\": \"function\",
         \"metadata\": {
@@ -1085,300 +676,188 @@ pub fn mock() {
             }
         },
         \"json_signature\": {
-            \"name\": \"border_app\",
+            \"name\": \"application\",
             \"type\": \"function\",
             \"return\": {
-                \"ref\": \"3.1.4\",
-                \"name\": \"Attribute\",
+                \"ref\": \"3.1.2\",
+                \"name\": \"App\",
                 \"type\": \"named\",
-                \"module\": \"lustre/attribute\",
+                \"module\": \"lustre\",
                 \"package\": \"lustre\",
                 \"parameters\": [
                     {
                         \"id\": 0,
                         \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
                     }
                 ]
             },
-            \"parameters\": [],
-            \"deprecation\": null,
-            \"documentation\": null,
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"3.1.2\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"3.1.2\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": \"3.1.2\",
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/element\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \"\",
+            \"documentation\": \"\",
             \"implementations\": {
                 \"gleam\": false,
                 \"uses_erlang_externals\": true,
                 \"uses_javascript_externals\": true
             }
-        },
-        \"module_name\": \"lustre/ui/classes\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.3.0\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \"\\n\",
-            \"constructors\": [],
-            \"documentation\": \"\\n\"
         },
         \"module_name\": \"lustre\",
         \"package_name\": \"lustre\",
         \"version\": \"3.1.2\"
     },
     {
-        \"name\": \"App\",
-        \"documentation\": \"\",
+        \"name\": \"Application\",
+        \"documentation\": \"Model for a Discord Application: https://discord.com/developers/docs/resources/application\\n Note to self: summary is deprecated and will be removed in v11\",
         \"nature\": \"type_definition\",
         \"metadata\": {
             \"deprecation\": null
         },
         \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \"\\n\",
-            \"constructors\": [],
-            \"documentation\": \"\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"3.1.4\"
-    },
-    {
-        \"name\": \"InlineKeyboardButton\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"InlineKeyboardButton\",
+            \"name\": \"Application\",
             \"type\": \"type-definition\",
             \"parameters\": 0,
-            \"deprecation\": null,
+            \"deprecation\": \" Model for a Discord Application: https://discord.com/developers/docs/resources/application\\n Note to self: summary is deprecated and will be removed in v11\",
             \"constructors\": [
                 {
-                    \"name\": \"InlineKeyboardButton\",
+                    \"name\": \"Application\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"id\",
+                            \"params_type\": {
                                 \"ref\": null,
                                 \"name\": \"String\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"text\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"url\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"callback_data\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"WebAppInfo\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"web_app\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"LoginUrl\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"login_url\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"switch_inline_query\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"switch_inline_query_current_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"SwitchInlineQueryChosenChat\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"switch_inline_query_chosen_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"pay\"
-                        }
-                    ],
-                    \"documentation\": \" **Official reference:** https://core.telegram.org/bots/api#inlinekeyboardbutton\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"Message\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"Message\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"Message\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"name\",
+                            \"params_type\": {
                                 \"ref\": null,
-                                \"name\": \"Int\",
+                                \"name\": \"String\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"message_id\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"icon\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -1387,300 +866,31 @@ pub fn mock() {
                                 \"parameters\": [
                                     {
                                         \"ref\": null,
-                                        \"name\": \"Int\",
+                                        \"name\": \"String\",
                                         \"type\": \"named\",
                                         \"module\": \"gleam\",
                                         \"package\": \"\",
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"message_thread_id\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"User\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"from\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"Chat\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"sender_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"sender_boost_count\"
-                        },
-                        {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"description\",
+                            \"params_type\": {
                                 \"ref\": null,
-                                \"name\": \"Int\",
+                                \"name\": \"String\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"date\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.1.1\",
-                                \"name\": \"Chat\",
-                                \"type\": \"named\",
-                                \"module\": \"telega/model\",
-                                \"package\": \"telega\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"is_topic_message\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"is_automatic_forward\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"Message\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"reply_to_message\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"User\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"via_bot\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"edit_date\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"has_protected_content\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"is_from_offline\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"media_group_id\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"author_signature\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"text\"
-                        },
-                        {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"rpc_origins\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -1695,21 +905,46 @@ pub fn mock() {
                                         \"package\": \"\",
                                         \"parameters\": [
                                             {
-                                                \"ref\": \"0.1.1\",
-                                                \"name\": \"MessageEntity\",
+                                                \"ref\": null,
+                                                \"name\": \"String\",
                                                 \"type\": \"named\",
-                                                \"module\": \"telega/model\",
-                                                \"package\": \"telega\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
                                                 \"parameters\": []
                                             }
                                         ]
                                     }
                                 ]
-                            },
-                            \"label\": \"entities\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"bot_public\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"Bool\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"bot_require_code_grant\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"Bool\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"bot\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -1717,117 +952,20 @@ pub fn mock() {
                                 \"package\": \"gleam_stdlib\",
                                 \"parameters\": [
                                     {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"caption\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"List\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": [
-                                            {
-                                                \"ref\": \"0.1.1\",
-                                                \"name\": \"MessageEntity\",
-                                                \"type\": \"named\",
-                                                \"module\": \"telega/model\",
-                                                \"package\": \"telega\",
-                                                \"parameters\": []
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            \"label\": \"caption_entities\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"has_media_spoiler\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"List\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": [
-                                            {
-                                                \"ref\": \"0.1.1\",
-                                                \"name\": \"User\",
-                                                \"type\": \"named\",
-                                                \"module\": \"telega/model\",
-                                                \"package\": \"telega\",
-                                                \"parameters\": []
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            \"label\": \"new_chat_members\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.1\",
+                                        \"ref\": \"0.0.1\",
                                         \"name\": \"User\",
                                         \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
+                                        \"module\": \"models/api\",
+                                        \"package\": \"glyph\",
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"left_chat_member\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"terms_of_service_url\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -1843,131 +981,12 @@ pub fn mock() {
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"new_chat_title\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"delete_chat_photo\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"group_chat_created\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"supergroup_chat_created\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"channel_chat_created\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"migrate_to_chat_id\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"migrate_from_chat_id\"
-                        },
-                        {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"privacy_policy_url\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -1983,11 +1002,12 @@ pub fn mock() {
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"connected_website\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"owner\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -1995,19 +1015,20 @@ pub fn mock() {
                                 \"package\": \"gleam_stdlib\",
                                 \"parameters\": [
                                     {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"WebAppData\",
+                                        \"ref\": \"0.0.1\",
+                                        \"name\": \"User\",
                                         \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
+                                        \"module\": \"models/api\",
+                                        \"package\": \"glyph\",
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"web_app_data\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"summary\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -2015,376 +1036,1426 @@ pub fn mock() {
                                 \"package\": \"gleam_stdlib\",
                                 \"parameters\": [
                                     {
-                                        \"ref\": \"0.1.1\",
-                                        \"name\": \"InlineKeyboardMarkup\",
+                                        \"ref\": null,
+                                        \"name\": \"String\",
                                         \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"reply_markup\"
-                        }
-                    ],
-                    \"documentation\": \" **Official reference:** https://core.telegram.org/bots/api#message\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"encode_web_app_info\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"encode_web_app_info\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": \"1.0.1\",
-                \"name\": \"Json\",
-                \"type\": \"named\",
-                \"module\": \"gleam/json\",
-                \"package\": \"gleam_json\",
-                \"parameters\": []
-            },
-            \"parameters\": [
-                {
-                    \"type\": {
-                        \"ref\": \"0.1.0\",
-                        \"name\": \"WebAppInfo\",
-                        \"type\": \"named\",
-                        \"module\": \"telega/model\",
-                        \"package\": \"telega\",
-                        \"parameters\": []
-                    },
-                    \"label\": null
-                }
-            ],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"decode_web_app_data\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"decode_web_app_data\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": null,
-                \"name\": \"Result\",
-                \"type\": \"named\",
-                \"module\": \"gleam\",
-                \"package\": \"\",
-                \"parameters\": [
-                    {
-                        \"ref\": \"0.1.1\",
-                        \"name\": \"WebAppData\",
-                        \"type\": \"named\",
-                        \"module\": \"telega/model\",
-                        \"package\": \"telega\",
-                        \"parameters\": []
-                    },
-                    {
-                        \"ref\": null,
-                        \"name\": \"List\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam\",
-                        \"package\": \"\",
-                        \"parameters\": [
-                            {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"DecodeError\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/dynamic\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": []
                             }
-                        ]
-                    }
-                ]
-            },
-            \"parameters\": [
-                {
-                    \"type\": {
-                        \"ref\": \"0.37.0\",
-                        \"name\": \"Dynamic\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam/dynamic\",
-                        \"package\": \"gleam_stdlib\",
-                        \"parameters\": []
-                    },
-                    \"label\": null
-                }
-            ],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"decode_web_app_info\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"decode_web_app_info\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": null,
-                \"name\": \"Result\",
-                \"type\": \"named\",
-                \"module\": \"gleam\",
-                \"package\": \"\",
-                \"parameters\": [
-                    {
-                        \"ref\": \"0.1.1\",
-                        \"name\": \"WebAppInfo\",
-                        \"type\": \"named\",
-                        \"module\": \"telega/model\",
-                        \"package\": \"telega\",
-                        \"parameters\": []
-                    },
-                    {
-                        \"ref\": null,
-                        \"name\": \"List\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam\",
-                        \"package\": \"\",
-                        \"parameters\": [
-                            {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"DecodeError\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/dynamic\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": []
-                            }
-                        ]
-                    }
-                ]
-            },
-            \"parameters\": [
-                {
-                    \"type\": {
-                        \"ref\": \"0.37.0\",
-                        \"name\": \"Dynamic\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam/dynamic\",
-                        \"package\": \"gleam_stdlib\",
-                        \"parameters\": []
-                    },
-                    \"label\": null
-                }
-            ],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"decode_web_app_data\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"decode_web_app_data\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": null,
-                \"name\": \"Result\",
-                \"type\": \"named\",
-                \"module\": \"gleam\",
-                \"package\": \"\",
-                \"parameters\": [
-                    {
-                        \"ref\": \"0.1.0\",
-                        \"name\": \"WebAppData\",
-                        \"type\": \"named\",
-                        \"module\": \"telega/model\",
-                        \"package\": \"telega\",
-                        \"parameters\": []
-                    },
-                    {
-                        \"ref\": null,
-                        \"name\": \"List\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam\",
-                        \"package\": \"\",
-                        \"parameters\": [
-                            {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"DecodeError\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/dynamic\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": []
-                            }
-                        ]
-                    }
-                ]
-            },
-            \"parameters\": [
-                {
-                    \"type\": {
-                        \"ref\": \"0.37.0\",
-                        \"name\": \"Dynamic\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam/dynamic\",
-                        \"package\": \"gleam_stdlib\",
-                        \"parameters\": []
-                    },
-                    \"label\": null
-                }
-            ],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"Limits\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"Limits\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"Limits\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"Int\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_limit\"
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"verify_key\",
+                            \"params_type\": {
                                 \"ref\": null,
-                                \"name\": \"Int\",
+                                \"name\": \"String\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_remaining\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"Int\",
+                            \"type\": \"parameter\",
+                            \"label\": \"team\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_reset\"
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": \"0.0.1\",
+                                        \"name\": \"Team\",
+                                        \"type\": \"named\",
+                                        \"module\": \"models/api\",
+                                        \"package\": \"glyph\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"guild_id\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"primary_sku_id\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"slug\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"cover_image\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"flags\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"Int\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"approximate_guild_count\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"Int\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"redirect_uris\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"List\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": [
+                                            {
+                                                \"ref\": null,
+                                                \"name\": \"String\",
+                                                \"type\": \"named\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
+                                                \"parameters\": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"interactions_endpoint_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"role_connections_verification_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"tags\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"List\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": [
+                                            {
+                                                \"ref\": null,
+                                                \"name\": \"String\",
+                                                \"type\": \"named\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
+                                                \"parameters\": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"install_params\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": \"0.0.1\",
+                                        \"name\": \"InstallParams\",
+                                        \"type\": \"named\",
+                                        \"module\": \"models/api\",
+                                        \"package\": \"glyph\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"custom_install_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
                         }
                     ],
                     \"documentation\": null
                 }
             ],
-            \"documentation\": null
+            \"documentation\": \" Model for a Discord Application: https://discord.com/developers/docs/resources/application\\n Note to self: summary is deprecated and will be removed in v11\"
         },
-        \"module_name\": \"wimp\",
-        \"package_name\": \"wimp\",
-        \"version\": \"1.1.0\"
+        \"module_name\": \"models/api\",
+        \"package_name\": \"glyph\",
+        \"version\": \"0.0.1\"
     },
     {
-        \"name\": \"ReleaseMeta\",
-        \"documentation\": \"Meta for a hex release\",
+        \"name\": \"Body\",
+        \"documentation\": \"The body of a HTTP response, to be sent to the client.\",
         \"nature\": \"type_definition\",
         \"metadata\": {
             \"deprecation\": null
         },
         \"json_signature\": {
-            \"name\": \"ReleaseMeta\",
+            \"name\": \"Body\",
             \"type\": \"type-definition\",
             \"parameters\": 0,
-            \"deprecation\": \" Meta for a hex release\",
+            \"deprecation\": \" The body of a HTTP response, to be sent to the client.\\n\",
             \"constructors\": [
                 {
-                    \"name\": \"ReleaseMeta\",
+                    \"name\": \"Text\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"StringBuilder\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/string_builder\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of unicode text.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
+                {
+                    \"name\": \"File\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"path\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of the contents of a file.\\n\\n This will be sent efficiently using the `send_file` function of the\\n underlying HTTP server. The file will not be read into memory so it is\\n safe to send large files this way.\\n\"
+                },
+                {
+                    \"name\": \"Empty\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" An empty body. This may be returned by the `require_*` middleware\\n functions in the event of a failure, invalid request, or other situation\\n in which the request cannot be processed.\\n\\n Your application may wish to use a middleware to provide default responses\\n in place of any with an empty body.\\n\"
+                }
+            ],
+            \"documentation\": \" The body of a HTTP response, to be sent to the client.\\n\"
+        },
+        \"module_name\": \"wisp\",
+        \"package_name\": \"wisp\",
+        \"version\": \"0.11.0\"
+    },
+    {
+        \"name\": \"Body\",
+        \"documentation\": \"The body of a HTTP response, to be sent to the client.\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Body\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": \" The body of a HTTP response, to be sent to the client.\\n\",
+            \"constructors\": [
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"StringBuilder\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/string_builder\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of unicode text.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
+                {
+                    \"name\": \"File\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"path\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of the contents of a file.\\n\\n This will be sent efficiently using the `send_file` function of the\\n underlying HTTP server. The file will not be read into memory so it is\\n safe to send large files this way.\\n\"
+                },
+                {
+                    \"name\": \"Empty\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" An empty body. This may be returned by the `require_*` middleware\\n functions in the event of a failure, invalid request, or other situation\\n in which the request cannot be processed.\\n\\n Your application may wish to use a middleware to provide default responses\\n in place of any with an empty body.\\n\"
+                }
+            ],
+            \"documentation\": \" The body of a HTTP response, to be sent to the client.\\n\"
+        },
+        \"module_name\": \"wisp\",
+        \"package_name\": \"wisp\",
+        \"version\": \"0.10.0\"
+    },
+    {
+        \"name\": \"get_application\",
+        \"documentation\": \"\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"get_application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": null,
+                \"name\": \"Result\",
+                \"type\": \"named\",
+                \"module\": \"gleam\",
+                \"package\": \"\",
+                \"parameters\": [
+                    {
+                        \"ref\": \"0.1.0\",
+                        \"name\": \"Application\",
+                        \"type\": \"named\",
+                        \"module\": \"glyph/models/discord\",
+                        \"package\": \"glyph\",
+                        \"parameters\": []
+                    },
+                    {
+                        \"ref\": \"0.1.0\",
+                        \"name\": \"APIError\",
+                        \"type\": \"named\",
+                        \"module\": \"glyph/clients/api\",
+                        \"package\": \"glyph\",
+                        \"parameters\": []
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"ref\": \"0.1.0\",
+                        \"name\": \"APIClient\",
+                        \"type\": \"named\",
+                        \"module\": \"glyph/clients/api\",
+                        \"package\": \"glyph\",
+                        \"parameters\": []
+                    }
+                }
+            ],
+            \"deprecation\": null,
+            \"documentation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"module_name\": \"glyph/clients/api\",
+        \"package_name\": \"glyph\",
+        \"version\": \"0.1.0\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.5\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.5\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.5\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.5\"
+    },
+    {
+        \"name\": \"application_stopped\",
+        \"documentation\": \"\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application_stopped\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"0.10.0\",
+                \"name\": \"ApplicationStop\",
+                \"type\": \"named\",
+                \"module\": \"gleam/otp/supervisor\",
+                \"package\": \"gleam_otp\",
+                \"parameters\": []
+            },
+            \"parameters\": [],
+            \"deprecation\": null,
+            \"documentation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"gleam/otp/supervisor\",
+        \"package_name\": \"gleam_otp\",
+        \"version\": \"0.10.0\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.1\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.1\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.1\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.1\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"3.1.1\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"3.1.1\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"3.1.1\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": \"3.1.1\",
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/element\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \"\",
+            \"documentation\": \"\",
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"3.1.1\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect.html) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.8\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.8\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.8\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect.html) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect.html) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.8\"
+    },
+    {
+        \"name\": \"Body\",
+        \"documentation\": \"The body of a HTTP response, to be sent to the client.\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Body\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": \" The body of a HTTP response, to be sent to the client.\\n\",
+            \"constructors\": [
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"StringBuilder\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/string_builder\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of unicode text.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
+                {
+                    \"name\": \"File\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"path\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of the contents of a file.\\n\\n This will be sent efficiently using the `send_file` function of the\\n underlying HTTP server. The file will not be read into memory so it is\\n safe to send large files this way.\\n\"
+                },
+                {
+                    \"name\": \"Empty\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" An empty body. This may be returned by the `require_*` middleware\\n functions in the event of a failure, invalid request, or other situation\\n in which the request cannot be processed.\\n\\n Your application may wish to use a middleware to provide default responses\\n in place of any with an empty body.\\n\"
+                }
+            ],
+            \"documentation\": \" The body of a HTTP response, to be sent to the client.\\n\"
+        },
+        \"module_name\": \"wisp\",
+        \"package_name\": \"wisp\",
+        \"version\": \"0.12.0\"
+    },
+    {
+        \"name\": \"ensure_all_started\",
+        \"documentation\": \"Starts an OTP application's process tree in the background, as well as\\n the trees of any applications that the given application depends upon. An\\n OTP application typically maps onto a Gleam or Hex package.\\n\\n Returns a list of the applications that were started. Calling this function\\n for application that have already been started is a no-op so you do not need\\n to check the application state beforehand.\\n\\n In Gleam we prefer to not use these implicit background process trees, but\\n you will likely still need to start the trees of OTP applications written in\\n other BEAM languages such as Erlang or Elixir, including those included by\\n default with Erlang/OTP.\\n\\n For more information see the OTP documentation.\\n - <https://www.erlang.org/doc/man/application.html#ensure_all_started-1>\\n - <https://www.erlang.org/doc/man/application.html#start-1>\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"ensure_all_started\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": null,
+                \"name\": \"Result\",
+                \"type\": \"named\",
+                \"module\": \"gleam\",
+                \"package\": \"\",
+                \"parameters\": [
+                    {
+                        \"ref\": null,
+                        \"name\": \"List\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam\",
+                        \"package\": \"\",
+                        \"parameters\": [
+                            {
+                                \"ref\": \"0.25.0\",
+                                \"name\": \"Atom\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/erlang/atom\",
+                                \"package\": \"gleam_erlang\",
+                                \"parameters\": []
+                            }
+                        ]
+                    },
+                    {
+                        \"ref\": \"0.25.0\",
+                        \"name\": \"EnsureAllStartedError\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam/erlang\",
+                        \"package\": \"gleam_erlang\",
+                        \"parameters\": []
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": \"application\",
+                    \"params_type\": {
+                        \"ref\": \"0.25.0\",
+                        \"name\": \"Atom\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam/erlang/atom\",
+                        \"package\": \"gleam_erlang\",
+                        \"parameters\": []
+                    }
+                }
+            ],
+            \"deprecation\": \" Starts an OTP application's process tree in the background, as well as\\n the trees of any applications that the given application depends upon. An\\n OTP application typically maps onto a Gleam or Hex package.\\n\\n Returns a list of the applications that were started. Calling this function\\n for application that have already been started is a no-op so you do not need\\n to check the application state beforehand.\\n\\n In Gleam we prefer to not use these implicit background process trees, but\\n you will likely still need to start the trees of OTP applications written in\\n other BEAM languages such as Erlang or Elixir, including those included by\\n default with Erlang/OTP.\\n\\n For more information see the OTP documentation.\\n - <https://www.erlang.org/doc/man/application.html#ensure_all_started-1>\\n - <https://www.erlang.org/doc/man/application.html#start-1>\\n\",
+            \"documentation\": \" Starts an OTP application's process tree in the background, as well as\\n the trees of any applications that the given application depends upon. An\\n OTP application typically maps onto a Gleam or Hex package.\\n\\n Returns a list of the applications that were started. Calling this function\\n for application that have already been started is a no-op so you do not need\\n to check the application state beforehand.\\n\\n In Gleam we prefer to not use these implicit background process trees, but\\n you will likely still need to start the trees of OTP applications written in\\n other BEAM languages such as Erlang or Elixir, including those included by\\n default with Erlang/OTP.\\n\\n For more information see the OTP documentation.\\n - <https://www.erlang.org/doc/man/application.html#ensure_all_started-1>\\n - <https://www.erlang.org/doc/man/application.html#start-1>\\n\",
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"gleam/erlang\",
+        \"package_name\": \"gleam_erlang\",
+        \"version\": \"0.25.0\"
+    },
+    {
+        \"name\": \"Body\",
+        \"documentation\": \"The body of a HTTP response, to be sent to the client.\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Body\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": \" The body of a HTTP response, to be sent to the client.\\n\",
+            \"constructors\": [
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"StringBuilder\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/string_builder\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of unicode text.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
+                {
+                    \"name\": \"Bytes\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"BytesBuilder\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/bytes_builder\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of binary data.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
+                {
+                    \"name\": \"File\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"path\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of the contents of a file.\\n\\n This will be sent efficiently using the `send_file` function of the\\n underlying HTTP server. The file will not be read into memory so it is\\n safe to send large files this way.\\n\"
+                },
+                {
+                    \"name\": \"Empty\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" An empty body. This may be returned by the `require_*` middleware\\n functions in the event of a failure, invalid request, or other situation\\n in which the request cannot be processed.\\n\\n Your application may wish to use a middleware to provide default responses\\n in place of any with an empty body.\\n\"
+                }
+            ],
+            \"documentation\": \" The body of a HTTP response, to be sent to the client.\\n\"
+        },
+        \"module_name\": \"wisp\",
+        \"package_name\": \"wisp\",
+        \"version\": \"0.14.0\"
+    },
+    {
+        \"name\": \"Application\",
+        \"documentation\": \"Model for a Discord Application: https://discord.com/developers/docs/resources/application\\n Note to self: summary is deprecated and will be removed in v11\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Application\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": \" Model for a Discord Application: https://discord.com/developers/docs/resources/application\\n Note to self: summary is deprecated and will be removed in v11\",
+            \"constructors\": [
+                {
+                    \"name\": \"Application\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"id\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"name\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"icon\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -2400,11 +2471,730 @@ pub fn mock() {
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"app\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"description\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"rpc_origins\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"List\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": [
+                                            {
+                                                \"ref\": null,
+                                                \"name\": \"String\",
+                                                \"type\": \"named\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
+                                                \"parameters\": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"bot_public\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"Bool\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"bot_require_code_grant\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"Bool\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"bot\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": \"0.1.0\",
+                                        \"name\": \"User\",
+                                        \"type\": \"named\",
+                                        \"module\": \"glyph/models/discord\",
+                                        \"package\": \"glyph\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"terms_of_service_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"privacy_policy_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"owner\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": \"0.1.0\",
+                                        \"name\": \"User\",
+                                        \"type\": \"named\",
+                                        \"module\": \"glyph/models/discord\",
+                                        \"package\": \"glyph\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"summary\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"verify_key\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"team\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": \"0.1.0\",
+                                        \"name\": \"Team\",
+                                        \"type\": \"named\",
+                                        \"module\": \"glyph/models/discord\",
+                                        \"package\": \"glyph\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"guild_id\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"primary_sku_id\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"slug\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"cover_image\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"flags\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"Int\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"approximate_guild_count\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"Int\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"redirect_uris\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"List\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": [
+                                            {
+                                                \"ref\": null,
+                                                \"name\": \"String\",
+                                                \"type\": \"named\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
+                                                \"parameters\": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"interactions_endpoint_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"role_connections_verification_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"tags\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"List\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": [
+                                            {
+                                                \"ref\": null,
+                                                \"name\": \"String\",
+                                                \"type\": \"named\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
+                                                \"parameters\": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"install_params\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": \"0.1.0\",
+                                        \"name\": \"InstallParams\",
+                                        \"type\": \"named\",
+                                        \"module\": \"glyph/models/discord\",
+                                        \"package\": \"glyph\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"custom_install_url\",
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Option\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/option\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                }
+            ],
+            \"documentation\": \" Model for a Discord Application: https://discord.com/developers/docs/resources/application\\n Note to self: summary is deprecated and will be removed in v11\"
+        },
+        \"module_name\": \"glyph/models/discord\",
+        \"package_name\": \"glyph\",
+        \"version\": \"0.1.0\"
+    },
+    {
+        \"name\": \"application_stopped\",
+        \"documentation\": \"\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application_stopped\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"0.9.0\",
+                \"name\": \"ApplicationStop\",
+                \"type\": \"named\",
+                \"module\": \"gleam/otp/supervisor\",
+                \"package\": \"gleam_otp\",
+                \"parameters\": []
+            },
+            \"parameters\": [],
+            \"deprecation\": null,
+            \"documentation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"gleam/otp/supervisor\",
+        \"package_name\": \"gleam_otp\",
+        \"version\": \"0.9.0\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect.html) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.2.0\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.2.0\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.2.0\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect.html) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect.html) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.2.0\"
+    },
+    {
+        \"name\": \"ContentType\",
+        \"documentation\": \"\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"ContentType\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": null,
+            \"constructors\": [
+                {
+                    \"name\": \"Application\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Application\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/application\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"ApplicationWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Application\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/application\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
                                 \"ref\": null,
                                 \"name\": \"List\",
                                 \"type\": \"named\",
@@ -2420,167 +3210,308 @@ pub fn mock() {
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"build_tools\"
+                            }
                         }
                     ],
                     \"documentation\": null
-                }
-            ],
-            \"documentation\": \" Meta for a hex release\"
-        },
-        \"module_name\": \"gleam/hexpm\",
-        \"package_name\": \"gleam_hexpm\",
-        \"version\": \"1.0.0\"
-    },
-    {
-        \"name\": \"Scale\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"Scale\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
+                },
                 {
-                    \"name\": \"Scale\",
+                    \"name\": \"Audio\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Audio\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"typed_headers/content_type/audio\",
+                                \"package\": \"typed_headers\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_background\"
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"AudioWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Audio\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/audio\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Font\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Font\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/font\",
+                                \"package\": \"typed_headers\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_background_subtle\"
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Example\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Example\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/example\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Image\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Image\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/image\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Message\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Message\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/message\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Model\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Model\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/model\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Multipart\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Multipart\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/multipart\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Text\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/text\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Video\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Video\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/video\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"VideoWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.1\",
+                                \"name\": \"Video\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/video\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Custom\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"media_type\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_border\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": \"sub_type\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"element_background\"
-                        },
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Raw\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"element_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_high_contrast\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_low_contrast\"
+                            }
                         }
                     ],
                     \"documentation\": null
@@ -2588,158 +3519,84 @@ pub fn mock() {
             ],
             \"documentation\": null
         },
-        \"module_name\": \"lustre/ui/colour\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.2.2\"
+        \"module_name\": \"typed_headers/content_type\",
+        \"package_name\": \"typed_headers\",
+        \"version\": \"1.1.1\"
     },
     {
-        \"name\": \"Scale\",
+        \"name\": \"Application\",
         \"documentation\": \"\",
         \"nature\": \"type_definition\",
         \"metadata\": {
             \"deprecation\": null
         },
         \"json_signature\": {
-            \"name\": \"Scale\",
+            \"name\": \"Application\",
             \"type\": \"type-definition\",
             \"parameters\": 0,
             \"deprecation\": null,
             \"constructors\": [
                 {
-                    \"name\": \"Scale\",
+                    \"name\": \"JSON\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"XML\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"OGG\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"OGGWithCodecs\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_background\"
-                        },
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Custom\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"app_background_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"app_border\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_background_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_subtle\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"element_border_strong\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"solid_background_hover\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_high_contrast\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"1.4.0\",
-                                \"name\": \"Colour\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam_community/colour\",
-                                \"package\": \"gleam_community_colour\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text_low_contrast\"
+                            }
                         }
                     ],
                     \"documentation\": null
@@ -2747,12 +3604,1309 @@ pub fn mock() {
             ],
             \"documentation\": null
         },
-        \"module_name\": \"lustre/ui/util/colour\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.6.0\"
+        \"module_name\": \"typed_headers/content_type/application\",
+        \"package_name\": \"typed_headers\",
+        \"version\": \"1.1.1\"
     },
     {
-        \"name\": \"gateway_partial_app_decoder\",
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.0\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.0\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.0\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.0\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.4\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.4\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.4\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.4\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.7\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.7\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.7\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.7\"
+    },
+    {
+        \"name\": \"application\",
+        \"documentation\": \"A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"4.1.6\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.6\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"4.1.6\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/internals/vdom\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"documentation\": \" A complete Lustre application that follows the Model-View-Update architecture\\n and can handle side effects like HTTP requests or querying the DOM. Most real\\n Lustre applications will use this constructor.\\n\\n To learn more about effects and their purpose, take a look at the\\n [`effect`](./lustre/effect) module or the\\n [HTTP requests example](https://github.com/lustre-labs/lustre/tree/main/examples/05-http-requests).\\n\",
+            \"implementations\": {
+                \"gleam\": true,
+                \"uses_erlang_externals\": false,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"4.1.6\"
+    },
+    {
+        \"name\": \"Body\",
+        \"documentation\": \"The body of a HTTP response, to be sent to the client.\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Body\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": \" The body of a HTTP response, to be sent to the client.\\n\",
+            \"constructors\": [
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"StringBuilder\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/string_builder\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of unicode text.\\n\\n The body is represented using a `StringBuilder`. If you have a `String`\\n you can use the `string_builder.from_string` function to convert it.\\n\"
+                },
+                {
+                    \"name\": \"File\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"path\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": \" A body of the contents of a file.\\n\\n This will be sent efficiently using the `send_file` function of the\\n underlying HTTP server. The file will not be read into memory so it is\\n safe to send large files this way.\\n\"
+                },
+                {
+                    \"name\": \"Empty\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" An empty body. This may be returned by the `require_*` middleware\\n functions in the event of a failure, invalid request, or other situation\\n in which the request cannot be processed.\\n\\n Your application may wish to use a middleware to provide default responses\\n in place of any with an empty body.\\n\"
+                }
+            ],
+            \"documentation\": \" The body of a HTTP response, to be sent to the client.\\n\"
+        },
+        \"module_name\": \"wisp\",
+        \"package_name\": \"wisp\",
+        \"version\": \"0.9.0\"
+    },
+    {
+        \"name\": \"ContentType\",
+        \"documentation\": \"\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"ContentType\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": null,
+            \"constructors\": [
+                {
+                    \"name\": \"Application\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Application\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/application\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"ApplicationWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Application\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/application\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Audio\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Audio\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/audio\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"AudioWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Audio\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/audio\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Font\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Font\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/font\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Example\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Example\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/example\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Image\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Image\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/image\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Message\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Message\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/message\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Model\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Model\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/model\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Multipart\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Multipart\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/multipart\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Text\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/text\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Video\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Video\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/video\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"VideoWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.0\",
+                                \"name\": \"Video\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/video\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"CustomContentType\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"media_type\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"sub_type\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"CustomRawContentType\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                }
+            ],
+            \"documentation\": null
+        },
+        \"module_name\": \"typed_headers/content_type\",
+        \"package_name\": \"typed_headers\",
+        \"version\": \"1.1.0\"
+    },
+    {
+        \"name\": \"Application\",
+        \"documentation\": \"\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Application\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": null,
+            \"constructors\": [
+                {
+                    \"name\": \"JSON\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"XML\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"OGG\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Custom\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                }
+            ],
+            \"documentation\": null
+        },
+        \"module_name\": \"typed_headers/content_type/application\",
+        \"package_name\": \"typed_headers\",
+        \"version\": \"1.1.2\"
+    },
+    {
+        \"name\": \"Application\",
+        \"documentation\": \"\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"Application\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": null,
+            \"constructors\": [
+                {
+                    \"name\": \"JSON\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"XML\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"OGG\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"OGGWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Custom\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                }
+            ],
+            \"documentation\": null
+        },
+        \"module_name\": \"typed_headers/content_type/application\",
+        \"package_name\": \"typed_headers\",
+        \"version\": \"1.1.0\"
+    },
+    {
+        \"name\": \"application_stopped\",
+        \"documentation\": \"\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application_stopped\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"0.8.0\",
+                \"name\": \"ApplicationStop\",
+                \"type\": \"named\",
+                \"module\": \"gleam/otp/supervisor\",
+                \"package\": \"gleam_otp\",
+                \"parameters\": []
+            },
+            \"parameters\": [],
+            \"deprecation\": null,
+            \"documentation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"gleam/otp/supervisor\",
+        \"package_name\": \"gleam_otp\",
+        \"version\": \"0.8.0\"
+    },
+    {
+        \"name\": \"ensure_all_started\",
+        \"documentation\": \"Starts an OTP application's process tree in the background, as well as\\n the trees of any applications that the given application depends upon. An\\n OTP application typically maps onto a Gleam or Hex package.\\n\\n Returns a list of the applications that were started. Calling this function\\n for application that have already been started is a no-op so you do not need\\n to check the application state beforehand.\\n\\n In Gleam we prefer to not use these implicit background process trees, but\\n you will likely still need to start the trees of OTP applications written in\\n other BEAM languages such as Erlang or Elixir, including those included by\\n default with Erlang/OTP.\\n\\n For more information see the OTP documentation.\\n - <https://www.erlang.org/doc/man/application.html#ensure_all_started-1>\\n - <https://www.erlang.org/doc/man/application.html#start-1>\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"ensure_all_started\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": null,
+                \"name\": \"Result\",
+                \"type\": \"named\",
+                \"module\": \"gleam\",
+                \"package\": \"\",
+                \"parameters\": [
+                    {
+                        \"ref\": null,
+                        \"name\": \"List\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam\",
+                        \"package\": \"\",
+                        \"parameters\": [
+                            {
+                                \"ref\": \"0.24.0\",
+                                \"name\": \"Atom\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/erlang/atom\",
+                                \"package\": \"gleam_erlang\",
+                                \"parameters\": []
+                            }
+                        ]
+                    },
+                    {
+                        \"ref\": \"0.24.0\",
+                        \"name\": \"EnsureAllStartedError\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam/erlang\",
+                        \"package\": \"gleam_erlang\",
+                        \"parameters\": []
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": \"application\",
+                    \"params_type\": {
+                        \"ref\": \"0.24.0\",
+                        \"name\": \"Atom\",
+                        \"type\": \"named\",
+                        \"module\": \"gleam/erlang/atom\",
+                        \"package\": \"gleam_erlang\",
+                        \"parameters\": []
+                    }
+                }
+            ],
+            \"deprecation\": \" Starts an OTP application's process tree in the background, as well as\\n the trees of any applications that the given application depends upon. An\\n OTP application typically maps onto a Gleam or Hex package.\\n\\n Returns a list of the applications that were started. Calling this function\\n for application that have already been started is a no-op so you do not need\\n to check the application state beforehand.\\n\\n In Gleam we prefer to not use these implicit background process trees, but\\n you will likely still need to start the trees of OTP applications written in\\n other BEAM languages such as Erlang or Elixir, including those included by\\n default with Erlang/OTP.\\n\\n For more information see the OTP documentation.\\n - <https://www.erlang.org/doc/man/application.html#ensure_all_started-1>\\n - <https://www.erlang.org/doc/man/application.html#start-1>\\n\",
+            \"documentation\": \" Starts an OTP application's process tree in the background, as well as\\n the trees of any applications that the given application depends upon. An\\n OTP application typically maps onto a Gleam or Hex package.\\n\\n Returns a list of the applications that were started. Calling this function\\n for application that have already been started is a no-op so you do not need\\n to check the application state beforehand.\\n\\n In Gleam we prefer to not use these implicit background process trees, but\\n you will likely still need to start the trees of OTP applications written in\\n other BEAM languages such as Erlang or Elixir, including those included by\\n default with Erlang/OTP.\\n\\n For more information see the OTP documentation.\\n - <https://www.erlang.org/doc/man/application.html#ensure_all_started-1>\\n - <https://www.erlang.org/doc/man/application.html#start-1>\\n\",
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": false
+            }
+        },
+        \"module_name\": \"gleam/erlang\",
+        \"package_name\": \"gleam_erlang\",
+        \"version\": \"0.24.0\"
+    },
+    {
+        \"name\": \"application\",
         \"documentation\": \"\",
         \"nature\": \"function\",
         \"metadata\": {
@@ -2764,7 +4918,157 @@ pub fn mock() {
             }
         },
         \"json_signature\": {
-            \"name\": \"gateway_partial_app_decoder\",
+            \"name\": \"application\",
+            \"type\": \"function\",
+            \"return\": {
+                \"ref\": \"3.1.4\",
+                \"name\": \"App\",
+                \"type\": \"named\",
+                \"module\": \"lustre\",
+                \"package\": \"lustre\",
+                \"parameters\": [
+                    {
+                        \"id\": 0,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 1,
+                        \"type\": \"variable\"
+                    },
+                    {
+                        \"id\": 2,
+                        \"type\": \"variable\"
+                    }
+                ]
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"3.1.4\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"type\": \"tuple\",
+                            \"elements\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": \"3.1.4\",
+                                    \"name\": \"Effect\",
+                                    \"type\": \"named\",
+                                    \"module\": \"lustre/effect\",
+                                    \"package\": \"lustre\",
+                                    \"parameters\": [
+                                        {
+                                            \"id\": 2,
+                                            \"type\": \"variable\"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": \"3.1.4\",
+                            \"name\": \"Element\",
+                            \"type\": \"named\",
+                            \"module\": \"lustre/element\",
+                            \"package\": \"lustre\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            \"deprecation\": \"\",
+            \"documentation\": \"\",
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"module_name\": \"lustre\",
+        \"package_name\": \"lustre\",
+        \"version\": \"3.1.4\"
+    },
+    {
+        \"name\": \"application_decoder\",
+        \"documentation\": \"\",
+        \"nature\": \"function\",
+        \"metadata\": {
+            \"deprecation\": null,
+            \"implementations\": {
+                \"gleam\": false,
+                \"uses_erlang_externals\": true,
+                \"uses_javascript_externals\": true
+            }
+        },
+        \"json_signature\": {
+            \"name\": \"application_decoder\",
             \"type\": \"function\",
             \"return\": {
                 \"type\": \"fn\",
@@ -2787,7 +5091,7 @@ pub fn mock() {
                     \"parameters\": [
                         {
                             \"ref\": \"0.1.0\",
-                            \"name\": \"ReadyApplication\",
+                            \"name\": \"Application\",
                             \"type\": \"named\",
                             \"module\": \"glyph/models/discord\",
                             \"package\": \"glyph\",
@@ -2827,951 +5131,1961 @@ pub fn mock() {
         \"version\": \"0.1.0\"
     },
     {
-        \"name\": \"bg_app_subtle\",
+        \"name\": \"application\",
         \"documentation\": \"\",
         \"nature\": \"function\",
         \"metadata\": {
             \"deprecation\": null,
             \"implementations\": {
-                \"gleam\": false,
+                \"gleam\": true,
                 \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
+                \"uses_javascript_externals\": false
             }
         },
         \"json_signature\": {
-            \"name\": \"bg_app_subtle\",
+            \"name\": \"application\",
             \"type\": \"function\",
             \"return\": {
-                \"ref\": \"3.1.4\",
-                \"name\": \"Attribute\",
-                \"type\": \"named\",
-                \"module\": \"lustre/attribute\",
-                \"package\": \"lustre\",
-                \"parameters\": [
+                \"type\": \"fn\",
+                \"params\": [
                     {
-                        \"id\": 0,
-                        \"type\": \"variable\"
-                    }
-                ]
-            },
-            \"parameters\": [],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"lustre/ui/classes\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.2.2\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.4\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element.html#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element.html#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element.html#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.8\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.5\"
-    },
-    {
-        \"name\": \"encode_web_app_info\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"encode_web_app_info\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": \"1.0.1\",
-                \"name\": \"Json\",
-                \"type\": \"named\",
-                \"module\": \"gleam/json\",
-                \"package\": \"gleam_json\",
-                \"parameters\": []
-            },
-            \"parameters\": [
-                {
-                    \"type\": {
-                        \"ref\": \"0.1.1\",
-                        \"name\": \"WebAppInfo\",
-                        \"type\": \"named\",
-                        \"module\": \"telega/model\",
-                        \"package\": \"telega\",
-                        \"parameters\": []
-                    },
-                    \"label\": null
-                }
-            ],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"InlineKeyboardButton\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"InlineKeyboardButton\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"InlineKeyboardButton\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"url\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"callback_data\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"WebAppInfo\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"web_app\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"LoginUrl\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"login_url\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"switch_inline_query\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"switch_inline_query_current_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"SwitchInlineQueryChosenChat\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"switch_inline_query_chosen_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"pay\"
-                        }
-                    ],
-                    \"documentation\": \" **Official reference:** https://core.telegram.org/bots/api#inlinekeyboardbutton\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"decode_web_app_info\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"decode_web_app_info\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": null,
-                \"name\": \"Result\",
-                \"type\": \"named\",
-                \"module\": \"gleam\",
-                \"package\": \"\",
-                \"parameters\": [
-                    {
-                        \"ref\": \"0.1.0\",
-                        \"name\": \"WebAppInfo\",
-                        \"type\": \"named\",
-                        \"module\": \"telega/model\",
-                        \"package\": \"telega\",
-                        \"parameters\": []
-                    },
-                    {
-                        \"ref\": null,
-                        \"name\": \"List\",
-                        \"type\": \"named\",
-                        \"module\": \"gleam\",
-                        \"package\": \"\",
-                        \"parameters\": [
-                            {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"DecodeError\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/dynamic\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": []
-                            }
-                        ]
-                    }
-                ]
-            },
-            \"parameters\": [
-                {
-                    \"type\": {
                         \"ref\": \"0.37.0\",
                         \"name\": \"Dynamic\",
                         \"type\": \"named\",
                         \"module\": \"gleam/dynamic\",
                         \"package\": \"gleam_stdlib\",
                         \"parameters\": []
-                    },
-                    \"label\": null
+                    }
+                ],
+                \"return\": {
+                    \"ref\": null,
+                    \"name\": \"Result\",
+                    \"type\": \"named\",
+                    \"module\": \"gleam\",
+                    \"package\": \"\",
+                    \"parameters\": [
+                        {
+                            \"ref\": \"0.0.1\",
+                            \"name\": \"Application\",
+                            \"type\": \"named\",
+                            \"module\": \"models/api\",
+                            \"package\": \"glyph\",
+                            \"parameters\": []
+                        },
+                        {
+                            \"ref\": null,
+                            \"name\": \"List\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"ref\": \"0.37.0\",
+                                    \"name\": \"DecodeError\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam/dynamic\",
+                                    \"package\": \"gleam_stdlib\",
+                                    \"parameters\": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            \"parameters\": [
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"id\": 0,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 1,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 2,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 3,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 4,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 5,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 6,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 7,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 8,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 9,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 10,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 11,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 12,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 13,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 14,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 15,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 16,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 17,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 18,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 19,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 20,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 21,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 22,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 23,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 24,
+                                \"type\": \"variable\"
+                            },
+                            {
+                                \"id\": 25,
+                                \"type\": \"variable\"
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": \"0.0.1\",
+                            \"name\": \"Application\",
+                            \"type\": \"named\",
+                            \"module\": \"models/api\",
+                            \"package\": \"glyph\",
+                            \"parameters\": []
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 0,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 1,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 2,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 3,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 4,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 5,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 6,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 7,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 8,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 9,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 10,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 11,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 12,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 13,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 14,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 15,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 16,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 17,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 18,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 19,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 20,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 21,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 22,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 23,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 24,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    \"type\": \"parameter\",
+                    \"label\": null,
+                    \"params_type\": {
+                        \"type\": \"fn\",
+                        \"params\": [
+                            {
+                                \"ref\": \"0.37.0\",
+                                \"name\": \"Dynamic\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam/dynamic\",
+                                \"package\": \"gleam_stdlib\",
+                                \"parameters\": []
+                            }
+                        ],
+                        \"return\": {
+                            \"ref\": null,
+                            \"name\": \"Result\",
+                            \"type\": \"named\",
+                            \"module\": \"gleam\",
+                            \"package\": \"\",
+                            \"parameters\": [
+                                {
+                                    \"id\": 25,
+                                    \"type\": \"variable\"
+                                },
+                                {
+                                    \"ref\": null,
+                                    \"name\": \"List\",
+                                    \"type\": \"named\",
+                                    \"module\": \"gleam\",
+                                    \"package\": \"\",
+                                    \"parameters\": [
+                                        {
+                                            \"ref\": \"0.37.0\",
+                                            \"name\": \"DecodeError\",
+                                            \"type\": \"named\",
+                                            \"module\": \"gleam/dynamic\",
+                                            \"package\": \"gleam_stdlib\",
+                                            \"parameters\": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
                 }
             ],
             \"deprecation\": null,
             \"documentation\": null,
             \"implementations\": {
-                \"gleam\": false,
+                \"gleam\": true,
                 \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
+                \"uses_javascript_externals\": false
             }
         },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
+        \"module_name\": \"models/decoders\",
+        \"package_name\": \"glyph\",
+        \"version\": \"0.0.1\"
     },
     {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.0\"
-    },
-    {
-        \"name\": \"App\",
-        \"documentation\": \"Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"App\",
-            \"type\": \"type-definition\",
-            \"parameters\": 3,
-            \"deprecation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\",
-            \"constructors\": [],
-            \"documentation\": \" Represents a constructed Lustre application that is ready to be started.\\n Depending on where you want the application to run, you have a few options:\\n\\n - Use [`start`](#start) to start a single-page-application in the browser.\\n\\n   This is the most common way to start a Lustre application. If you're new to\\n   Lustre or frontend development in general, make sure you check out the\\n   [examples](https://github.com/lustre-labs/lustre/tree/main/examples) or the\\n   [quickstart guide]()\\n\\n - Use [`start_server_component`](#start_server_component) to start a Lustre\\n   Server Component anywhere Gleam will run: Erlang, Node, Deno, or in the\\n   browser. If you're running on the BEAM though, you should...\\n\\n - Use [`start_actor`](#start_actor) to start a Lustre Server Component only\\n   for the Erlang target. BEAM users should always prefer this over\\n   `start_server_component` so they can take advantage of OTP features.\\n\\n - Use [`register`](#register) to register a component in the browser to be\\n   used as a Custom Element. This is useful even if you're not using Lustre\\n   to build a SPA.\\n\\n If you're only interested in using Lustre as a HTML templating engine, you\\n don't need an `App` at all! You can render an element directly using the\\n [`element.to_string`](./lustre/element#to_string) function.\\n\"
-        },
-        \"module_name\": \"lustre\",
-        \"package_name\": \"lustre\",
-        \"version\": \"4.1.2\"
-    },
-    {
-        \"name\": \"KeyboardButton\",
+        \"name\": \"Argon2Type\",
         \"documentation\": \"\",
         \"nature\": \"type_definition\",
         \"metadata\": {
             \"deprecation\": null
         },
         \"json_signature\": {
-            \"name\": \"KeyboardButton\",
+            \"name\": \"Argon2Type\",
             \"type\": \"type-definition\",
             \"parameters\": 0,
             \"deprecation\": null,
             \"constructors\": [
                 {
-                    \"name\": \"KeyboardButton\",
+                    \"name\": \"Argon2d\",
                     \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"text\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"KeyboardButtonRequestUsers\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_users\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"KeyboardButtonRequestChat\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_chat\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_contact\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_location\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"KeyboardButtonPollType\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"request_poll\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"WebAppInfo\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"web_app\"
-                        }
-                    ],
-                    \"documentation\": \" This object represents one button of the reply keyboard. For simple text buttons, String can be used instead of this object to specify the button text. The optional fields _web_app_, _request_users_, _request_chat_, _request_contact_, _request_location_, and _request_poll_ are mutually exclusive.\\n\\n **Official reference:** https://core.telegram.org/bots/api#keyboardbutton\"
+                    \"parameters\": [],
+                    \"documentation\": \" Suitable for applications with no threats from side-channel timing attacks (eg. cryptocurrencies)\"
+                },
+                {
+                    \"name\": \"Argon2i\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" Suitable for password hashing and password-based key derivation.\"
+                },
+                {
+                    \"name\": \"Argon2id\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" A hybrid of Argon2d and Argon2i. The default type.\"
                 }
             ],
             \"documentation\": null
         },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
+        \"module_name\": \"antigone\",
+        \"package_name\": \"antigone\",
+        \"version\": \"1.0.0\"
     },
     {
-        \"name\": \"Message\",
+        \"name\": \"Argon2Type\",
         \"documentation\": \"\",
         \"nature\": \"type_definition\",
         \"metadata\": {
             \"deprecation\": null
         },
         \"json_signature\": {
-            \"name\": \"Message\",
+            \"name\": \"Argon2Type\",
             \"type\": \"type-definition\",
             \"parameters\": 0,
             \"deprecation\": null,
             \"constructors\": [
+                {
+                    \"name\": \"Argon2d\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" Suitable for applications with no threats from side-channel timing attacks (eg. cryptocurrencies)\"
+                },
+                {
+                    \"name\": \"Argon2i\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" Suitable for password hashing and password-based key derivation.\"
+                },
+                {
+                    \"name\": \"Argon2id\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [],
+                    \"documentation\": \" A hybrid of Argon2d and Argon2i. The default type.\"
+                }
+            ],
+            \"documentation\": null
+        },
+        \"module_name\": \"antigone\",
+        \"package_name\": \"antigone\",
+        \"version\": \"1.1.0\"
+    },
+    {
+        \"name\": \"ContentType\",
+        \"documentation\": \"\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"ContentType\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": null,
+            \"constructors\": [
+                {
+                    \"name\": \"Application\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Application\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/application\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"ApplicationWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Application\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/application\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Audio\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Audio\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/audio\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"AudioWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Audio\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/audio\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"List\",
+                                \"type\": \"named\",
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": [
+                                    {
+                                        \"ref\": null,
+                                        \"name\": \"String\",
+                                        \"type\": \"named\",
+                                        \"module\": \"gleam\",
+                                        \"package\": \"\",
+                                        \"parameters\": []
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Font\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Font\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/font\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Example\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Example\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/example\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Image\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Image\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/image\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
                 {
                     \"name\": \"Message\",
                     \"type\": \"type-constructor\",
                     \"parameters\": [
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Message\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/message\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Model\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Model\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/model\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Multipart\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Multipart\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/multipart\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Text\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Text\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/text\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Video\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Video\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/video\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"VideoWithCodecs\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": \"1.1.2\",
+                                \"name\": \"Video\",
+                                \"type\": \"named\",
+                                \"module\": \"typed_headers/content_type/video\",
+                                \"package\": \"typed_headers\",
+                                \"parameters\": []
+                            }
+                        },
+                        {
+                            \"type\": \"parameter\",
+                            \"label\": \"codecs\",
+                            \"params_type\": {
                                 \"ref\": null,
-                                \"name\": \"Int\",
+                                \"name\": \"List\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"message_id\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
                                 \"parameters\": [
                                     {
                                         \"ref\": null,
-                                        \"name\": \"Int\",
+                                        \"name\": \"String\",
                                         \"type\": \"named\",
                                         \"module\": \"gleam\",
                                         \"package\": \"\",
                                         \"parameters\": []
                                     }
                                 ]
-                            },
-                            \"label\": \"message_thread_id\"
-                        },
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Custom\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                            \"type\": \"parameter\",
+                            \"label\": \"media_type\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"User\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"from\"
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                            \"type\": \"parameter\",
+                            \"label\": \"sub_type\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"Chat\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"sender_chat\"
-                        },
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                },
+                {
+                    \"name\": \"Raw\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                            \"type\": \"parameter\",
+                            \"label\": null,
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"sender_boost_count\"
-                        },
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
+                        }
+                    ],
+                    \"documentation\": null
+                }
+            ],
+            \"documentation\": null
+        },
+        \"module_name\": \"typed_headers/content_type\",
+        \"package_name\": \"typed_headers\",
+        \"version\": \"1.1.2\"
+    },
+    {
+        \"name\": \"ReadyEvent\",
+        \"documentation\": \"Structure of a Ready event: https://discord.com/developers/docs/topics/gateway-events#ready-ready-event-fields\",
+        \"nature\": \"type_definition\",
+        \"metadata\": {
+            \"deprecation\": null
+        },
+        \"json_signature\": {
+            \"name\": \"ReadyEvent\",
+            \"type\": \"type-definition\",
+            \"parameters\": 0,
+            \"deprecation\": \" Structure of a Ready event: https://discord.com/developers/docs/topics/gateway-events#ready-ready-event-fields\",
+            \"constructors\": [
+                {
+                    \"name\": \"ReadyEvent\",
+                    \"type\": \"type-constructor\",
+                    \"parameters\": [
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"v\",
+                            \"params_type\": {
                                 \"ref\": null,
                                 \"name\": \"Int\",
                                 \"type\": \"named\",
                                 \"module\": \"gleam\",
                                 \"package\": \"\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"date\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"user\",
+                            \"params_type\": {
                                 \"ref\": \"0.1.0\",
-                                \"name\": \"Chat\",
+                                \"name\": \"User\",
                                 \"type\": \"named\",
-                                \"module\": \"telega/model\",
-                                \"package\": \"telega\",
+                                \"module\": \"glyph/models/discord\",
+                                \"package\": \"glyph\",
                                 \"parameters\": []
-                            },
-                            \"label\": \"chat\"
+                            }
                         },
                         {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"guilds\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                                \"name\": \"Dynamic\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
+                                \"module\": \"gleam/dynamic\",
                                 \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"is_topic_message\"
+                                \"parameters\": []
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                            \"type\": \"parameter\",
+                            \"label\": \"session_id\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"is_automatic_forward\"
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                            \"type\": \"parameter\",
+                            \"label\": \"resume_gateway_url\",
+                            \"params_type\": {
+                                \"ref\": null,
+                                \"name\": \"String\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"Message\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"reply_to_message\"
+                                \"module\": \"gleam\",
+                                \"package\": \"\",
+                                \"parameters\": []
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"User\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"via_bot\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"edit_date\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"has_protected_content\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"is_from_offline\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"media_group_id\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"author_signature\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"text\"
-                        },
-                        {
-                            \"type\": {
+                            \"type\": \"parameter\",
+                            \"label\": \"shard\",
+                            \"params_type\": {
                                 \"ref\": \"0.37.0\",
                                 \"name\": \"Option\",
                                 \"type\": \"named\",
@@ -3786,561 +7100,39 @@ pub fn mock() {
                                         \"package\": \"\",
                                         \"parameters\": [
                                             {
-                                                \"ref\": \"0.1.0\",
-                                                \"name\": \"MessageEntity\",
+                                                \"ref\": null,
+                                                \"name\": \"Int\",
                                                 \"type\": \"named\",
-                                                \"module\": \"telega/model\",
-                                                \"package\": \"telega\",
+                                                \"module\": \"gleam\",
+                                                \"package\": \"\",
                                                 \"parameters\": []
                                             }
                                         ]
                                     }
                                 ]
-                            },
-                            \"label\": \"entities\"
+                            }
                         },
                         {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
+                            \"type\": \"parameter\",
+                            \"label\": \"application\",
+                            \"params_type\": {
+                                \"ref\": \"0.1.0\",
+                                \"name\": \"ReadyApplication\",
                                 \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"caption\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"List\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": [
-                                            {
-                                                \"ref\": \"0.1.0\",
-                                                \"name\": \"MessageEntity\",
-                                                \"type\": \"named\",
-                                                \"module\": \"telega/model\",
-                                                \"package\": \"telega\",
-                                                \"parameters\": []
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            \"label\": \"caption_entities\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"has_media_spoiler\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"List\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": [
-                                            {
-                                                \"ref\": \"0.1.0\",
-                                                \"name\": \"User\",
-                                                \"type\": \"named\",
-                                                \"module\": \"telega/model\",
-                                                \"package\": \"telega\",
-                                                \"parameters\": []
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            \"label\": \"new_chat_members\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"User\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"left_chat_member\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"new_chat_title\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"delete_chat_photo\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"group_chat_created\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"supergroup_chat_created\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Bool\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"channel_chat_created\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"migrate_to_chat_id\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"Int\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"migrate_from_chat_id\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": null,
-                                        \"name\": \"String\",
-                                        \"type\": \"named\",
-                                        \"module\": \"gleam\",
-                                        \"package\": \"\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"connected_website\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"WebAppData\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"web_app_data\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": \"0.37.0\",
-                                \"name\": \"Option\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam/option\",
-                                \"package\": \"gleam_stdlib\",
-                                \"parameters\": [
-                                    {
-                                        \"ref\": \"0.1.0\",
-                                        \"name\": \"InlineKeyboardMarkup\",
-                                        \"type\": \"named\",
-                                        \"module\": \"telega/model\",
-                                        \"package\": \"telega\",
-                                        \"parameters\": []
-                                    }
-                                ]
-                            },
-                            \"label\": \"reply_markup\"
+                                \"module\": \"glyph/models/discord\",
+                                \"package\": \"glyph\",
+                                \"parameters\": []
+                            }
                         }
                     ],
-                    \"documentation\": \" **Official reference:** https://core.telegram.org/bots/api#message\"
+                    \"documentation\": null
                 }
             ],
-            \"documentation\": null
+            \"documentation\": \" Structure of a Ready event: https://discord.com/developers/docs/topics/gateway-events#ready-ready-event-fields\"
         },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
+        \"module_name\": \"glyph/models/discord\",
+        \"package_name\": \"glyph\",
         \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"WebAppData\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"WebAppData\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"WebAppData\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"data\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"button_text\"
-                        }
-                    ],
-                    \"documentation\": \" Describes data sent from a [Web App](https://core.telegram.org/bots/webapps) to the bot.\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"WebAppInfo\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"WebAppInfo\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"WebAppInfo\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"url\"
-                        }
-                    ],
-                    \"documentation\": \" Describes a [Web App](https://core.telegram.org/bots/webapps).\\n\\n **Official reference:** [WebAppInfo](https://core.telegram.org/bots/api#webappinfo)\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.1\"
-    },
-    {
-        \"name\": \"WebAppInfo\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"WebAppInfo\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"WebAppInfo\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"url\"
-                        }
-                    ],
-                    \"documentation\": \" Describes a [Web App](https://core.telegram.org/bots/webapps).\\n\\n **Official reference:** [WebAppInfo](https://core.telegram.org/bots/api#webappinfo)\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"WebAppData\",
-        \"documentation\": \"\",
-        \"nature\": \"type_definition\",
-        \"metadata\": {
-            \"deprecation\": null
-        },
-        \"json_signature\": {
-            \"name\": \"WebAppData\",
-            \"type\": \"type-definition\",
-            \"parameters\": 0,
-            \"deprecation\": null,
-            \"constructors\": [
-                {
-                    \"name\": \"WebAppData\",
-                    \"type\": \"type-constructor\",
-                    \"parameters\": [
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"data\"
-                        },
-                        {
-                            \"type\": {
-                                \"ref\": null,
-                                \"name\": \"String\",
-                                \"type\": \"named\",
-                                \"module\": \"gleam\",
-                                \"package\": \"\",
-                                \"parameters\": []
-                            },
-                            \"label\": \"button_text\"
-                        }
-                    ],
-                    \"documentation\": \" Describes data sent from a [Web App](https://core.telegram.org/bots/webapps) to the bot.\"
-                }
-            ],
-            \"documentation\": null
-        },
-        \"module_name\": \"telega/model\",
-        \"package_name\": \"telega\",
-        \"version\": \"0.1.0\"
-    },
-    {
-        \"name\": \"bg_app\",
-        \"documentation\": \"\",
-        \"nature\": \"function\",
-        \"metadata\": {
-            \"deprecation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"json_signature\": {
-            \"name\": \"bg_app\",
-            \"type\": \"function\",
-            \"return\": {
-                \"ref\": \"3.1.4\",
-                \"name\": \"Attribute\",
-                \"type\": \"named\",
-                \"module\": \"lustre/attribute\",
-                \"package\": \"lustre\",
-                \"parameters\": [
-                    {
-                        \"id\": 0,
-                        \"type\": \"variable\"
-                    }
-                ]
-            },
-            \"parameters\": [],
-            \"deprecation\": null,
-            \"documentation\": null,
-            \"implementations\": {
-                \"gleam\": false,
-                \"uses_erlang_externals\": true,
-                \"uses_javascript_externals\": true
-            }
-        },
-        \"module_name\": \"lustre/ui/classes\",
-        \"package_name\": \"lustre_ui\",
-        \"version\": \"0.3.0\"
     }
 ]"
   |> json.decode(search_result.decode_search_results)

@@ -21,9 +21,13 @@ fn empty_json() {
 }
 
 fn search(query: String, ctx: Context) {
-  let a = result.unwrap(queries.name_search(ctx.db, query), [])
-  let b = result.unwrap(queries.search(ctx.db, query), [])
-  list.append(a, b)
+  [
+    queries.name_search(ctx.db, query),
+    queries.content_search(ctx.db, query),
+    queries.search(ctx.db, query),
+  ]
+  |> list.map(fn(r) { result.unwrap(r, []) })
+  |> list.concat()
 }
 
 pub fn handle_get(req: Request, ctx: Context) {

@@ -449,6 +449,39 @@ pub fn name_search(db: pgo.Connection, query: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+pub fn content_search(db: pgo.Connection, query: String) {
+  let query = pgo.text(query)
+  "SELECT DISTINCT ON (type_name, kind, module_name) *
+   FROM (
+     SELECT
+       s.name type_name,
+       s.documentation,
+       s.kind,
+       s.metadata,
+       s.json_signature,
+       m.name module_name,
+       p.name,
+       r.version,
+       string_to_array(r.version, '.')::int[] AS ordering
+     FROM package_type_fun_signature s
+     JOIN package_module m
+       ON m.id = s.package_module_id
+     JOIN package_release r
+       ON m.package_release_id = r.id
+     JOIN package p
+       ON p.id = r.package_id
+     WHERE s.name ILIKE '%' || $1 || '%'
+       OR s.signature_ ILIKE '%' || $1 || '%'
+       OR replace(s.signature_, ' ', '') ILIKE '%' || $1 || '%'
+       OR replace(s.signature_, ' ', '') ILIKE '%' || replace($1, ' ', '') || '%'
+     ORDER BY m.name ASC, ordering DESC
+     LIMIT 100
+   ) i"
+  |> pgo.execute(db, [query], decode_type_search)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
 fn decode_type_search(dyn) {
   dynamic.decode8(
     fn(a, b, c, d, e, f, g, h) {

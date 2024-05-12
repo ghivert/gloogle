@@ -382,6 +382,61 @@ pub fn upsert_package_type_fun_signature(
   |> result.replace(Nil)
 }
 
+pub fn name_search(db: pgo.Connection, query: String) {
+  let query = pgo.text(query)
+  "SELECT DISTINCT ON (type_name, nature, module_name) *
+   FROM (
+     SELECT
+       s.name type_name,
+       s.documentation,
+       s.nature,
+       s.metadata,
+       s.json_signature,
+       m.name module_name,
+       p.name,
+       r.version,
+       string_to_array(r.version, '.')::int[] AS ordering
+     FROM package_type_fun_signature s
+     JOIN package_module m
+       ON m.id = s.package_module_id
+     JOIN package_release r
+       ON m.package_release_id = r.id
+     JOIN package p
+       ON p.id = r.package_id
+     WHERE s.name = $1
+     ORDER BY m.name ASC, ordering DESC
+     LIMIT 100
+   ) i"
+  |> pgo.execute(db, [query], decode_type_search)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+fn decode_type_search(dyn) {
+  dynamic.decode8(
+    fn(a, b, c, d, e, f, g, h) {
+      json.object([
+        #("name", json.string(a)),
+        #("documentation", json.string(b)),
+        #("nature", json.string(c)),
+        #("metadata", dynamic.unsafe_coerce(d)),
+        #("json_signature", dynamic.unsafe_coerce(e)),
+        #("module_name", json.string(f)),
+        #("package_name", json.string(g)),
+        #("version", json.string(h)),
+      ])
+    },
+    dynamic.element(0, dynamic.string),
+    dynamic.element(1, dynamic.string),
+    dynamic.element(2, dynamic.string),
+    dynamic.element(3, dynamic.dynamic),
+    dynamic.element(4, dynamic.dynamic),
+    dynamic.element(5, dynamic.string),
+    dynamic.element(6, dynamic.string),
+    dynamic.element(7, dynamic.string),
+  )(dyn)
+}
+
 pub fn search(db: pgo.Connection, q: String) {
   let query = pgo.text("'" <> q <> "'")
   "SELECT
@@ -402,32 +457,7 @@ pub fn search(db: pgo.Connection, q: String) {
      ON p.id = r.package_id
    WHERE to_tsvector(s.signature_) @@ to_tsquery($1)
    LIMIT 100"
-  |> pgo.execute(
-    db,
-    [query],
-    dynamic.decode8(
-      fn(a, b, c, d, e, f, g, h) {
-        json.object([
-          #("name", json.string(a)),
-          #("documentation", json.string(b)),
-          #("nature", json.string(c)),
-          #("metadata", dynamic.unsafe_coerce(d)),
-          #("json_signature", dynamic.unsafe_coerce(e)),
-          #("module_name", json.string(f)),
-          #("package_name", json.string(g)),
-          #("version", json.string(h)),
-        ])
-      },
-      dynamic.element(0, dynamic.string),
-      dynamic.element(1, dynamic.string),
-      dynamic.element(2, dynamic.string),
-      dynamic.element(3, dynamic.dynamic),
-      dynamic.element(4, dynamic.dynamic),
-      dynamic.element(5, dynamic.string),
-      dynamic.element(6, dynamic.string),
-      dynamic.element(7, dynamic.string),
-    ),
-  )
+  |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }

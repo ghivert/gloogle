@@ -40,7 +40,7 @@ pub fn type_definition_to_json(
   use gen <- result.map(reduce_components(type_def.constructors, mapper))
   use constructors <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
-    #("type", json.string("type-definition")),
+    #("nature", json.string("type-definition")),
     #("name", json.string(type_name)),
     #("documentation", json.nullable(type_def.documentation, json.string)),
     #("deprecation", json.nullable(type_def.documentation, json.string)),
@@ -266,7 +266,7 @@ pub fn type_alias_to_json(
   use gen <- result.map(type_to_json(ctx, type_alias.alias))
   use alias <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
-    #("type", json.string("type-alias")),
+    #("nature", json.string("type-alias")),
     #("name", json.string(type_name)),
     #("documentation", json.nullable(type_alias.documentation, json.string)),
     #("deprecation", json.nullable(type_alias.documentation, json.string)),
@@ -288,7 +288,7 @@ pub fn constant_to_json(ctx: Context, constant_name: String, constant: Constant)
   use gen <- result.map(type_to_json(ctx, constant.type_))
   use type_ <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
-    #("type", json.string("constant")),
+    #("nature", json.string("constant")),
     #("name", json.string(constant_name)),
     #("documentation", json.nullable(constant.documentation, json.string)),
     #("deprecation", json.nullable(constant.documentation, json.string)),
@@ -305,7 +305,7 @@ pub fn function_to_json(ctx: Context, function_name: String, function: Function)
   |> pair.map_second(fn(s) { set.to_list(set.union(s, ret.1)) })
   |> pair.map_first(fn(parameters) {
     json.object([
-      #("type", json.string("function")),
+      #("nature", json.string("function")),
       #("name", json.string(function_name)),
       #("documentation", json.nullable(function.documentation, json.string)),
       #("deprecation", json.nullable(function.documentation, json.string)),

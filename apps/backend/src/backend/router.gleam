@@ -20,13 +20,19 @@ fn empty_json() {
   |> wisp.json_response(200)
 }
 
+fn search(query: String, ctx: Context) {
+  let a = result.unwrap(queries.name_search(ctx.db, query), [])
+  let b = result.unwrap(queries.search(ctx.db, query), [])
+  list.append(a, b)
+}
+
 pub fn handle_get(req: Request, ctx: Context) {
   case wisp.path_segments(req) {
     ["search"] -> {
       wisp.get_query(req)
       |> list.find(fn(item) { item.0 == "q" })
       |> result.replace_error(error.EmptyError)
-      |> result.try(fn(item) { queries.search(ctx.db, item.1) })
+      |> result.map(fn(item) { search(item.1, ctx) })
       |> result.unwrap([])
       |> json.preprocessed_array()
       |> json.to_string_builder()

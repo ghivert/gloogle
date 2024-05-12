@@ -363,11 +363,11 @@ fn view_search_input(model: Model) {
   ])
 }
 
-fn match_title(results: List(a), title: String) {
+fn match_title(results: List(a), title: String, content: String) {
   use <- bool.guard(when: list.is_empty(results), return: element.none())
   h.div([s.matches_titles()], [
-    h.div([s.matches_title()], [h.text("Exact matches")]),
-    h.div([], [h.text(title)]),
+    h.div([s.matches_title()], [h.text(title)]),
+    h.div([], [h.text(content)]),
   ])
 }
 
@@ -399,9 +399,9 @@ fn body(model: Model) {
       ),
     ]
     search_result.SearchResults(exact, others) -> [
-      match_title(exact, frontend_strings.exact_match),
+      match_title(exact, "Exact matches", frontend_strings.exact_match),
       view_search_results(exact),
-      match_title(others, frontend_strings.partial_match),
+      match_title(others, "Other matches", frontend_strings.partial_match),
       view_search_results(others),
     ]
   })

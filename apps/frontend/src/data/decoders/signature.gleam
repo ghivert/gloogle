@@ -1,6 +1,5 @@
 import gleam/dynamic
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{type Option}
 import gleam/result
@@ -48,7 +47,7 @@ pub type Signature {
 }
 
 pub fn decode_signature(dyn) {
-  use res <- result.try(dynamic.field("nature", dynamic.string)(dyn))
+  use res <- result.try(dynamic.field("kind", dynamic.string)(dyn))
   case res {
     "constant" -> decode_constant(dyn)
     "function" -> decode_function(dyn)
@@ -59,7 +58,7 @@ pub fn decode_signature(dyn) {
 }
 
 fn decode_type(dyn) {
-  use res <- result.try(dynamic.field("type", dynamic.string)(dyn))
+  use res <- result.try(dynamic.field("kind", dynamic.string)(dyn))
   case res {
     "variable" -> decode_variable(dyn)
     "fn" -> decode_fn(dyn)
@@ -134,7 +133,7 @@ fn decode_parameter(dyn) {
       Parameter(width, a, b)
     },
     dynamic.field("label", dynamic.optional(dynamic.string)),
-    dynamic.field("params_type", decode_type),
+    dynamic.field("type", decode_type),
   )(dyn)
 }
 

@@ -52,7 +52,7 @@ pub fn decode_search_result(dyn) {
     dynamic.field("documentation", dynamic.string),
     dynamic.field("module_name", dynamic.string),
     dynamic.field("name", dynamic.string),
-    dynamic.field("nature", nature.decode_nature),
+    dynamic.field("kind", nature.decode_nature),
     dynamic.field("package_name", dynamic.string),
     dynamic.field("json_signature", signature.decode_signature),
     dynamic.field("metadata", decode_metadata),

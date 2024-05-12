@@ -35,7 +35,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
     let _ =
       queries.upsert_package_type_fun_signature(
         db: ctx.db,
-        nature: queries.TypeDefinition,
+        kind: queries.TypeDefinition,
         name: type_name,
         documentation: option.None,
         metadata: json.null(),
@@ -49,7 +49,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
     use gen <- result.try(type_definition_to_json(ctx, type_name, type_def))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
-      nature: queries.TypeDefinition,
+      kind: queries.TypeDefinition,
       name: type_name,
       documentation: type_def.documentation,
       metadata: metadata.generate(type_def.deprecation, None),
@@ -73,7 +73,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
     let _ =
       queries.upsert_package_type_fun_signature(
         db: ctx.db,
-        nature: queries.TypeAlias,
+        kind: queries.TypeAlias,
         name: type_name,
         documentation: option.None,
         metadata: json.null(),
@@ -88,7 +88,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name: type_name,
-      nature: queries.TypeAlias,
+      kind: queries.TypeAlias,
       documentation: type_alias.documentation,
       metadata: metadata.generate(type_alias.deprecation, None),
       signature: type_alias_to_string(type_name, type_alias),
@@ -111,7 +111,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name: constant_name,
-      nature: queries.Constant,
+      kind: queries.Constant,
       documentation: constant.documentation,
       metadata: Some(constant.implementations)
         |> metadata.generate(constant.deprecation, _),
@@ -135,7 +135,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name: function_name,
-      nature: queries.Function,
+      kind: queries.Function,
       documentation: function.documentation,
       metadata: Some(function.implementations)
         |> metadata.generate(function.deprecation, _),

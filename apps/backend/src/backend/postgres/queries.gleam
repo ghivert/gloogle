@@ -17,7 +17,7 @@ import gleam/result
 import gleam/string
 import helpers
 
-pub type SignatureNature {
+pub type SignatureKind {
   TypeAlias
   TypeDefinition
   Constant
@@ -195,18 +195,27 @@ pub fn upsert_release(
   let gleam_toml = pgo.nullable(pgo.text, gleam_toml)
   let args = [package_id, version, url, package_interface, gleam_toml]
   "INSERT INTO package_release (
-    package_id,
-    version,
-    url,
-    package_interface,
-    gleam_toml
-  ) VALUES ($1, $2, $3, $4, $5)
+     package_id,
+     version,
+     url,
+     package_interface,
+     gleam_toml
+   ) VALUES ($1, $2, $3, $4, $5)
    ON CONFLICT (package_id, version) DO UPDATE
      SET
        url = $3,
        package_interface = $4,
-       gleam_toml = $5"
-  |> pgo.execute(db, args, dynamic.dynamic)
+       gleam_toml = $5
+   RETURNING id, package_interface, gleam_toml"
+  |> pgo.execute(
+    db,
+    args,
+    dynamic.tuple3(
+      dynamic.int,
+      dynamic.optional(dynamic.string),
+      dynamic.optional(dynamic.string),
+    ),
+  )
   |> result.map_error(error.DatabaseError)
 }
 
@@ -218,13 +227,14 @@ pub fn lookup_release(
   let package_id = pgo.int(package_id)
   let version = pgo.text(release.version)
   let args = [package_id, version]
-  "SELECT package_interface, gleam_toml
+  "SELECT id, package_interface, gleam_toml
    FROM package_release
    WHERE package_id = $1 AND version = $2"
   |> pgo.execute(
     db,
     args,
-    dynamic.tuple2(
+    dynamic.tuple3(
+      dynamic.int,
       dynamic.optional(dynamic.string),
       dynamic.optional(dynamic.string),
     ),
@@ -246,6 +256,33 @@ pub fn add_package_gleam_constraint(
   let release_id = pgo.int(release_id)
   "UPDATE package_release SET gleam_constraint = $1 WHERE id = $2"
   |> pgo.execute(db, [constraint, release_id], dynamic.dynamic)
+  |> result.replace(Nil)
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn add_package_gleam_retirement(
+  db: pgo.Connection,
+  retirement: hexpm.ReleaseRetirement,
+  release_id: Int,
+) {
+  let retirement =
+    json.object([
+      #("message", json.nullable(retirement.message, json.string)),
+      #("reason", {
+        json.string(case retirement.reason {
+          hexpm.OtherReason -> "other-reason"
+          hexpm.Invalid -> "invalid"
+          hexpm.Security -> "security"
+          hexpm.Deprecated -> "deprecated"
+          hexpm.Renamed -> "renamed"
+        })
+      }),
+    ])
+    |> json.to_string()
+    |> pgo.text()
+  let release_id = pgo.int(release_id)
+  "UPDATE package_release SET retirement = $1 WHERE id = $2"
+  |> pgo.execute(db, [retirement, release_id], dynamic.dynamic)
   |> result.replace(Nil)
   |> result.map_error(error.DatabaseError)
 }
@@ -311,7 +348,7 @@ fn implementations_pgo(implementations: package_interface.Implementations) {
 
 pub fn upsert_package_type_fun_signature(
   db db: pgo.Connection,
-  nature nature: SignatureNature,
+  kind kind: SignatureKind,
   name name: String,
   documentation documentation: Option(String),
   metadata metadata: json.Json,
@@ -322,7 +359,7 @@ pub fn upsert_package_type_fun_signature(
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
 ) {
-  let nature = case nature {
+  let kind = case kind {
     Function -> "function"
     TypeAlias -> "type_alias"
     TypeDefinition -> "type_definition"
@@ -333,7 +370,7 @@ pub fn upsert_package_type_fun_signature(
      documentation,
      signature_,
      json_signature,
-     nature,
+     kind,
      parameters,
      metadata,
      package_module_id,
@@ -345,7 +382,7 @@ pub fn upsert_package_type_fun_signature(
        documentation = $2,
        signature_ = $3,
        json_signature = $4,
-       nature = $5,
+       kind = $5,
        parameters = $6,
        metadata = $7,
        deprecation = $9,
@@ -362,7 +399,7 @@ pub fn upsert_package_type_fun_signature(
       json_signature
         |> json.to_string()
         |> pgo.text(),
-      pgo.text(nature),
+      pgo.text(kind),
       dynamic.unsafe_coerce(dynamic.from(parameters)),
       metadata
         |> json.to_string()
@@ -384,12 +421,12 @@ pub fn upsert_package_type_fun_signature(
 
 pub fn name_search(db: pgo.Connection, query: String) {
   let query = pgo.text(query)
-  "SELECT DISTINCT ON (type_name, nature, module_name) *
+  "SELECT DISTINCT ON (type_name, kind, module_name) *
    FROM (
      SELECT
        s.name type_name,
        s.documentation,
-       s.nature,
+       s.kind,
        s.metadata,
        s.json_signature,
        m.name module_name,
@@ -418,7 +455,7 @@ fn decode_type_search(dyn) {
       json.object([
         #("name", json.string(a)),
         #("documentation", json.string(b)),
-        #("nature", json.string(c)),
+        #("kind", json.string(c)),
         #("metadata", dynamic.unsafe_coerce(d)),
         #("json_signature", dynamic.unsafe_coerce(e)),
         #("module_name", json.string(f)),
@@ -442,7 +479,7 @@ pub fn search(db: pgo.Connection, q: String) {
   "SELECT
      s.name,
      s.documentation,
-     s.nature,
+     s.kind,
      s.metadata,
      s.json_signature,
      m.name,

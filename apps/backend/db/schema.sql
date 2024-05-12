@@ -190,7 +190,8 @@ CREATE TABLE public.package_release (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     package_interface text,
-    gleam_toml text
+    gleam_toml text,
+    retirement jsonb
 );
 
 
@@ -218,7 +219,7 @@ CREATE TABLE public.package_type_fun_signature (
     documentation text NOT NULL,
     signature_ text NOT NULL,
     json_signature jsonb NOT NULL,
-    nature public.type_nature NOT NULL,
+    kind public.type_nature NOT NULL,
     parameters integer[] NOT NULL,
     deprecation text,
     implementations text,
@@ -456,4 +457,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240412155056'),
     ('20240412155057'),
     ('20240413164020'),
-    ('20240506110519');
+    ('20240506110519'),
+    ('20240512211227'),
+    ('20240512214036');

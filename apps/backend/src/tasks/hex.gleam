@@ -132,7 +132,7 @@ pub fn sync_package(ctx: Context, package: hexpm.Package) {
 }
 
 fn log_retirement_data(release: String, retirement: hexpm.ReleaseRetirement) {
-  wisp.log_info("Release " <> release <> " is retired. Skipping.")
+  wisp.log_info("Release " <> release <> " is retired.")
   case retirement.message {
     option.Some(m) -> wisp.log_debug("  Retired because " <> m)
     option.None -> Nil
@@ -152,8 +152,10 @@ fn extract_release_interfaces_from_db(
   release: hexpm.Release,
 ) {
   use _ <- result.try_recover(queries.lookup_release(state.db, id, release))
-  queries.upsert_release(state.db, id, release, None, None)
-  |> result.replace(#(None, None))
+  use r <- result.try(queries.upsert_release(state.db, id, release, None, None))
+  r.rows
+  |> list.first()
+  |> result.replace_error(error.UnknownError(""))
 }
 
 fn extract_release_interfaces_from_hex(
@@ -176,18 +178,35 @@ fn extract_release_interfaces(
   id: Int,
   package: hexpm.Package,
   release: hexpm.Release,
-  interfaces: #(Option(String), Option(String)),
+  interfaces: #(Int, Option(String), Option(String)),
 ) {
   use _ <- result.try_recover(case interfaces {
-    #(Some(interface), Some(toml)) ->
-      hex_repo.parse_files(interface, toml)
-      |> result.map(fn(content) {
-        wisp.log_debug("Using interfaces from database")
-        content
-      })
+    #(_, Some(interface), Some(toml)) -> {
+      use content <- result.map(hex_repo.parse_files(interface, toml))
+      wisp.log_debug("Using interfaces from database")
+      content
+    }
     _ -> Error(error.UnknownError("No release data"))
   })
   extract_release_interfaces_from_hex(state, id, package, release)
+}
+
+fn save_retirement_data(
+  state: State,
+  release_id: Int,
+  package: hexpm.Package,
+  release: hexpm.Release,
+) {
+  case release.retirement {
+    option.None -> Nil
+    option.Some(retirement) -> {
+      let release = package.name <> " v" <> release.version
+      log_retirement_data(release, retirement)
+      let _ =
+        queries.add_package_gleam_retirement(state.db, retirement, release_id)
+      Nil
+    }
+  }
 }
 
 fn insert_package_and_releases(
@@ -204,54 +223,42 @@ fn insert_package_and_releases(
     |> string.join(", v")
   wisp.log_info("Saving " <> package.name <> " v" <> versions)
   use id <- result.try(queries.upsert_package(state.db, package))
+
   wisp.log_debug("Saving owners for " <> package.name)
   use owners <- result.try(api.get_package_owners(package.name, secret: secret))
   use _ <- result.try(queries.sync_package_owners(state.db, id, owners))
+
   wisp.log_debug("Saving releases for " <> package.name)
-  list.try_each(releases, fn(r) {
-    let release = package.name <> " v" <> r.version
-    use _ <- result.try_recover({
-      queries.lookup_release(state.db, id, r)
-      |> result.replace(Nil)
-      |> case force_old_release_update {
-        True -> result.try(_, fn(_) { Error(error.EmptyError) })
-        False -> function.identity
-      }
-    })
-    wisp.log_debug("Handling release " <> r.version)
-    use interfaces <- result.map({
-      extract_release_interfaces_from_db(state, id, r)
-    })
-    case r.retirement {
-      option.Some(retirement) -> log_retirement_data(release, retirement)
-      option.None -> {
-        case children {
-          None -> {
-            let _ = do_extract_package(state, id, r, package, interfaces, False)
-            Nil
-          }
-          Some(children) -> {
-            supervisor.add(children, {
-              use _ <- supervisor.worker()
-              use iterations <- retrier.retry()
-              let it = int.to_string(iterations)
-              wisp.log_notice("Trying iteration " <> it <> " for " <> release)
-              do_extract_package(
-                state,
-                id,
-                r,
-                package,
-                interfaces,
-                iterations == 0,
-              )
-            })
-            Nil
-          }
-        }
-        Nil
-      }
+  use r <- list.try_each(releases)
+  let release = package.name <> " v" <> r.version
+  use _ <- result.try_recover({
+    queries.lookup_release(state.db, id, r)
+    |> result.replace(Nil)
+    |> case force_old_release_update {
+      True -> result.try(_, fn(_) { Error(error.EmptyError) })
+      False -> function.identity
     }
   })
+  wisp.log_debug("Handling release " <> r.version)
+  use interfaces <- result.map(extract_release_interfaces_from_db(state, id, r))
+  save_retirement_data(state, interfaces.0, package, r)
+  let _ = case children {
+    None -> {
+      let _ = do_extract_package(state, id, r, package, interfaces, False)
+      Nil
+    }
+    Some(children) -> {
+      supervisor.add(children, {
+        use _ <- supervisor.worker()
+        use iterations <- retrier.retry()
+        let it = int.to_string(iterations)
+        wisp.log_notice("Trying iteration " <> it <> " for " <> release)
+        do_extract_package(state, id, r, package, interfaces, iterations == 0)
+      })
+      Nil
+    }
+  }
+  Nil
 }
 
 fn do_extract_package(
@@ -259,7 +266,7 @@ fn do_extract_package(
   id: Int,
   release: hexpm.Release,
   package: hexpm.Package,
-  interfaces: #(Option(String), Option(String)),
+  interfaces: #(Int, Option(String), Option(String)),
   ignore_errors: Bool,
 ) {
   use #(package, gleam_toml) <- result.try({

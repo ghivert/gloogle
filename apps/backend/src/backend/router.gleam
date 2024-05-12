@@ -21,13 +21,19 @@ fn empty_json() {
 }
 
 fn search(query: String, ctx: Context) {
-  [
-    queries.name_search(ctx.db, query),
-    queries.content_search(ctx.db, query),
-    queries.search(ctx.db, query),
-  ]
-  |> list.map(fn(r) { result.unwrap(r, []) })
-  |> list.concat()
+  json.object([
+    #("exact-matches", {
+      queries.name_search(ctx.db, query)
+      |> result.unwrap([])
+      |> json.preprocessed_array()
+    }),
+    #("matches", {
+      queries.content_search(ctx.db, query)
+      |> result.unwrap([])
+      |> json.preprocessed_array()
+    }),
+  ])
+  // queries.search(ctx.db, query),
 }
 
 pub fn handle_get(req: Request, ctx: Context) {
@@ -37,8 +43,7 @@ pub fn handle_get(req: Request, ctx: Context) {
       |> list.find(fn(item) { item.0 == "q" })
       |> result.replace_error(error.EmptyError)
       |> result.map(fn(item) { search(item.1, ctx) })
-      |> result.unwrap([])
-      |> json.preprocessed_array()
+      |> result.unwrap(json.object([#("error", json.string("internal"))]))
       |> json.to_string_builder()
       |> wisp.json_response(200)
     }

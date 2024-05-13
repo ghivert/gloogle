@@ -1,6 +1,7 @@
 import data/msg
 import data/search_result
 import data/signature.{type Parameter, type Type, Parameter}
+import frontend/view/body/styles as s
 import frontend/view/helpers
 import frontend/view/types as t
 import gleam/bool
@@ -8,6 +9,7 @@ import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
+import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 
@@ -109,13 +111,29 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
         }),
       ]
     }
-    signature.Named(width, name, _package, _module, parameters, _ref) -> {
+    signature.Named(width, name, package, module, parameters, version) -> {
       let inline = width + indent <= 80
       let is_params = !list.is_empty(parameters)
       list.concat([
         [
           helpers.idt(indent),
-          t.type_(name),
+          case version {
+            None -> t.type_(name)
+            Some(version) ->
+              s.named_type_button(
+                [
+                  a.target("_blank"),
+                  a.rel("noreferrer"),
+                  a.href(helpers.hexdocs_link(
+                    package: package,
+                    version: version,
+                    module: module,
+                    name: name,
+                  )),
+                ],
+                [t.type_(name)],
+              )
+          },
           case is_params {
             True -> h.text("(")
             False -> el.none()

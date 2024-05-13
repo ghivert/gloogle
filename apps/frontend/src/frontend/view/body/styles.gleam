@@ -411,3 +411,11 @@ pub fn items_wrapper(attributes, children) {
   |> list.prepend(attributes, _)
   |> element.element("div", _, children)
 }
+
+pub fn named_type_button(attributes, children) {
+  s.class([s.text_decoration("none")])
+  |> s.memo()
+  |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("a", _, children)
+}

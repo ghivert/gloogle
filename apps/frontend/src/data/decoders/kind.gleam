@@ -1,14 +1,14 @@
 import gleam/dynamic
 import gleam/result
 
-pub type Nature {
+pub type Kind {
   Function
   TypeDefinition
   TypeAlias
   Constant
 }
 
-pub fn decode_nature(dyn) {
+pub fn decode_kind(dyn) {
   use str <- result.try(dynamic.string(dyn))
   case str {
     "function" -> Ok(Function)
@@ -19,8 +19,8 @@ pub fn decode_nature(dyn) {
   }
 }
 
-pub fn display_nature(nature) {
-  case nature {
+pub fn display_kind(kind) {
+  case kind {
     Function -> "Function"
     TypeDefinition -> "Type"
     TypeAlias -> "Type Alias"

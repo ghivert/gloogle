@@ -40,11 +40,9 @@ pub fn main() {
     |> options.timeout(5000)
     |> grille_pain.setup()
 
-  let apply_debugger = fn(fun: fn(a, tardis.Instance) -> a) {
-    fn(app: a) {
-      result.map(debugger_, fun(app, _))
-      |> result.unwrap(app)
-    }
+  let apply_debugger = fn(app: a, fun: fn(a, tardis.Instance) -> a) {
+    result.map(debugger_, fun(app, _))
+    |> result.unwrap(app)
   }
 
   let assert Ok(_) =
@@ -58,35 +56,53 @@ pub fn main() {
 
 fn update(model: Model, msg: Msg) {
   case msg {
-    msg.UpdateInput(content) ->
-      model
-      |> model.update_input(content)
-      |> update.none()
-    msg.SubmitSearch -> {
-      use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
-      http.expect_json(search_result.decode_search_results, msg.SearchResults)
-      |> http.get("http://localhost:3000/search?q=" <> model.input, _)
-      |> pair.new(model, _)
-    }
-    msg.Reset ->
-      model
-      |> model.reset()
-      |> update.none()
-    msg.SearchResults(search_results) -> {
-      let toast =
-        search_results
-        |> result.map_error(fn(error) {
-          error
-          |> toast_error.describe_http_error()
-          |> option.map(toast.error)
-        })
-        |> result.unwrap_error(option.None)
-        |> option.unwrap(effect.none())
-      search_results
-      |> result.map(model.update_search_results(model, _))
-      |> result.unwrap(model)
-      |> pair.new(toast)
-    }
+    msg.UpdateInput(content) -> update_input(model, content)
+    msg.SubmitSearch -> submit_search(model)
+    msg.Reset -> reset(model)
     msg.None -> update.none(model)
+    msg.SearchResults(search_results) ->
+      handle_search_results(model, search_results)
   }
+}
+
+fn update_input(model: Model, content: String) {
+  model
+  |> model.update_input(content)
+  |> update.none()
+}
+
+fn reset(model: Model) {
+  model
+  |> model.reset()
+  |> update.none()
+}
+
+fn submit_search(model: Model) {
+  use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
+  http.expect_json(search_result.decode_search_results, msg.SearchResults)
+  |> http.get("http://localhost:3000/search?q=" <> model.input, _)
+  |> pair.new(model, _)
+}
+
+fn handle_search_results(
+  model: Model,
+  search_results: Result(search_result.SearchResults, http.HttpError),
+) {
+  let toast = display_toast(search_results)
+  search_results
+  |> result.map(model.update_search_results(model, _))
+  |> result.unwrap(model)
+  |> pair.new(toast)
+}
+
+fn display_toast(
+  search_results: Result(search_result.SearchResults, http.HttpError),
+) {
+  search_results
+  |> result.map_error(fn(error) {
+    toast_error.describe_http_error(error)
+    |> option.map(toast.error)
+  })
+  |> result.unwrap_error(option.None)
+  |> option.unwrap(effect.none())
 }

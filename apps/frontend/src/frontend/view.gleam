@@ -1,4 +1,4 @@
-import data/decoders/nature
+import data/decoders/kind
 import data/decoders/search_result
 import data/decoders/signature.{type Parameter, type Type, Parameter}
 import data/model.{type Model}
@@ -10,7 +10,6 @@ import frontend/styles as s
 import frontend/types as t
 import gleam/bool
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
@@ -323,7 +322,7 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
     use item <- list.map(search_results)
     h.div([s.search_result()], [
       h.div([s.search_details()], [
-        h.div([], [h.text(nature.display_nature(item.nature))]),
+        h.div([], [h.text(kind.display_kind(item.kind))]),
         h.div([], [
           t.dark_white(item.package_name <> "@" <> item.version),
           t.dark_white("."),

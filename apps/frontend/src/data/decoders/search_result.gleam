@@ -1,5 +1,5 @@
 import data/decoders/implementations.{type Implementations, Implementations}
-import data/decoders/nature.{type Nature}
+import data/decoders/kind.{type Kind}
 import data/decoders/signature.{type Signature}
 import gleam/dynamic
 import gleam/option.{type Option}
@@ -38,7 +38,7 @@ pub type SearchResult {
     documentation: String,
     module_name: String,
     name: String,
-    nature: Nature,
+    kind: Kind,
     package_name: String,
     json_signature: Signature,
     metadata: Metadata,
@@ -58,7 +58,7 @@ pub fn decode_search_result(dyn) {
     dynamic.field("documentation", dynamic.string),
     dynamic.field("module_name", dynamic.string),
     dynamic.field("name", dynamic.string),
-    dynamic.field("kind", nature.decode_nature),
+    dynamic.field("kind", kind.decode_kind),
     dynamic.field("package_name", dynamic.string),
     dynamic.field("json_signature", signature.decode_signature),
     dynamic.field("metadata", decode_metadata),

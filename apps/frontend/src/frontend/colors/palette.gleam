@@ -27,3 +27,7 @@ pub const dark = Palette(
   black: "#1e1e1e",
   blacker: "#151515",
 )
+
+pub const erlang = "rgb(155, 32, 54)"
+
+pub const javascript = "#f7df1e"

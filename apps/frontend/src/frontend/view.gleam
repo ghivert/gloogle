@@ -1,8 +1,10 @@
+import data/decoders/implementations
 import data/decoders/kind
 import data/decoders/search_result
 import data/decoders/signature.{type Parameter, type Type, Parameter}
 import data/model.{type Index, type Model}
 import data/msg
+import frontend/colors/palette
 import frontend/documentation
 import frontend/footer/view as footer
 import frontend/images
@@ -318,6 +320,24 @@ fn view_signature(
   }
 }
 
+fn view_implementations(implementations: implementations.Implementations) {
+  case implementations {
+    implementations.Implementations(True, False, False) -> element.none()
+    implementations.Implementations(gleam, erl, js) ->
+      [
+        #("Gleam", gleam, palette.dark.faff_pink, palette.dark.blacker),
+        #("Erlang", erl, palette.erlang, palette.dark.white),
+        #("JavaScript", js, palette.javascript, palette.dark.blacker),
+      ]
+      |> list.filter(fn(item) { item.1 })
+      |> list.map(fn(item) {
+        let #(content, _, background, color) = item
+        h.div([s.implementations_pill(background, color)], [h.text(content)])
+      })
+      |> h.div([s.implementations_pill_wrapper()], _)
+  }
+}
+
 fn view_search_results(search_results: List(search_result.SearchResult)) {
   element.fragment({
     use item <- list.map(search_results)
@@ -325,8 +345,13 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
     let id = package_id <> "-" <> item.module_name <> "-" <> item.name
     h.div([s.search_result(), a.id(id)], [
       h.div([s.search_details()], [
-        h.div([], [h.text(kind.display_kind(item.kind))]),
-        h.div([], [
+        h.div([s.search_details_title()], [
+          h.text(kind.display_kind(item.kind)),
+          item.metadata.implementations
+            |> option.map(view_implementations)
+            |> option.unwrap(element.none()),
+        ]),
+        h.div([s.qualified_name()], [
           t.dark_white(package_id),
           t.dark_white("."),
           t.keyword(item.module_name),

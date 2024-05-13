@@ -480,3 +480,34 @@ pub fn sidebar_package_wrapper() {
   ])
   |> s.to_lustre()
 }
+
+pub fn search_details_title() {
+  s.class([s.display("flex"), s.align_items("center"), s.gap(px(12))])
+  |> s.to_lustre()
+}
+
+pub fn implementations_pill(background: String, color: String) {
+  let id = "implementations-pill-" <> background
+  s.dynamic(id, [
+    s.background(background),
+    s.color(color),
+    s.padding_("4px 9px"),
+    s.border_radius(px(6)),
+    s.font_size(px(10)),
+  ])
+  |> s.to_lustre()
+}
+
+pub fn implementations_pill_wrapper() {
+  s.class([s.display("flex"), s.align_items("center"), s.gap(px(6))])
+  |> s.to_lustre()
+}
+
+pub fn qualified_name() {
+  s.class([
+    s.overflow("hidden"),
+    s.text_overflow("ellipsis"),
+    s.direction("rtl"),
+  ])
+  |> s.to_lustre()
+}

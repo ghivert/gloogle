@@ -54,6 +54,7 @@ pub fn sync_new_gleam_releases(
   let latest = queries.upsert_most_recent_hex_timestamp(ctx.db, latest)
   wisp.log_info("")
   wisp.log_info("Up to date!")
+  pgo.disconnect(ctx.db)
   latest
 }
 

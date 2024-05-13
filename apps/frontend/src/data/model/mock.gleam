@@ -1,4 +1,4 @@
-import data/decoders/search_result
+import data/search_result
 import gleam/json
 
 pub fn mock() {

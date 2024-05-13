@@ -1,4 +1,4 @@
-import data/decoders/search_result.{type SearchResults}
+import data/search_result.{type SearchResults}
 import lustre_http as http
 
 pub type Msg {

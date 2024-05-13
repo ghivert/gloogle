@@ -1,37 +1,7 @@
-import data/decoders/implementations.{type Implementations, Implementations}
-import data/decoders/kind.{type Kind}
-import data/decoders/signature.{type Signature}
+import data/kind.{type Kind}
+import data/metadata.{type Metadata}
+import data/signature.{type Signature}
 import gleam/dynamic
-import gleam/option.{type Option}
-import gleam/result
-
-pub type Metadata {
-  Metadata(
-    deprecation: Option(String),
-    implementations: Option(Implementations),
-  )
-}
-
-fn completely_option(dyn) {
-  dynamic.optional_field("deprecation", dynamic.optional(dynamic.string))(dyn)
-  |> result.map(fn(res) { option.flatten(res) })
-}
-
-fn decode_metadata(dyn) {
-  dynamic.decode2(
-    Metadata,
-    completely_option,
-    dynamic.optional_field(
-      "implementations",
-      dynamic.decode3(
-        Implementations,
-        dynamic.field("gleam", dynamic.bool),
-        dynamic.field("uses_erlang_externals", dynamic.bool),
-        dynamic.field("uses_javascript_externals", dynamic.bool),
-      ),
-    ),
-  )(dyn)
-}
 
 pub type SearchResult {
   SearchResult(
@@ -61,7 +31,7 @@ pub fn decode_search_result(dyn) {
     dynamic.field("kind", kind.decode_kind),
     dynamic.field("package_name", dynamic.string),
     dynamic.field("json_signature", signature.decode_signature),
-    dynamic.field("metadata", decode_metadata),
+    dynamic.field("metadata", metadata.decode_metadata),
     dynamic.field("version", dynamic.string),
   )(dyn)
 }

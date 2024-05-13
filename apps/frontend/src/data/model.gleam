@@ -1,5 +1,5 @@
-import data/decoders/search_result.{type SearchResult, type SearchResults}
 import data/model/mock
+import data/search_result.{type SearchResult, type SearchResults}
 import gleam/io
 import gleam/list
 import gleam/pair

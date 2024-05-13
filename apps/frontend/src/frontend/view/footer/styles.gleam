@@ -1,8 +1,10 @@
 import frontend/colors/palette
+import gleam/list
+import lustre/element
 import sketch as s
 import sketch/size.{px}
 
-pub fn footer() {
+pub fn footer(attributes, children) {
   s.class([
     s.background(palette.dark.charcoal),
     s.display("flex"),
@@ -14,9 +16,11 @@ pub fn footer() {
   ])
   |> s.memo()
   |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("div", _, children)
 }
 
-pub fn footer_built() {
+pub fn footer_built(attributes, children) {
   s.class([
     s.display("flex"),
     s.flex_direction("column"),
@@ -27,9 +31,11 @@ pub fn footer_built() {
   ])
   |> s.memo()
   |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("div", _, children)
 }
 
-pub fn footer_links() {
+pub fn footer_links(attributes, children) {
   s.class([
     s.display("grid"),
     s.grid_template_columns("repeat(3, 1fr)"),
@@ -40,9 +46,11 @@ pub fn footer_links() {
   ])
   |> s.memo()
   |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("div", _, children)
 }
 
-pub fn footer_section() {
+pub fn footer_section(attributes, children) {
   s.class([
     s.display("grid"),
     s.grid_template_columns("1fr"),
@@ -51,9 +59,11 @@ pub fn footer_section() {
   ])
   |> s.memo()
   |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("div", _, children)
 }
 
-pub fn foot_title() {
+pub fn foot_title(attributes, children) {
   s.class([
     s.color(palette.dark.dark_white),
     s.font_weight("500"),
@@ -61,13 +71,17 @@ pub fn foot_title() {
   ])
   |> s.memo()
   |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("div", _, children)
 }
 
-pub fn foot_lk() {
+pub fn foot_lk(attributes, children) {
   s.class([
     s.font_size(size.rem_(0.9)),
     s.color(palette.dark.white),
     s.text_decoration("none"),
   ])
   |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("a", _, children)
 }

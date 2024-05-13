@@ -1,6 +1,6 @@
-import data/decoders/search_result
 import data/model.{type Model}
 import data/msg.{type Msg}
+import data/search_result
 import frontend/view
 import gleam/bool
 import gleam/option

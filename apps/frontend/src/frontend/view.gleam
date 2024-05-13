@@ -52,7 +52,10 @@ fn navbar(model: Model) {
         ])
     },
     h.div([s.nav_links()], [
-      h.div([], [h.text("Packages")]),
+      h.div([s.trending()], [
+        h.text("Packages"),
+        h.span([s.coming_soon()], [h.text(" (coming soon…)")]),
+      ]),
       h.div([s.trending()], [
         h.text("Trending"),
         h.span([s.coming_soon()], [h.text(" (coming soon…)")]),

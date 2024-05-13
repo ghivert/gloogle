@@ -3,7 +3,7 @@ import gleam/string
 import lustre/attribute as a
 import lustre/element/html as h
 
-@external(javascript, "../markdown.ffi.mjs", "convert")
+@external(javascript, "../../markdown.ffi.mjs", "convert")
 fn converter(content: String) -> String
 
 fn remove_leading_space(str: String) {

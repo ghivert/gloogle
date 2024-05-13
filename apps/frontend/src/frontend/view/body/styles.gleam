@@ -82,10 +82,11 @@ pub fn qualified_name(attributes, children) {
     s.overflow("hidden"),
     s.text_overflow("ellipsis"),
     s.direction("rtl"),
+    s.text_decoration("none"),
   ])
   |> s.to_lustre()
   |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  |> element.element("a", _, children)
 }
 
 pub fn search_body(attributes, children) {

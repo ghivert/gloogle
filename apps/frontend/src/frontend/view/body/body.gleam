@@ -4,11 +4,11 @@ import data/model.{type Index, type Model}
 import data/msg
 import data/search_result
 import frontend/colors/palette
-import frontend/documentation
 import frontend/images
 import frontend/strings as frontend_strings
 import frontend/view/body/signature
 import frontend/view/body/styles as s
+import frontend/view/documentation
 import frontend/view/types as t
 import gleam/bool
 import gleam/list
@@ -49,13 +49,20 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
             |> option.map(implementations_pill)
             |> option.unwrap(el.none()),
         ]),
-        s.qualified_name([], [
-          t.dark_white(package_id),
-          t.dark_white("."),
-          t.keyword(item.module_name),
-          t.dark_white("#"),
-          t.fun(item.name),
-        ]),
+        s.qualified_name(
+          [
+            a.target("_blank"),
+            a.rel("noreferrer"),
+            a.href(search_result.hexdocs_link(item)),
+          ],
+          [
+            t.dark_white(package_id),
+            t.dark_white("."),
+            t.keyword(item.module_name),
+            t.dark_white("#"),
+            t.fun(item.name),
+          ],
+        ),
       ]),
       s.search_body([], [
         s.signature([], signature.view_signature(item)),

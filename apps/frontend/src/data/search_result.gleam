@@ -2,6 +2,8 @@ import data/kind.{type Kind}
 import data/metadata.{type Metadata}
 import data/signature.{type Signature}
 import gleam/dynamic
+import gleam/function
+import gleam/string
 
 pub type SearchResult {
   SearchResult(
@@ -47,4 +49,16 @@ pub fn decode_search_results(dyn) {
       dynamic.field("matches", dynamic.list(decode_search_result)),
     ),
   ])(dyn)
+}
+
+pub fn hexdocs_link(search_result: SearchResult) {
+  let join = function.flip(string.join)
+  let base =
+    join("/", [
+      "https://hexdocs.pm",
+      search_result.package_name,
+      search_result.version,
+      search_result.module_name,
+    ])
+  base <> ".html#" <> search_result.name
 }

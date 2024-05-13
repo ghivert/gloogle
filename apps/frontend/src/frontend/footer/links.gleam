@@ -13,6 +13,7 @@ pub const links = [
     "Gleam Community",
     [
       #("https://gleam.run/news/", "News"),
+      #("https://gleamweekly.com/", "Gleam Weekly"),
       #("https://gleam.run/community/", "Community"),
       #("https://github.com/sponsors/lpil", "Sponsor Gleam"),
     ],

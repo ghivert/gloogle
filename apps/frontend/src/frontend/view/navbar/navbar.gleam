@@ -8,10 +8,10 @@ import lustre/event as e
 
 fn navbar_links() {
   s.nav_links([], [
-    s.trending([], [
-      h.text("Packages"),
-      s.coming_soon([], [h.text(" (coming soon…)")]),
-    ]),
+    // s.trending([], [
+    //   h.text("Packages"),
+    //   s.coming_soon([], [h.text(" (coming soon…)")]),
+    // ]),
     s.trending([], [
       h.text("Trending"),
       s.coming_soon([], [h.text(" (coming soon…)")]),

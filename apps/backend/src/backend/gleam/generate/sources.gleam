@@ -87,19 +87,15 @@ fn type_to_string(type_: Type) {
       |> result.map(string.from_utf_codepoints)
       |> result.unwrap("a")
     }
-    package_interface.Named(name, package, module, parameters) -> {
-      let params =
-        parameters
-        |> list.map(type_to_string)
-        |> string.join(", ")
-        |> fn(s) {
-          use <- bool.guard(when: string.is_empty(s), return: s)
-          "(" <> s <> ")"
-        }
-      case package {
-        "" -> name <> params
-        _ -> module <> "." <> name <> params
+    package_interface.Named(name, _package, _module, parameters) -> {
+      parameters
+      |> list.map(type_to_string)
+      |> string.join(", ")
+      |> fn(s) {
+        use <- bool.guard(when: string.is_empty(s), return: s)
+        "(" <> s <> ")"
       }
+      |> string.append(name, _)
     }
   }
 }

@@ -2,6 +2,7 @@ import data/decoders/search_result
 import data/model.{type Model}
 import data/msg.{type Msg}
 import frontend/view
+import gleam/bool
 import gleam/option
 import gleam/pair
 import gleam/result
@@ -62,6 +63,7 @@ fn update(model: Model, msg: Msg) {
       |> model.update_input(content)
       |> update.none()
     msg.SubmitSearch -> {
+      use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
       http.expect_json(search_result.decode_search_results, msg.SearchResults)
       |> http.get("http://localhost:3000/search?q=" <> model.input, _)
       |> pair.new(model, _)

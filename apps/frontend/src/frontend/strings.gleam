@@ -1,6 +1,6 @@
 pub const gloogle_description = "Gloogle can search through all public gleam packages, to help you find the function you're looking for! Enter a type or a function name to get some results."
 
-pub const exact_match = "Matched directly from the signature of the functions, constants or types."
+pub const exact_match = "Matched directly from the name of the functions, constants or types."
 
 pub const partial_match = "Partly matched from the signature of the functions, constants or types."
 

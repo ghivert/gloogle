@@ -1,10 +1,11 @@
 import data/decoders/kind
 import data/decoders/search_result
 import data/decoders/signature.{type Parameter, type Type, Parameter}
-import data/model.{type Model}
+import data/model.{type Index, type Model}
 import data/msg
 import frontend/documentation
 import frontend/footer/view as footer
+import frontend/images
 import frontend/strings as frontend_strings
 import frontend/styles as s
 import frontend/types as t
@@ -31,7 +32,7 @@ pub fn view(model: Model) {
 }
 
 fn navbar(model: Model) {
-  h.div([s.navbar()], [
+  h.div([s.navbar(), a.class("navbar")], [
     case model.search_results {
       search_result.Start -> h.div([], [])
       search_result.NoSearchResults | search_result.SearchResults(_, _) ->
@@ -320,11 +321,13 @@ fn view_signature(
 fn view_search_results(search_results: List(search_result.SearchResult)) {
   element.fragment({
     use item <- list.map(search_results)
-    h.div([s.search_result()], [
+    let package_id = item.package_name <> "@" <> item.version
+    let id = package_id <> "-" <> item.module_name <> "-" <> item.name
+    h.div([s.search_result(), a.id(id)], [
       h.div([s.search_details()], [
         h.div([], [h.text(kind.display_kind(item.kind))]),
         h.div([], [
-          t.dark_white(item.package_name <> "@" <> item.version),
+          t.dark_white(package_id),
           t.dark_white("."),
           t.keyword(item.module_name),
           t.dark_white("#"),
@@ -373,7 +376,11 @@ fn match_title(results: List(a), title: String, content: String) {
   ])
 }
 
-fn empty_state(image: String, title: String, content: String) {
+fn empty_state(
+  image image: String,
+  title title: String,
+  content content: String,
+) {
   h.div([s.empty_state()], [
     h.img([a.src(image), s.empty_state_lucy()]),
     h.div([s.empty_state_titles()], [
@@ -383,28 +390,53 @@ fn empty_state(image: String, title: String, content: String) {
   ])
 }
 
-fn body(model: Model) {
-  h.main([s.main_wrapper()], case model.search_results {
-    search_result.Start -> [view_search_input(model)]
-    search_result.NoSearchResults -> [
-      empty_state(
-        "/images/internal_error.png",
-        "Internal server error",
-        frontend_strings.internal_server_error,
-      ),
-    ]
-    search_result.SearchResults([], []) -> [
-      empty_state(
-        "/images/shadow_lucy.png",
-        "No match found!",
-        frontend_strings.retry_query,
-      ),
-    ]
-    search_result.SearchResults(exact, others) -> [
-      match_title(exact, "Exact matches", frontend_strings.exact_match),
-      view_search_results(exact),
-      match_title(others, "Other matches", frontend_strings.partial_match),
-      view_search_results(others),
-    ]
+fn sidebar(index: Index) {
+  h.div([s.sidebar_wrapper()], {
+    use #(package, modules) <- list.map(index)
+    h.div([s.sidebar_package_wrapper()], [
+      h.div([s.sidebar_package_name()], [
+        h.text(package.0),
+        t.dark_white("#" <> package.1),
+      ]),
+      ..list.map(modules, fn(module) {
+        let #(module, name) = module
+        let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
+        h.button([s.sidebar_module_name(), e.on_click(msg.ScrollTo(id))], [
+          t.keyword(module),
+          h.text("#"),
+          t.fun(name),
+        ])
+      })
+    ])
   })
+}
+
+fn body(model: Model) {
+  h.main([s.main_wrapper()], [
+    case model.search_results {
+      search_result.Start -> view_search_input(model)
+      search_result.NoSearchResults ->
+        empty_state(
+          image: images.internal_error,
+          title: "Internal server error",
+          content: frontend_strings.internal_server_error,
+        )
+      search_result.SearchResults([], []) ->
+        empty_state(
+          image: images.shadow_lucy,
+          title: "No match found!",
+          content: frontend_strings.retry_query,
+        )
+      search_result.SearchResults(exact, others) ->
+        h.div([s.search_results_wrapper()], [
+          sidebar(model.index),
+          h.div([s.items_wrapper()], [
+            match_title(exact, "Exact matches", frontend_strings.exact_match),
+            view_search_results(exact),
+            match_title(others, "Other matches", frontend_strings.partial_match),
+            view_search_results(others),
+          ]),
+        ])
+    },
+  ])
 }

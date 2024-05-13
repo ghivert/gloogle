@@ -21,6 +21,9 @@ import toast/error as toast_error
 @external(javascript, "./config.ffi.mjs", "is_dev")
 fn is_dev() -> Bool
 
+@external(javascript, "./config.ffi.mjs", "scrollTo")
+fn scroll_to_element(id: String) -> Nil
+
 pub fn main() {
   let init = fn(_) { #(model.init(), effect.none()) }
 
@@ -60,6 +63,7 @@ fn update(model: Model, msg: Msg) {
     msg.SubmitSearch -> submit_search(model)
     msg.Reset -> reset(model)
     msg.None -> update.none(model)
+    msg.ScrollTo(id) -> scroll_to(model, id)
     msg.SearchResults(search_results) ->
       handle_search_results(model, search_results)
   }
@@ -82,6 +86,11 @@ fn submit_search(model: Model) {
   http.expect_json(search_result.decode_search_results, msg.SearchResults)
   |> http.get("http://localhost:3000/search?q=" <> model.input, _)
   |> pair.new(model, _)
+}
+
+fn scroll_to(model: Model, id: String) {
+  let eff = effect.from(fn(_dispatch) { scroll_to_element(id) })
+  #(model, eff)
 }
 
 fn handle_search_results(

@@ -101,20 +101,29 @@ hue-6-2: #e6c07b
 
 .documentation {
   line-height: 1.3;
+  font-size: 14px;
 }
 
-.documentation p {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+.documentation * {
+  margin-bottom: 9px;
+  margin-top: 9px;
+}
+
+.documentation *:last-child {
+  margin-bottom: 0px;
+}
+
+.documentation *:first-child {
+  margin-top: 0px;
 }
 
 .documentation h1 {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
 .documentation h2 {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
@@ -122,6 +131,6 @@ hue-6-2: #e6c07b
 .documentation h4,
 .documentation h5,
 .documentation h6 {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }

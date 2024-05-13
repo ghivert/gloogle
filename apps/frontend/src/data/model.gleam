@@ -1,11 +1,23 @@
-import data/decoders/search_result.{type SearchResults}
+import data/decoders/search_result.{type SearchResult, type SearchResults}
+import data/model/mock
+import gleam/io
+import gleam/list
+import gleam/pair
+import gleam/result
+
+pub type Index =
+  List(#(#(String, String), List(#(String, String))))
 
 pub type Model {
-  Model(input: String, search_results: SearchResults)
+  Model(input: String, search_results: SearchResults, index: Index)
 }
 
 pub fn init() {
-  Model(input: "", search_results: search_result.Start)
+  let search_results =
+    mock.mock()
+    |> result.unwrap(search_result.Start)
+  let index = compute_index(search_results)
+  Model(input: "", search_results: search_results, index: index)
 }
 
 pub fn update_input(model: Model, content: String) {
@@ -13,9 +25,33 @@ pub fn update_input(model: Model, content: String) {
 }
 
 pub fn update_search_results(model: Model, search_results: SearchResults) {
-  Model(..model, search_results: search_results)
+  let index = compute_index(search_results)
+  Model(..model, search_results: search_results, index: index)
 }
 
 pub fn reset(_model: Model) {
-  Model(search_results: search_result.Start, input: "")
+  Model(search_results: search_result.Start, input: "", index: [])
+}
+
+fn compute_index(search_results: SearchResults) -> Index {
+  case search_results {
+    search_result.Start -> []
+    search_result.NoSearchResults -> []
+    search_result.SearchResults(exact, others) -> {
+      []
+      |> insert_module_names(exact)
+      |> insert_module_names(others)
+      |> list.map(fn(i) { pair.map_second(i, list.reverse) })
+    }
+  }
+}
+
+fn insert_module_names(index: Index, search_results: List(SearchResult)) {
+  use acc, val <- list.fold(search_results, index)
+  let key = #(val.package_name, val.version)
+  list.key_find(acc, key)
+  |> result.unwrap([])
+  |> fn(i) { list.prepend(i, #(val.module_name, val.name)) }
+  |> io.debug()
+  |> fn(i) { list.key_set(acc, key, i) }
 }

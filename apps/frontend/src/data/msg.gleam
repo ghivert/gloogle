@@ -7,4 +7,5 @@ pub type Msg {
   SearchResults(Result(SearchResults, http.HttpError))
   UpdateInput(String)
   Reset
+  ScrollTo(String)
 }

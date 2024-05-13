@@ -31,6 +31,7 @@ pub fn navbar() {
     s.padding_left(px(48)),
     s.gap(px(48)),
     s.background(palette.dark.underwater_blue),
+    s.height(px(130)),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -89,6 +90,9 @@ pub fn search_wrapper() {
     ),
     s.padding(px(48)),
     s.gap(px(24)),
+    s.max_width(px(700)),
+    s.width(size.percent(100)),
+    s.margin_("auto"),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -99,10 +103,6 @@ pub fn main_wrapper() {
     s.grid_area("main"),
     s.display("flex"),
     s.flex_direction("column"),
-    s.justify_content("center"),
-    s.max_width(px(700)),
-    s.width(size.percent(100)),
-    s.margin_("auto"),
     s.gap(px(24)),
   ])
   |> s.memo()
@@ -293,6 +293,7 @@ pub fn search_result() {
     s.border_radius(px(14)),
     s.overflow("hidden"),
     s.padding(px(12)),
+    s.box_shadow("0 0 3px 2px " <> palette.dark.black <> "4d"),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -324,7 +325,7 @@ pub fn documentation() {
     s.margin_top(px(12)),
     s.display("flex"),
     s.flex_direction("column"),
-    s.gap(px(6)),
+    s.gap(px(12)),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -361,6 +362,9 @@ pub fn empty_state() {
     s.align_items("center"),
     s.gap(px(24)),
     s.justify_content("center"),
+    s.max_width(px(700)),
+    s.width(size.percent(100)),
+    s.margin_("auto"),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -388,5 +392,90 @@ pub fn empty_state_titles() {
 pub fn empty_state_subtitle() {
   s.class([s.font_size(px(16)), s.color(palette.dark.dark_white)])
   |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn items_wrapper() {
+  s.class([
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(24)),
+    s.padding_top(px(12)),
+    s.max_width(px(700)),
+  ])
+  |> s.memo()
+  |> s.to_lustre()
+}
+
+pub fn search_results_wrapper() {
+  s.class([
+    s.display("grid"),
+    s.padding_("0 48px"),
+    s.gap(px(24)),
+    s.grid_template_columns("min-content minmax(auto, 1fr)"),
+    s.justify_items("center"),
+  ])
+  |> s.to_lustre()
+}
+
+pub fn sidebar_wrapper() {
+  s.class([
+    s.position("sticky"),
+    s.top(px(130)),
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(12)),
+    s.height_("calc(100vh - 130px)"),
+    s.overflow("auto"),
+    s.padding_("12px 0"),
+    s.property(
+      "mask",
+      "linear-gradient(180deg, rgba(255,255,255, 0) 0%, rgba(255,255,255,1) 1% 99%, rgba(255, 255, 255, 0))",
+    ),
+  ])
+  |> s.to_lustre()
+}
+
+pub fn sidebar_package_name() {
+  s.class([
+    s.background(palette.dark.unexpected_aubergine),
+    s.padding(px(6)),
+    s.border_radius(px(6)),
+    s.overflow("hidden"),
+    s.text_overflow("ellipsis"),
+  ])
+  |> s.to_lustre()
+}
+
+pub fn sidebar_module_name() {
+  s.class([
+    s.text_overflow("ellipsis"),
+    s.overflow("hidden"),
+    s.direction("rtl"),
+    s.text_align("left"),
+    s.cursor("pointer"),
+    s.hover([s.text_decoration("underline")]),
+    s.appearance("none"),
+    s.background("inherit"),
+    s.border("none"),
+    s.color("inherit"),
+    s.font_size_("inherit"),
+    s.line_height("inherit"),
+    s.display("block"),
+    s.property("padding-block", "0"),
+    s.property("padding-inline", "0"),
+    s.padding_left(px(24)),
+  ])
+  |> s.to_lustre()
+}
+
+pub fn sidebar_package_wrapper() {
+  s.class([
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(9)),
+    s.font_size(px(14)),
+    s.max_width(px(250)),
+  ])
   |> s.to_lustre()
 }

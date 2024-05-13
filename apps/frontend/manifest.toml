@@ -14,6 +14,7 @@ packages = [
   { name = "grille_pain", version = "1.0.0", build_tools = ["gleam"], requirements = ["birl", "gleam_stdlib", "lustre", "scheduler", "sketch", "tardis"], source = "local", path = "../../packages/grille_pain" },
   { name = "lustre", version = "4.2.0", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_json", "gleam_otp", "gleam_stdlib"], otp_app = "lustre", source = "hex", outer_checksum = "258F876CD7AB12C2C773F1A30F76DFC0A0ED989B720070DF32FC0717A6A0E60C" },
   { name = "lustre_http", version = "0.5.2", build_tools = ["gleam"], requirements = ["gleam_fetch", "gleam_http", "gleam_javascript", "gleam_json", "gleam_stdlib", "lustre"], otp_app = "lustre_http", source = "hex", outer_checksum = "FB0478CBFA6B16DBE8ECA326DAE2EC15645E04900595EF2C4F039ABFA0512ABA" },
+  { name = "modem", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "lustre"], otp_app = "modem", source = "hex", outer_checksum = "4C6E448089B09A57C179455D44526A717E4E217D4000B91201617FD2D9F18E68" },
   { name = "plinth", version = "0.2.0", build_tools = ["gleam"], requirements = ["gleam_javascript", "gleam_json", "gleam_stdlib"], otp_app = "plinth", source = "hex", outer_checksum = "83211E672D83F3CE14681D0ECD3AD883EE7588E423E7C9DDDB460014AD60AC24" },
   { name = "ranger", version = "1.2.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "ranger", source = "hex", outer_checksum = "1566C272B1D141B3BBA38B25CB761EF56E312E79EC0E2DFD4D3C19FB0CC1F98C" },
   { name = "scheduler", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], source = "local", path = "../../packages/scheduler" },
@@ -30,6 +31,7 @@ gleeunit = { version = "~> 1.0" }
 grille_pain = { path = "../../packages/grille_pain" }
 lustre = { version = ">= 4.2.0 and < 5.0.0" }
 lustre_http = { version = "~> 0.5" }
+modem = { version = ">= 1.1.0 and < 2.0.0"}
 plinth = { version = ">= 0.2.0 and < 1.0.0" }
 sketch = { version = ">= 2.2.0 and < 3.0.0" }
 tardis = { version = ">= 0.1.0 and < 1.0.0" }

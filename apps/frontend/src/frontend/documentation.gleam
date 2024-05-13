@@ -20,5 +20,8 @@ pub fn view(document: String) {
     })
     |> string.join("\n")
     |> converter()
-  h.div([a.attribute("dangerous-unescaped-html", content)], [])
+  h.div(
+    [a.attribute("dangerous-unescaped-html", content), a.class("documentation")],
+    [],
+  )
 }

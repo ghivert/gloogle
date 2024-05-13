@@ -5,7 +5,6 @@ import backend/postgres/queries
 import backend/web
 import cors_builder as cors
 import gleam/http
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/result
@@ -57,7 +56,6 @@ pub fn handle_post(req: Request, ctx: Context) {
       let _ =
         hex.get_package(name, ctx.hex_api_key)
         |> result.try(fn(package) { syncing.sync_package(ctx, package) })
-        |> io.debug()
       empty_json()
     }
     _ -> wisp.not_found()

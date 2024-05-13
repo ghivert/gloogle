@@ -385,7 +385,7 @@ fn empty_state(image: String, title: String, content: String) {
 }
 
 fn body(model: Model) {
-  h.main([s.main_wrapper()], case io.debug(model.search_results) {
+  h.main([s.main_wrapper()], case model.search_results {
     search_result.Start -> [view_search_input(model)]
     search_result.NoSearchResults -> [
       empty_state(

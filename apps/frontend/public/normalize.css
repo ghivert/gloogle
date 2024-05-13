@@ -115,7 +115,14 @@ strong {
 code,
 kbd,
 samp {
-  font-family: monospace, monospace;
+  font-family: "Ubuntu Mono",
+    SFMono-Regular,
+    "SF Mono",
+    Menlo,
+    Consolas,
+    "Liberation Mono",
+    ui-monospace,
+    monospace;
   /* 1 */
   font-size: 1em;
   /* 2 */

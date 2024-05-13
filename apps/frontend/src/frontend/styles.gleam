@@ -32,6 +32,7 @@ pub fn navbar() {
     s.gap(px(48)),
     s.background(palette.dark.underwater_blue),
     s.height(px(130)),
+    s.z_index(1000),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -464,7 +465,7 @@ pub fn sidebar_module_name() {
     s.display("block"),
     s.property("padding-block", "0"),
     s.property("padding-inline", "0"),
-    s.padding_left(px(24)),
+    s.padding_left(px(12)),
   ])
   |> s.to_lustre()
 }

@@ -8,6 +8,7 @@
 - Daily dumps of data analytics from hex for trends
 - Implements a full-mirror of hex, in case hex is down (because we can, so why not)
 - Implements search engine
+- Search in documentation
 - Let the DB completely crawl everything one more time
 
 #### Frontend

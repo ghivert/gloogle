@@ -1,36 +1,59 @@
 import backend/config.{type Config, type Context, Context}
-import gleam/int
+import backend/error
+import gleam/bool
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{type Option, Some}
 import gleam/pgo.{Config}
-import gleam/regex
+import gleam/pgo/ssl
 import gleam/result
+import gleam/string
+import gleam/uri
 
 pub fn connect(cnf: Config) {
   let assert Ok(config) = parse_database_url(cnf.database_url)
   config
+  |> fn(c) { Config(..c, ssl_options: [ssl.Verify(ssl.VerifyNone)]) }
   |> pgo.connect()
   |> fn(db) { Context(db: db, hex_api_key: cnf.hex_api_key) }
 }
 
-fn database_url_matcher() {
-  "postgres://(.*):(.*)@(.*):(.*)/(.*)\\?sslmode=(.*)"
-  |> regex.from_string()
-  |> result.replace_error(Nil)
+fn parse_database_url(database_url: String) {
+  use db_uri <- result.try({
+    uri.parse(database_url)
+    |> result.replace_error(error.UnknownError("Unable to parse database URL"))
+  })
+  use <- bool.guard(
+    when: db_uri.scheme != Some("postgres"),
+    return: Error(error.UnknownError("No postgres protocol")),
+  )
+
+  pgo.default_config()
+  |> fn(cnf) { Config(..cnf, database: string.replace(db_uri.path, "/", "")) }
+  |> update_config(db_uri.userinfo, add_user_info)
+  |> update_config(db_uri.host, fn(cnf, u) { Config(..cnf, host: u) })
+  |> update_config(db_uri.port, fn(cnf, p) { Config(..cnf, port: p) })
+  |> update_config(db_uri.query, fn(cnf, q) {
+    uri.parse_query(q)
+    |> result.then(list.key_find(_, "sslmode"))
+    |> result.map(fn(ssl) { Config(..cnf, ssl: ssl != "disable") })
+    |> result.unwrap(cnf)
+  })
+  |> Ok
 }
 
-fn parse_database_url(database_url: String) -> Result(pgo.Config, _) {
-  use matcher <- result.map(database_url_matcher())
-  let matches = regex.scan(with: matcher, content: database_url)
-  use cnf, data <- list.fold(matches, pgo.default_config())
-  use acc, m, index <- list.index_fold(data.submatches, cnf)
-  case index, m {
-    0, Some(v) -> Config(..acc, user: v)
-    1, Some(v) -> Config(..acc, password: Some(v))
-    2, Some(v) -> Config(..acc, host: v)
-    3, Some(v) -> Config(..acc, port: result.unwrap(int.parse(v), 5432))
-    4, Some(v) -> Config(..acc, database: v)
-    5, Some(v) -> Config(..acc, ssl: v == "true")
-    _, _ -> acc
+fn update_config(
+  cnf: pgo.Config,
+  field: Option(a),
+  mapper: fn(pgo.Config, a) -> pgo.Config,
+) {
+  option.map(field, fn(u) { mapper(cnf, u) })
+  |> option.unwrap(cnf)
+}
+
+fn add_user_info(c: pgo.Config, u: String) {
+  case string.split(u, ":") {
+    [user, password] -> Config(..c, user: user, password: Some(password))
+    [user] -> Config(..c, user: user)
+    _ -> c
   }
 }

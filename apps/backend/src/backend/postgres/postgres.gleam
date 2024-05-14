@@ -12,7 +12,6 @@ import gleam/uri
 pub fn connect(cnf: Config) {
   let assert Ok(config) = parse_database_url(cnf.database_url)
   config
-  |> fn(c) { Config(..c, ssl_options: [ssl.Verify(ssl.VerifyNone)]) }
   |> pgo.connect()
   |> fn(db) { Context(db: db, hex_api_key: cnf.hex_api_key) }
 }
@@ -35,7 +34,14 @@ fn parse_database_url(database_url: String) {
   |> update_config(db_uri.query, fn(cnf, q) {
     uri.parse_query(q)
     |> result.then(list.key_find(_, "sslmode"))
-    |> result.map(fn(ssl) { Config(..cnf, ssl: ssl != "disable") })
+    |> result.map(fn(ssl) {
+      let is_ssl_enabled = ssl != "disable"
+      let ssl_options = case is_ssl_enabled {
+        True -> [ssl.Verify(ssl.VerifyNone)]
+        False -> []
+      }
+      Config(..cnf, ssl: is_ssl_enabled, ssl_options: ssl_options)
+    })
     |> result.unwrap(cnf)
   })
   |> Ok

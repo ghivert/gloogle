@@ -1,0 +1,18 @@
+name = "gleam_pgo"
+version = "0.7.0"
+gleam = ">= 0.32.0"
+licences = ["Apache-2.0"]
+description = "Gleam bindings to the PGO PostgreSQL client"
+
+repository = { type = "github", user = "gleam-experiments", repo = "pgo" }
+links = [
+  { title = "Website", href = "https://gleam.run" },
+  { title = "Sponsor", href = "https://github.com/sponsors/lpil" },
+]
+
+[dependencies]
+gleam_stdlib = "~> 0.20 or ~> 1.0"
+pgo = "~> 0.12"
+
+[dev-dependencies]
+gleeunit = "~> 1.0"

@@ -13,7 +13,7 @@ gleam_httpc = ">= 2.2.0 and < 3.0.0"
 gleam_json = "~> 1.0"
 gleam_otp = "~> 0.10"
 gleam_package_interface = ">= 1.0.0 and < 2.0.0"
-gleam_pgo = "~> 0.7"
+gleam_pgo = {path = "../../packages/pgo"}
 gleam_stdlib = "~> 0.34 or ~> 1.0"
 mist = ">= 1.0.0 and < 2.0.0"
 pgo = "~> 0.14"

@@ -1,6 +1,5 @@
 import frontend/colors/palette
 import gleam/bool
-import gleam/string
 import sketch as s
 import sketch/lustre/extra as l
 import sketch/size.{px}

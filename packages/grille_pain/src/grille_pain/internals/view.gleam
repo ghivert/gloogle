@@ -56,6 +56,7 @@ fn wrapper_position_style(toast: Toast) {
     sketch.position("fixed"),
     sketch.top(px(min_bot)),
     sketch.transition("right 0.7s, top 0.7s"),
+    sketch.z_index(1_000_000),
     case toast.displayed {
       True -> sketch.right(px(0))
       False ->

@@ -16,7 +16,7 @@ pub fn foundations(req: Request, handler: Handler) -> Response {
 pub fn cors() {
   let origin = case config.is_dev() {
     True -> "http://localhost:5173"
-    False -> "https://api.gloogle.run"
+    False -> "https://gloogle.run"
   }
   cors.new()
   |> cors.allow_origin(origin)

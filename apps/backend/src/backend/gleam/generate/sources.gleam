@@ -87,7 +87,7 @@ fn type_to_string(type_: Type) {
       |> result.map(string.from_utf_codepoints)
       |> result.unwrap("a")
     }
-    package_interface.Named(name, _package, _module, parameters) -> {
+    package_interface.Named(name, package, module, parameters) -> {
       parameters
       |> list.map(type_to_string)
       |> string.join(", ")
@@ -95,7 +95,12 @@ fn type_to_string(type_: Type) {
         use <- bool.guard(when: string.is_empty(s), return: s)
         "(" <> s <> ")"
       }
-      |> string.append(name, _)
+      |> fn(params) {
+        case package {
+          "" -> name <> params
+          _ -> module <> "." <> name <> params
+        }
+      }
     }
   }
 }

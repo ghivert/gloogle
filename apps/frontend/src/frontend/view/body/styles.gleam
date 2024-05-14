@@ -1,4 +1,6 @@
 import frontend/colors/palette
+import gleam/bool
+import gleam/string
 import sketch as s
 import sketch/lustre/extra as l
 import sketch/size.{px}
@@ -154,20 +156,45 @@ pub fn search_lucy(attributes) {
   l.memo("img", attributes, [], [s.width(px(40))])
 }
 
-pub fn search_input(attributes) {
-  l.memo("input", attributes, [], [
-    s.grid_area("input"),
-    s.appearance("none"),
-    s.background(palette.dark.white),
-    s.border("none"),
-    s.padding(px(18)),
+pub fn search_input(loading: Bool, attributes) {
+  let id = "search-input-wrapper-" <> bool.to_string(loading)
+  let id_ = "search-input-" <> bool.to_string(loading)
+  let content =
+    l.dynamic("input", attributes, [], id_, [
+      s.appearance("none"),
+      s.border("none"),
+      s.padding(
+        px(case loading {
+          True -> 18
+          False -> 22
+        }),
+      ),
+      s.outline("none"),
+      s.color(palette.dark.charcoal),
+      s.width(size.percent(100)),
+      s.background(palette.dark.white),
+      s.border_radius(px(14)),
+      s.transition("padding .3s"),
+    ])
+
+  l.dynamic("div", [], [content], id, [
     s.border_radius(px(18)),
-    s.transition("outline .3s"),
-    s.outline("2px solid transparent"),
-    s.color(palette.dark.charcoal),
-    s.active([s.outline("2px solid " <> palette.dark.faff_pink)]),
-    s.focus([s.outline("2px solid " <> palette.dark.faff_pink)]),
-    s.width(size.percent(100)),
+    s.overflow("hidden"),
+    s.grid_area("input"),
+    s.padding(
+      px(case loading {
+        True -> 4
+        False -> 0
+      }),
+    ),
+    s.background("linear-gradient(-45deg, #4ce7ff, #c651e5, #e3d8be, #4ce7ff)"),
+    s.property("background-size", "400% 400%"),
+    s.transition("padding .3s"),
+    s.animation("bg-spin 3s linear infinite"),
+    s.animation_play_state(case loading {
+      True -> "running"
+      False -> "paused"
+    }),
   ])
 }
 
@@ -188,6 +215,7 @@ pub fn search_submit(attributes) {
     s.transition("background .3s"),
     s.active([s.background(palette.dark.dark_faff_pink)]),
     s.focus([s.background(palette.dark.dark_faff_pink)]),
+    s.disabled([s.background(palette.dark.unexpected_aubergine)]),
   ])
 }
 
@@ -329,4 +357,12 @@ pub fn named_type_button(attributes, children) {
     s.text_decoration("none"),
     s.hover([s.text_decoration("underline")]),
   ])
+}
+
+pub fn search_title_with_hint(attributes, children) {
+  l.memo("div", attributes, children, [s.display("flex"), s.gap(px(12))])
+}
+
+pub fn pre_alpha_title(attributes, children) {
+  l.memo("div", attributes, children, [s.font_size(px(16))])
 }

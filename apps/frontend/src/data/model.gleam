@@ -7,13 +7,22 @@ pub type Index =
   List(#(#(String, String), List(#(String, String))))
 
 pub type Model {
-  Model(input: String, search_results: SearchResults, index: Index)
+  Model(
+    input: String,
+    search_results: SearchResults,
+    index: Index,
+    loading: Bool,
+  )
 }
 
 pub fn init() {
   let search_results = search_result.Start
   let index = compute_index(search_results)
-  Model(input: "", search_results: search_results, index: index)
+  Model(input: "", search_results: search_results, index: index, loading: False)
+}
+
+pub fn toggle_loading(model: Model) {
+  Model(..model, loading: !model.loading)
 }
 
 pub fn update_input(model: Model, content: String) {
@@ -26,7 +35,12 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
 }
 
 pub fn reset(_model: Model) {
-  Model(search_results: search_result.Start, input: "", index: [])
+  Model(
+    search_results: search_result.Start,
+    input: "",
+    index: [],
+    loading: False,
+  )
 }
 
 fn compute_index(search_results: SearchResults) -> Index {

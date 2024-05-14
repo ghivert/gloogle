@@ -87,9 +87,11 @@ fn submit_search(model: Model) {
     False -> "https://api.gloogle.run"
   }
   use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
+  use <- bool.guard(when: model.loading, return: #(model, effect.none()))
+  let new_model = model.toggle_loading(model)
   http.expect_json(search_result.decode_search_results, msg.SearchResults)
   |> http.get(endpoint <> "/search?q=" <> model.input, _)
-  |> pair.new(model, _)
+  |> pair.new(new_model, _)
 }
 
 fn scroll_to(model: Model, id: String) {
@@ -105,6 +107,7 @@ fn handle_search_results(
   search_results
   |> result.map(model.update_search_results(model, _))
   |> result.unwrap(model)
+  |> model.toggle_loading()
   |> pair.new(toast)
 }
 

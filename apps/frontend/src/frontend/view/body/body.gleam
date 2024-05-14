@@ -84,16 +84,23 @@ fn view_search_input(model: Model) {
     s.search_title_wrapper([], [
       s.search_title([], [
         s.search_lucy([a.src("/images/lucy.svg")]),
-        h.text("Gloogle"),
+        s.search_title_with_hint([], [
+          h.text("Gloogle"),
+          s.pre_alpha_title([], [h.text("Pre Alpha")]),
+        ]),
       ]),
       h.text(frontend_strings.gloogle_description),
     ]),
-    s.search_input([
+    s.search_input(model.loading, [
       a.placeholder("Search for a function, or a type"),
       e.on_input(msg.UpdateInput),
       a.value(model.input),
     ]),
-    s.search_submit([a.type_("submit"), a.value("Submit")]),
+    s.search_submit([
+      a.type_("submit"),
+      a.value("Submit"),
+      a.disabled(model.loading),
+    ]),
   ])
 }
 

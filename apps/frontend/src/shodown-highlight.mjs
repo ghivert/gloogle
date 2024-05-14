@@ -2,16 +2,43 @@ import hljs from 'highlight.js'
 import { decode as decodeHtml } from 'html-encoder-decoder'
 import showdown from 'showdown'
 
-export function convert(content) {
-  const converter = new showdown.Converter({
-    extensions: [showdownHighlight({ pre: true, auto_detection: true })],
-    tasklists: true,
-  })
-  return converter.makeHtml(content)
-}
-
 const classAttr = 'class="'
 
+/**
+ * showdownHighlight
+ * Highlight the code in the showdown input.
+ *
+ * Examples:
+ *
+ * ```js
+ * let converter = new showdown.Converter({
+ *     extensions: [showdownHighlight]
+ * })
+ * ```
+ *
+ * Enable the classes in the `<pre>` element:
+ *
+ * ```js
+ * let converter = new showdown.Converter({
+ *     extensions: [showdownHighlight({ pre: true })]
+ * })
+ * ```
+ *
+ *
+ * If you want to disable language [auto detection](https://highlightjs.org/usage/)
+ * feature of hljs, change `auto_detection` flag as `false`. With this option
+ * turned off, `showdown-highlight` will not process any codeblocks with no
+ * language specified.
+ *
+ * ```js
+ * let converter = new showdown.Converter({
+ *     extensions: [showdownHighlight({ auto_detection: false })]
+ * })
+ * ```
+ *
+ * @name showdownHighlight
+ * @function
+ */
 export function showdownHighlight({ pre = false, auto_detection = true } = {}) {
   const filter = text => {
     const params = {
@@ -22,7 +49,9 @@ export function showdownHighlight({ pre = false, auto_detection = true } = {}) {
 
     const replacement = (wholeMatch, match, left, right) => {
       match = decodeHtml(match)
+
       const lang = (left.match(/class=\"([^ \"]+)/) || [])[1]
+
       if (!lang && !auto_detection) {
         return wholeMatch
       }

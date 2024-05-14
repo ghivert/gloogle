@@ -1,4 +1,3 @@
-import data/model/mock
 import data/search_result.{type SearchResult, type SearchResults}
 import gleam/list
 import gleam/pair
@@ -12,9 +11,7 @@ pub type Model {
 }
 
 pub fn init() {
-  let search_results =
-    mock.mock()
-    |> result.unwrap(search_result.Start)
+  let search_results = search_result.Start
   let index = compute_index(search_results)
   Model(input: "", search_results: search_results, index: index)
 }

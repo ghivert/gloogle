@@ -15,11 +15,15 @@ pub fn foundations(req: Request, handler: Handler) -> Response {
 
 pub fn cors() {
   let origin = case config.is_dev() {
-    True -> "http://localhost:5173"
-    False -> "https://gloogle.run"
+    True -> cors.allow_origin(_, "http://localhost:5173")
+    False -> fn(cors) {
+      cors
+      |> cors.allow_origin("https://gloogle.run")
+      |> cors.allow_origin("https://www.gloogle.run")
+    }
   }
   cors.new()
-  |> cors.allow_origin(origin)
+  |> origin()
   |> cors.allow_method(http.Get)
   |> cors.allow_method(http.Post)
   |> cors.allow_method(http.Put)

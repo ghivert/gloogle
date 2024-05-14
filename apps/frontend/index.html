@@ -18,6 +18,20 @@
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="msapplication-config" content="/favicons/browserconfig.xml" />
     <meta name="theme-color" content="#292d3e" />
+    <script src="https://js-de.sentry-cdn.com/2798874d6ff29bdb35b2478129b5563d.min.js" crossorigin="anonymous"></script>
+    <script>
+      if (typeof Sentry !== 'undefined') {
+        Sentry.onLoad(function () {
+          Sentry.init({
+            // Performance Monitoring
+            tracesSampleRate: 1.0, // Capture 100% of the transactions
+            // Session Replay
+            replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+            replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+          })
+        })
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

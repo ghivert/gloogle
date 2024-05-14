@@ -24,6 +24,9 @@ fn is_dev() -> Bool
 @external(javascript, "./config.ffi.mjs", "scrollTo")
 fn scroll_to_element(id: String) -> Nil
 
+@external(javascript, "./config.ffi.mjs", "captureMessage")
+fn capture_message(content: String) -> String
+
 pub fn main() {
   let init = fn(_) { #(model.init(), effect.none()) }
 
@@ -117,6 +120,7 @@ fn display_toast(
   search_results
   |> result.map_error(fn(error) {
     toast_error.describe_http_error(error)
+    |> option.map(capture_message)
     |> option.map(toast.error)
   })
   |> result.unwrap_error(option.None)

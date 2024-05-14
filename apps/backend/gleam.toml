@@ -4,7 +4,6 @@ version = "1.0.0"
 [dependencies]
 aws4_request = ">= 0.1.1 and < 1.0.0"
 birl = "~> 1.6"
-cors_builder = ">= 0.1.0 and < 1.0.0"
 dot_env = "~> 0.5"
 gleam_erlang = "~> 0.25"
 gleam_hexpm = "~> 1.0"
@@ -24,6 +23,7 @@ simplifile = ">= 1.7.0 and < 2.0.0"
 tom = ">= 1.0.0 and < 2.0.0"
 verl = ">= 1.1.1 and < 2.0.0"
 wisp = "~> 0.14"
+cors_builder = ">= 1.0.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

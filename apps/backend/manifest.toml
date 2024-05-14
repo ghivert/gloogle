@@ -5,7 +5,7 @@ packages = [
   { name = "aws4_request", version = "0.1.1", build_tools = ["gleam"], requirements = ["gleam_crypto", "gleam_http", "gleam_stdlib"], otp_app = "aws4_request", source = "hex", outer_checksum = "90B1DB6E2A7F0396CD4713850B14B3A910331B5BA76D051E411D1499AAA2EA9A" },
   { name = "backoff", version = "1.1.6", build_tools = ["rebar3"], requirements = [], otp_app = "backoff", source = "hex", outer_checksum = "CF0CFFF8995FB20562F822E5CC47D8CCF664C5ECDC26A684CBE85C225F9D7C39" },
   { name = "birl", version = "1.6.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "ranger"], otp_app = "birl", source = "hex", outer_checksum = "976CFF85D34D50F7775896615A71745FBE0C325E50399787088F941B539A0497" },
-  { name = "cors_builder", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_stdlib", "mist", "wisp"], otp_app = "cors_builder", source = "hex", outer_checksum = "454E4C77BF5FA2C80813FCCACDE636E683F2CA509345BEBB3E5EEF7AABAD942B" },
+  { name = "cors_builder", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_stdlib", "mist", "wisp"], otp_app = "cors_builder", source = "hex", outer_checksum = "951B5B648E958BD6181A6EED98BCA4EEB302B83DC7DCE2954B3462114209EC43" },
   { name = "dot_env", version = "0.5.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "simplifile"], otp_app = "dot_env", source = "hex", outer_checksum = "AF5C972D6129F67AF3BB00134AB2808D37111A8D61686CFA86F3ADF652548982" },
   { name = "exception", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "exception", source = "hex", outer_checksum = "F5580D584F16A20B7FCDCABF9E9BE9A2C1F6AC4F9176FA6DD0B63E3B20D450AA" },
   { name = "filepath", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "EFB6FF65C98B2A16378ABC3EE2B14124168C0CE5201553DE652E2644DCFDB594" },
@@ -48,7 +48,7 @@ packages = [
 [requirements]
 aws4_request = { version = ">= 0.1.1 and < 1.0.0" }
 birl = { version = "~> 1.6" }
-cors_builder = { version = ">= 0.1.0 and < 1.0.0" }
+cors_builder = { version = ">= 1.0.0 and < 2.0.0"}
 dot_env = { version = "~> 0.5" }
 gleam_erlang = { version = "~> 0.25" }
 gleam_hexpm = { version = "~> 1.0" }

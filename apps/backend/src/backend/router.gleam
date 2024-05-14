@@ -69,7 +69,7 @@ pub fn handle_post(req: Request, ctx: Context) {
 }
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
-  use req <- cors.wisp_handle(req, web.cors())
+  use req <- cors.wisp_middleware(req, web.cors())
   use req <- web.foundations(req)
   case req.method {
     http.Get -> handle_get(req, ctx)

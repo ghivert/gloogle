@@ -25,7 +25,7 @@ pub fn main() {
     router.handle_request(_, ctx)
     |> wisp.mist_handler(secret_key_base)
     |> mist.new()
-    |> mist.port(3000)
+    |> mist.port(cnf.port)
     |> mist.start_http()
 
   let assert Ok(_) =

@@ -232,6 +232,8 @@ fn insert_package_and_releases(
   wisp.log_debug("Saving releases for " <> package.name)
   use r <- list.try_each(releases)
   let release = package.name <> " v" <> r.version
+  // When release does not exists, il will continue.
+  // Forcing the update will send an error no matter what to continue.
   use _ <- result.try_recover({
     queries.lookup_release(state.db, id, r)
     |> result.replace(Nil)

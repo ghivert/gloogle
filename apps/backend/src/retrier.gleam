@@ -20,7 +20,7 @@ type State(a) {
   )
 }
 
-pub const five_minutes: Int = 300_000
+pub const one_minute: Int = 60_000
 
 fn enqueue_next_rerun(state: State(a)) {
   let assert iterator.Next(cooldown, acc) = iterator.step(state.random_ints)
@@ -33,7 +33,7 @@ fn enqueue_next_rerun(state: State(a)) {
 pub fn retry(
   do work: fn(Int) -> Result(a, Error),
 ) -> Result(Subject(Message), actor.StartError) {
-  fn() { init(five_minutes, work) }
+  fn() { init(one_minute, work) }
   |> actor.Spec(loop: loop, init_timeout: 100)
   |> actor.start_spec()
 }

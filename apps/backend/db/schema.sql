@@ -358,6 +358,20 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: package_type_fun_signature_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_name ON public.package_type_fun_signature USING btree (name);
+
+
+--
+-- Name: package_type_fun_signature_signature; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_signature ON public.package_type_fun_signature USING gin (to_tsvector('english'::regconfig, signature_));
+
+
+--
 -- Name: hex_user hex_user_moddatetime; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -459,4 +473,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240413164020'),
     ('20240506110519'),
     ('20240512211227'),
-    ('20240512214036');
+    ('20240512214036'),
+    ('20240514214138');

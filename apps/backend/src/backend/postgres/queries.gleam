@@ -522,7 +522,7 @@ pub fn search(db: pgo.Connection, q: String) {
      ON r.id = m.package_release_id
    JOIN package p
      ON p.id = r.package_id
-   WHERE to_tsvector(s.signature_) @@ to_tsquery($1)
+   WHERE to_tsvector('english', s.signature_) @@ to_tsquery($1)
    LIMIT 40"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)

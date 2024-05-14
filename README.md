@@ -1,18 +1,37 @@
-### Future developments
+# Gloogle
 
-#### Backend
+Gloogle is a search engine, able to query the entirety of the Gleam ecosystem!
+Search for a function or a type, and let the magic happen!
 
-- Dive at the function level to see functions deps
-- Crawl github everyday to get the number of stars
-- Add analytics to observe trends
-- Daily dumps of data analytics from hex for trends
-- Implements a full-mirror of hex, in case hex is down (because we can, so why not)
-- Implements search engine
-- Search in documentation
-- Let the DB completely crawl everything one more time
+[First pre-alpha version is available!](https://google.run)
 
-#### Frontend
+## Features
 
-- Add search engine
-- Add trends page
-- Add module page
+Some features are already implemented, and some others are still on the roadmap!
+
+- Search for a function or a type by its name
+- Search for a function or a type by its type
+- Search with a document search accross the gleam ecosystem (with vector search)
+- Navigate in the documentation by clicking on types
+- Head back to [HexDocs](https://hexdocs.pm) when looking for something specific
+- Find a way to expose the database
+
+## Future developments
+
+- Use a proper parser to draw a graph of the function calls
+- Add analytics to extract trends
+- Get GitHub stars for each package on a regular basis
+- Get Hex data for each package on a regular basis
+- Enables Search in documentation directly
+
+<!-- Is it really useful? -->
+<!-- - Implements a full-mirror of hex, in case hex is down (because we can, so why not) -->
+<!-- - Add a way to visualise a package directly -->
+
+## Contributing
+
+If Gloogle please you, you can also contribute! Pull Requests are welcome!
+
+## An issue?
+
+Open an issue on the repo! That would be extremely helpful!

@@ -82,9 +82,13 @@ fn reset(model: Model) {
 }
 
 fn submit_search(model: Model) {
+  let endpoint = case is_dev() {
+    True -> "http://localhost:3000"
+    False -> "https://api.gloogle.run"
+  }
   use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
   http.expect_json(search_result.decode_search_results, msg.SearchResults)
-  |> http.get("http://localhost:3000/search?q=" <> model.input, _)
+  |> http.get(endpoint <> "/search?q=" <> model.input, _)
   |> pair.new(model, _)
 }
 

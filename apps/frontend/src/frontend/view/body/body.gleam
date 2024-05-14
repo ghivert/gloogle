@@ -157,20 +157,30 @@ pub fn body(model: Model) {
           title: "Internal server error",
           content: frontend_strings.internal_server_error,
         )
-      search_result.SearchResults([], []) ->
+      search_result.SearchResults([], [], []) ->
         empty_state(
           image: images.shadow_lucy,
           title: "No match found!",
           content: frontend_strings.retry_query,
         )
-      search_result.SearchResults(exact, others) ->
+      search_result.SearchResults(exact, others, searches) ->
         s.search_results_wrapper([], [
           sidebar(model.index),
           s.items_wrapper([], [
             match_title(exact, "Exact matches", frontend_strings.exact_match),
             view_search_results(exact),
-            match_title(others, "Other matches", frontend_strings.partial_match),
+            match_title(
+              others,
+              "Signature matches",
+              frontend_strings.partial_match,
+            ),
             view_search_results(others),
+            match_title(
+              others,
+              "Searches matches",
+              frontend_strings.searches_match,
+            ),
+            view_search_results(searches),
           ]),
         ])
     },

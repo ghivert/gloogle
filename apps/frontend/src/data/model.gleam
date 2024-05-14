@@ -47,10 +47,11 @@ fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
     search_result.Start -> []
     search_result.NoSearchResults -> []
-    search_result.SearchResults(exact, others) -> {
+    search_result.SearchResults(exact, others, searches) -> {
       []
       |> insert_module_names(exact)
       |> insert_module_names(others)
+      |> insert_module_names(searches)
       |> list.map(fn(i) { pair.map_second(i, list.reverse) })
     }
   }

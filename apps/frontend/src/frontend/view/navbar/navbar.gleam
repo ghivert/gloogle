@@ -23,7 +23,7 @@ pub fn navbar(model: Model) {
   s.navbar([a.class("navbar")], [
     case model.search_results {
       search_result.Start -> h.div([], [])
-      search_result.NoSearchResults | search_result.SearchResults(_, _) ->
+      search_result.NoSearchResults | search_result.SearchResults(_, _, _) ->
         s.navbar_search([], [
           s.navbar_search_title([e.on_click(msg.Reset)], [
             s.search_lucy([a.src("/images/lucy.svg")]),

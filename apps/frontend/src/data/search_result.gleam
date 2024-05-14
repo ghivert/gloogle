@@ -19,7 +19,11 @@ pub type SearchResult {
 
 pub type SearchResults {
   Start
-  SearchResults(exact_matches: List(SearchResult), matches: List(SearchResult))
+  SearchResults(
+    exact_matches: List(SearchResult),
+    matches: List(SearchResult),
+    searches: List(SearchResult),
+  )
   NoSearchResults
 }
 
@@ -42,10 +46,11 @@ pub fn decode_search_results(dyn) {
     dynamic.decode1(fn(_) { NoSearchResults }, {
       dynamic.field("error", dynamic.string)
     }),
-    dynamic.decode2(
+    dynamic.decode3(
       SearchResults,
       dynamic.field("exact-matches", dynamic.list(decode_search_result)),
       dynamic.field("matches", dynamic.list(decode_search_result)),
+      dynamic.field("searches", dynamic.list(decode_search_result)),
     ),
   ])(dyn)
 }

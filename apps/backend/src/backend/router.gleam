@@ -20,6 +20,7 @@ fn empty_json() {
 }
 
 fn search(query: String, ctx: Context) {
+  wisp.log_notice("Searching for " <> query)
   json.object([
     #("exact-matches", {
       queries.name_search(ctx.db, query)
@@ -31,8 +32,12 @@ fn search(query: String, ctx: Context) {
       |> result.unwrap([])
       |> json.preprocessed_array()
     }),
+    #("searches", {
+      queries.search(ctx.db, query)
+      |> result.unwrap([])
+      |> json.preprocessed_array()
+    }),
   ])
-  // queries.search(ctx.db, query),
 }
 
 pub fn handle_get(req: Request, ctx: Context) {

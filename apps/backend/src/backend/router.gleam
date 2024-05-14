@@ -37,6 +37,7 @@ fn search(query: String, ctx: Context) {
 
 pub fn handle_get(req: Request, ctx: Context) {
   case wisp.path_segments(req) {
+    ["healthcheck"] -> wisp.ok()
     ["search"] -> {
       wisp.get_query(req)
       |> list.find(fn(item) { item.0 == "q" })

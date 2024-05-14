@@ -1,52 +1,32 @@
 import frontend/colors/palette
-import gleam/list
 import lustre/element/html as h
 import sketch as s
+import sketch/lustre/extra as l
+
+fn span(text: String, color: String) {
+  l.memo("span", [], [h.text(text)], [s.color(color)])
+}
 
 pub fn keyword(text: String) {
-  s.class([s.color("#c678dd")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend([], _)
-  |> h.span([h.text(text)])
+  span(text, "#c678dd")
 }
 
 pub fn fun(text: String) {
-  s.class([s.color("#61afef")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend([], _)
-  |> h.span([h.text(text)])
+  span(text, "#61afef")
 }
 
 pub fn label(text: String) {
-  s.class([s.color("#e06c75")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend([], _)
-  |> h.span([h.text(text)])
+  span(text, "#e06c75")
 }
 
 pub fn type_(text: String) {
-  s.class([s.color("#e5c07b")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend([], _)
-  |> h.span([h.text(text)])
+  span(text, "#e5c07b")
 }
 
 pub fn variable(text: String) {
-  s.class([s.color("#98c379")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend([], _)
-  |> h.span([h.text(text)])
+  span(text, "#98c379")
 }
 
 pub fn dark_white(text: String) {
-  s.class([s.color(palette.dark.dark_white)])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend([], _)
-  |> h.span([h.text(text)])
+  span(text, palette.dark.dark_white)
 }

@@ -1,118 +1,93 @@
 import frontend/colors/palette
-import gleam/list
-import lustre/element
 import sketch as s
+import sketch/lustre/extra as l
 import sketch/size.{px}
 
-pub fn implementations_pill(
-  background: String,
-  color: String,
-  attributes,
-  children,
-) {
+pub fn implementations_pill(background, color, attributes, children) {
   let id = "implementations-pill-" <> background
-  s.dynamic(id, [
+  l.dynamic("div", attributes, children, id, [
     s.background(background),
     s.color(color),
     s.padding_("4px 9px"),
     s.border_radius(px(6)),
     s.font_size(px(10)),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn implementations_pill_wrapper(attributes, children) {
-  s.class([s.display("flex"), s.align_items("center"), s.gap(px(6))])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  l.element("div", attributes, children, [
+    s.display("flex"),
+    s.align_items("center"),
+    s.gap(px(6)),
+  ])
 }
 
 pub fn search_result(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.border_radius(px(14)),
     s.overflow("hidden"),
     s.padding(px(12)),
     s.box_shadow("0 0 3px 2px " <> palette.dark.black <> "4d"),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn search_results_wrapper(attributes, children) {
-  s.class([
+  l.element("div", attributes, children, [
     s.display("grid"),
     s.padding_("0 48px"),
     s.gap(px(24)),
     s.grid_template_columns("min-content minmax(auto, 1fr)"),
     s.justify_items("center"),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn search_details(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.display("flex"),
     s.gap(px(12)),
     s.justify_content("space-between"),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn search_details_title(attributes, children) {
-  s.class([s.display("flex"), s.align_items("center"), s.gap(px(12))])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  l.element("div", attributes, children, [
+    s.display("flex"),
+    s.align_items("center"),
+    s.gap(px(12)),
+  ])
 }
 
 pub fn qualified_name(attributes, children) {
-  s.class([
+  l.element("a", attributes, children, [
     s.overflow("hidden"),
     s.text_overflow("ellipsis"),
     s.direction("rtl"),
     s.text_decoration("none"),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("a", _, children)
 }
 
 pub fn search_body(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.background(palette.dark.black),
     s.border_radius(px(12)),
     s.margin(px(-12)),
     s.margin_top(px(12)),
     s.padding(px(12)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn signature(attributes, children) {
-  s.class([s.white_space("pre-wrap"), s.display("block"), s.line_height("1.6")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("code", _, children)
+  l.memo("code", attributes, children, [
+    s.white_space("pre-wrap"),
+    s.display("block"),
+    s.line_height("1.6"),
+  ])
 }
 
 pub fn documentation(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.background(palette.dark.charcoal),
     s.padding(px(12)),
     s.border_radius(px(10)),
@@ -122,22 +97,14 @@ pub fn documentation(attributes, children) {
     s.flex_direction("column"),
     s.gap(px(12)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn documentation_title(attributes, children) {
-  s.class([s.color(palette.dark.dark_white)])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  l.memo("div", attributes, children, [s.color(palette.dark.dark_white)])
 }
 
 pub fn search_wrapper(attributes, children) {
-  s.class([
+  l.memo("form", attributes, children, [
     s.display("grid"),
     s.grid_template_rows("auto auto auto"),
     s.grid_template_columns("auto auto auto"),
@@ -152,10 +119,6 @@ pub fn search_wrapper(attributes, children) {
     s.width(size.percent(100)),
     s.margin_("auto"),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("form", _, children)
 }
 
 pub fn search_title_() {
@@ -169,15 +132,14 @@ pub fn search_title_() {
 }
 
 pub fn search_title(attributes, children) {
-  s.class([s.compose(search_title_()), s.font_size(size.rem_(2.5))])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  l.memo("div", attributes, children, [
+    s.compose(search_title_()),
+    s.font_size(size.rem_(2.5)),
+  ])
 }
 
 pub fn search_title_wrapper(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.grid_area("title"),
     s.display("flex"),
     s.flex_direction("column"),
@@ -186,22 +148,14 @@ pub fn search_title_wrapper(attributes, children) {
     s.color(palette.dark.dark_white),
     s.line_height("1.3"),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn search_lucy(attributes) {
-  s.class([s.width(px(40))])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("img", _, [])
+  l.memo("img", attributes, [], [s.width(px(40))])
 }
 
 pub fn search_input(attributes) {
-  s.class([
+  l.memo("input", attributes, [], [
     s.grid_area("input"),
     s.appearance("none"),
     s.background(palette.dark.white),
@@ -215,14 +169,10 @@ pub fn search_input(attributes) {
     s.focus([s.outline("2px solid " <> palette.dark.faff_pink)]),
     s.width(size.percent(100)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("input", _, [])
 }
 
 pub fn search_submit(attributes) {
-  s.class([
+  l.memo("input", attributes, [], [
     s.grid_area("submit"),
     s.appearance("none"),
     s.border("none"),
@@ -239,14 +189,10 @@ pub fn search_submit(attributes) {
     s.active([s.background(palette.dark.dark_faff_pink)]),
     s.focus([s.background(palette.dark.dark_faff_pink)]),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("input", _, [])
 }
 
 pub fn matches_titles(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.line_height("1.3"),
     s.color(palette.dark.dark_white),
     s.display("flex"),
@@ -254,22 +200,17 @@ pub fn matches_titles(attributes, children) {
     s.gap(px(6)),
     s.font_size(px(12)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn matches_title(attributes, children) {
-  s.class([s.color(palette.dark.white), s.font_size(px(18))])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  l.memo("div", attributes, children, [
+    s.color(palette.dark.white),
+    s.font_size(px(18)),
+  ])
 }
 
 pub fn empty_state(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(24)),
@@ -278,22 +219,14 @@ pub fn empty_state(attributes, children) {
     s.width(size.percent(100)),
     s.margin_("auto"),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn empty_state_lucy(attributes) {
-  s.class([s.width(px(100))])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("img", _, [])
+  l.memo("img", attributes, [], [s.width(px(100))])
 }
 
 pub fn empty_state_titles(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.font_size(px(20)),
     s.display("flex"),
     s.flex_direction("column"),
@@ -301,22 +234,17 @@ pub fn empty_state_titles(attributes, children) {
     s.line_height("1.3"),
     s.max_width(px(400)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn empty_state_subtitle(attributes, children) {
-  s.class([s.font_size(px(16)), s.color(palette.dark.dark_white)])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
+  l.memo("div", attributes, children, [
+    s.font_size(px(16)),
+    s.color(palette.dark.dark_white),
+  ])
 }
 
 pub fn sidebar_wrapper(attributes, children) {
-  s.class([
+  l.element("div", attributes, children, [
     s.position("sticky"),
     s.top(px(130)),
     s.display("flex"),
@@ -325,31 +253,29 @@ pub fn sidebar_wrapper(attributes, children) {
     s.height_("calc(100vh - 130px)"),
     s.overflow("auto"),
     s.padding_("12px 0"),
-    s.property(
-      "mask",
-      "linear-gradient(180deg, rgba(255,255,255, 0) 0%, rgba(255,255,255,1) 1% 99%, rgba(255, 255, 255, 0))",
-    ),
+    s.property("mask", {
+      "linear-gradient(
+        180deg,
+        rgba(255,255,255, 0) 0%,
+        rgba(255,255,255,1) 0.5% 99.5%,
+        rgba(255, 255, 255, 0)
+      )"
+    }),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn sidebar_package_name(attributes, children) {
-  s.class([
+  l.element("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.padding(px(6)),
     s.border_radius(px(6)),
     s.overflow("hidden"),
     s.text_overflow("ellipsis"),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn sidebar_module_name(attributes, children) {
-  s.class([
+  l.element("button", attributes, children, [
     s.text_overflow("ellipsis"),
     s.overflow("hidden"),
     s.direction("rtl"),
@@ -367,55 +293,40 @@ pub fn sidebar_module_name(attributes, children) {
     s.property("padding-inline", "0"),
     s.padding_left(px(12)),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("button", _, children)
 }
 
 pub fn sidebar_package_wrapper(attributes, children) {
-  s.class([
+  l.element("div", attributes, children, [
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(9)),
     s.font_size(px(14)),
     s.max_width(px(250)),
   ])
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn main(attributes, children) {
-  s.class([
+  l.memo("main", attributes, children, [
     s.grid_area("main"),
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(24)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("main", _, children)
 }
 
 pub fn items_wrapper(attributes, children) {
-  s.class([
+  l.memo("div", attributes, children, [
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(24)),
     s.padding_top(px(12)),
     s.max_width(px(700)),
   ])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn named_type_button(attributes, children) {
-  s.class([s.text_decoration("none")])
-  |> s.memo()
-  |> s.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("a", _, children)
+  l.memo("a", attributes, children, [
+    s.text_decoration("none"),
+    s.hover([s.text_decoration("underline")]),
+  ])
 }

@@ -1,6 +1,5 @@
 import data/model/mock
 import data/search_result.{type SearchResult, type SearchResults}
-import gleam/io
 import gleam/list
 import gleam/pair
 import gleam/result
@@ -52,6 +51,5 @@ fn insert_module_names(index: Index, search_results: List(SearchResult)) {
   list.key_find(acc, key)
   |> result.unwrap([])
   |> fn(i) { list.prepend(i, #(val.module_name, val.name)) }
-  |> io.debug()
   |> fn(i) { list.key_set(acc, key, i) }
 }

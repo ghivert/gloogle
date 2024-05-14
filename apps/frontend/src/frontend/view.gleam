@@ -3,14 +3,12 @@ import frontend/colors/palette
 import frontend/view/body/body
 import frontend/view/footer/footer
 import frontend/view/navbar/navbar
-import gleam/list
-import lustre/attribute.{type Attribute}
-import lustre/element.{type Element}
 import sketch
+import sketch/lustre/extra as l
 import sketch/size
 
-fn layout(attributes: List(Attribute(msg)), children: List(Element(msg))) {
-  sketch.class([
+fn layout(attributes, children) {
+  l.memo("div", attributes, children, [
     sketch.display("grid"),
     sketch.grid_template_areas(
       "\"navbar\"
@@ -23,10 +21,6 @@ fn layout(attributes: List(Attribute(msg)), children: List(Element(msg))) {
     sketch.background(palette.dark.underwater_blue),
     sketch.color(palette.dark.white),
   ])
-  |> sketch.memo()
-  |> sketch.to_lustre()
-  |> list.prepend(attributes, _)
-  |> element.element("div", _, children)
 }
 
 pub fn view(model: Model) {

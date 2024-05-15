@@ -23,17 +23,18 @@ fn search(query: String, ctx: Context) {
   wisp.log_notice("Searching for " <> query)
   json.object([
     #("exact-matches", {
-      queries.name_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> json.preprocessed_array()
     }),
     #("matches", {
-      queries.content_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> json.preprocessed_array()
     }),
     #("searches", {
       queries.search(ctx.db, query)
+      |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> json.preprocessed_array()
     }),

@@ -80,6 +80,11 @@ pub fn log_error(error: Error) {
   }
 }
 
+pub fn debug_log(error: Error) {
+  log_error(error)
+  error
+}
+
 pub fn log_parse_tom_error(error: tom.ParseError) {
   case error {
     tom.Unexpected(got, expected) -> {

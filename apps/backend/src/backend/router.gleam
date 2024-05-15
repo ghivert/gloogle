@@ -21,22 +21,26 @@ fn empty_json() {
 
 fn search(query: String, ctx: Context) {
   wisp.log_notice("Searching for " <> query)
+  let exact_matches =
+    queries.name_search(ctx.db, query)
+    |> result.map_error(error.debug_log)
+    |> result.unwrap([])
+  let matches =
+    queries.content_search(ctx.db, query)
+    |> result.map_error(error.debug_log)
+    |> result.unwrap([])
+    |> list.filter(fn(i) { !list.contains(exact_matches, i) })
   json.object([
-    #("exact-matches", {
-      |> result.map_error(error.debug_log)
-      |> result.unwrap([])
-      |> json.preprocessed_array()
-    }),
-    #("matches", {
-      |> result.map_error(error.debug_log)
-      |> result.unwrap([])
-      |> json.preprocessed_array()
-    }),
+    #("exact-matches", json.array(exact_matches, queries.type_search_to_json)),
+    #("matches", json.array(matches, queries.type_search_to_json)),
     #("searches", {
       queries.search(ctx.db, query)
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
-      |> json.preprocessed_array()
+      |> list.filter(fn(i) {
+        !list.contains(list.append(exact_matches, matches), i)
+      })
+      |> json.array(queries.type_search_to_json)
     }),
   ])
 }

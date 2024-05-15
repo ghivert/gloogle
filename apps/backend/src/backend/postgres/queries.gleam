@@ -430,7 +430,7 @@ pub fn name_search(db: pgo.Connection, query: String) {
      m.name module_name,
      p.name,
      r.version,
-     string_to_array(r.version, '.')::int[] AS ordering
+     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -446,7 +446,20 @@ pub fn name_search(db: pgo.Connection, query: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+fn transform_query(q: String) {
+  q
+  |> string.replace("(", " ")
+  |> string.replace(")", " ")
+  |> string.replace(",", " ")
+  |> string.replace(".", " ")
+  |> string.split(" ")
+  |> list.filter(fn(item) { !string.is_empty(item) })
+  |> string.join(" ")
+  |> io.debug
+}
+
 pub fn content_search(db: pgo.Connection, query: String) {
+  let pattern = pgo.text(transform_query(query))
   let query = pgo.text(query)
   "SELECT DISTINCT ON (type_name, kind, module_name)
      s.name type_name,
@@ -457,7 +470,7 @@ pub fn content_search(db: pgo.Connection, query: String) {
      m.name module_name,
      p.name,
      r.version,
-     string_to_array(r.version, '.')::int[] AS ordering
+     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -470,29 +483,18 @@ pub fn content_search(db: pgo.Connection, query: String) {
       s.name ILIKE '%' || $1 || '%'
       OR s.signature_ ILIKE '%' || $1 || '%'
       OR replace(s.signature_, ' ', '') ILIKE '%' || $1 || '%'
-      OR replace(s.signature_, ' ', '') ILIKE '%' || replace($1, ' ', '') || '%'
+      OR replace(s.signature_, ' ', '') LIKE '%' || replace($2, ' ', '%') || '%'
     )
    ORDER BY s.name, s.kind, m.name, ordering DESC
-   LIMIT 40"
-  |> pgo.execute(db, [query], decode_type_search)
+   LIMIT 100"
+  |> pgo.execute(db, [query, pattern], decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
 fn decode_type_search(dyn) {
   dynamic.decode8(
-    fn(a, b, c, d, e, f, g, h) {
-      json.object([
-        #("name", json.string(a)),
-        #("documentation", json.string(b)),
-        #("kind", json.string(c)),
-        #("metadata", dynamic.unsafe_coerce(d)),
-        #("json_signature", dynamic.unsafe_coerce(e)),
-        #("module_name", json.string(f)),
-        #("package_name", json.string(g)),
-        #("version", json.string(h)),
-      ])
-    },
+    fn(a, b, c, d, e, f, g, h) { #(a, b, c, d, e, f, g, h) },
     dynamic.element(0, dynamic.string),
     dynamic.element(1, dynamic.string),
     dynamic.element(2, dynamic.string),
@@ -504,26 +506,42 @@ fn decode_type_search(dyn) {
   )(dyn)
 }
 
+pub fn type_search_to_json(item) {
+  let #(a, b, c, d, e, f, g, h) = item
+  json.object([
+    #("name", json.string(a)),
+    #("documentation", json.string(b)),
+    #("kind", json.string(c)),
+    #("metadata", dynamic.unsafe_coerce(d)),
+    #("json_signature", dynamic.unsafe_coerce(e)),
+    #("module_name", json.string(f)),
+    #("package_name", json.string(g)),
+    #("version", json.string(h)),
+  ])
+}
+
 pub fn search(db: pgo.Connection, q: String) {
   let query = pgo.text("'" <> q <> "'")
-  "SELECT
-     s.name,
+  "SELECT DISTINCT ON (type_name, kind, module_name)
+     s.name type_name,
      s.documentation,
      s.kind,
      s.metadata,
      s.json_signature,
-     m.name,
+     m.name module_name,
      p.name,
-     r.version
+     r.version,
+     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
    JOIN package_release r
-     ON r.id = m.package_release_id
+     ON m.package_release_id = r.id
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ to_tsquery($1)
-   LIMIT 40"
+   ORDER BY s.name, s.kind, m.name, ordering DESC
+   LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })

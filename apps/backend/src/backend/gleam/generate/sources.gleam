@@ -35,7 +35,11 @@ pub fn type_definition_to_string(type_name: String, type_def: TypeDefinition) {
   let params = int_parameters_to_string(type_def.parameters)
   let base = type_name <> params
   use <- bool.guard(when: type_def.constructors == [], return: base)
-  base <> " {\n" <> type_constructors_to_string(type_def.constructors) <> "\n}"
+  "type "
+  <> base
+  <> " {\n"
+  <> type_constructors_to_string(type_def.constructors)
+  <> "\n}"
 }
 
 fn type_constructors_to_string(constructors: List(TypeConstructor)) {
@@ -107,14 +111,14 @@ fn type_to_string(type_: Type) {
 
 pub fn type_alias_to_string(type_name: String, type_alias: TypeAlias) -> String {
   let params = int_parameters_to_string(type_alias.parameters)
-  type_name <> params <> " = " <> type_to_string(type_alias.alias)
+  "type " <> type_name <> params <> " = " <> type_to_string(type_alias.alias)
 }
 
 pub fn constant_to_string(constant_name: String, constant: Constant) -> String {
-  constant_name <> " = " <> type_to_string(constant.type_)
+  "const " <> constant_name <> " = " <> type_to_string(constant.type_)
 }
 
 pub fn function_to_string(function_name: String, function: Function) -> String {
   let params = parameters_to_string(function.parameters)
-  function_name <> params <> " -> " <> type_to_string(function.return)
+  "fn " <> function_name <> params <> " -> " <> type_to_string(function.return)
 }

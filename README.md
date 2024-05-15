@@ -35,3 +35,12 @@ If Gloogle please you, you can also contribute! Pull Requests are welcome!
 ## An issue?
 
 Open an issue on the repo! That would be extremely helpful!
+
+## Copyrights
+
+All rights for Lucy (the gleam mascott) belongs to their creators. Every Lucy will
+be removed upon demands.
+
+This project could have lived thanks to Louis Pilfold, that used his amazing work on
+[Gleam Packages](https://github.com/gleam-lang/packages) as a foundation. All credits for
+libraries used goes to the brilliant, vibrant gleam community. 💜

@@ -28,5 +28,7 @@ pub fn cors() {
   |> cors.allow_method(http.Post)
   |> cors.allow_method(http.Put)
   |> cors.allow_method(http.Patch)
+  |> cors.allow_header("baggage")
+  |> cors.allow_header("sentry-trace")
   |> cors.max_age(86_400)
 }

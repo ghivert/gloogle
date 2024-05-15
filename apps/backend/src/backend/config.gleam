@@ -3,13 +3,19 @@ import gleam/int
 import gleam/pgo
 import gleam/result
 import wisp
+import wisp/logger
 
 pub type Context {
   Context(db: pgo.Connection, hex_api_key: String)
 }
 
 pub type Config {
-  Config(database_url: String, hex_api_key: String, port: Int)
+  Config(
+    database_url: String,
+    hex_api_key: String,
+    port: Int,
+    level: logger.Level,
+  )
 }
 
 pub fn read_config() {
@@ -18,7 +24,11 @@ pub fn read_config() {
   let assert Ok(port) =
     os.get_env("PORT")
     |> result.try(int.parse)
-  Config(database_url, hex_api_key, port)
+  let level =
+    os.get_env("LOG_LEVEL")
+    |> result.try(logger.parse)
+    |> result.unwrap(logger.Info)
+  Config(database_url, hex_api_key, port, level)
 }
 
 pub fn get_secret_key_base() {

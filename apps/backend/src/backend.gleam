@@ -12,14 +12,15 @@ import wisp
 import wisp/logger
 
 pub fn main() {
-  dot_env.load()
-  setup.radiate()
   wisp.configure_logger()
-  logger.set_level(logger.Debug)
+  dot_env.load()
 
   let secret_key_base = config.get_secret_key_base()
   let cnf = config.read_config()
   let ctx = postgres.connect(cnf)
+
+  logger.set_level(cnf.level)
+  setup.radiate()
 
   let assert Ok(_) =
     router.handle_request(_, ctx)

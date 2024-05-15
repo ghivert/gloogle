@@ -1,9 +1,9 @@
 import backend/config
-import gleam/io
 import radiate
+import wisp
 
 fn print_radiate_update(_state: state, path: String) {
-  io.println("Change in " <> path <> ", reloading")
+  wisp.log_debug("Change in " <> path <> ", reloading")
 }
 
 pub fn radiate() {
@@ -15,7 +15,7 @@ pub fn radiate() {
         |> radiate.add_dir(".")
         |> radiate.on_reload(print_radiate_update)
         |> radiate.start()
-      io.println("Watching src to change.")
+      wisp.log_debug("Watching src to change.")
     }
   }
 }

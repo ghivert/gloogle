@@ -1,4 +1,4 @@
-import backend/config.{type Config}
+import backend/config.{type Context}
 import backend/postgres/postgres
 import backend/router
 import dot_env
@@ -30,7 +30,7 @@ pub fn main() {
 
   let assert Ok(_) =
     supervisor.start(fn(children) {
-      let assert Ok(_) = start_hex_sync(cnf, children)
+      let assert Ok(_) = start_hex_sync(ctx, children)
       children
     })
 
@@ -45,14 +45,11 @@ fn supervise(start: fn() -> _) {
   })
 }
 
-fn sync_hex(cnf: Config, children: supervisor.Children(Nil)) {
-  hex.sync_new_gleam_releases(cnf, children)
+fn sync_hex(ctx: Context, children: supervisor.Children(Nil)) {
+  hex.sync_new_gleam_releases(ctx, children)
 }
 
-fn start_hex_sync(cnf: Config, children: supervisor.Children(Nil)) {
+fn start_hex_sync(ctx: Context, children: supervisor.Children(Nil)) {
   use <- supervise()
-  periodic.periodically(
-    do: fn() { sync_hex(cnf, children) },
-    waiting: 60 * 1000,
-  )
+  periodic.periodically(do: fn() { sync_hex(ctx, children) }, waiting: 6 * 1000)
 }

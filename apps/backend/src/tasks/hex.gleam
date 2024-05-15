@@ -1,11 +1,10 @@
 import api/hex as api
 import api/hex_repo
 import api/signatures
-import backend/config.{type Config, type Context}
+import backend/config.{type Context}
 import backend/data/hex_read.{type HexRead}
 import backend/error.{type Error}
 import backend/gleam/context
-import backend/postgres/postgres
 import backend/postgres/queries
 import birl.{type Time}
 import birl/duration
@@ -34,10 +33,9 @@ type State {
 }
 
 pub fn sync_new_gleam_releases(
-  cnf: Config,
+  ctx: Context,
   children: supervisor.Children(Nil),
 ) -> Result(HexRead, Error) {
-  let ctx = postgres.connect(cnf)
   wisp.log_info("Syncing new releases from Hex")
   use limit <- result.try(queries.get_last_hex_date(ctx.db))
   use latest <- result.try(sync_packages(
@@ -45,7 +43,7 @@ pub fn sync_new_gleam_releases(
       page: 1,
       limit: limit,
       newest: limit,
-      hex_api_key: cnf.hex_api_key,
+      hex_api_key: ctx.hex_api_key,
       last_logged: birl.now(),
       db: ctx.db,
     ),
@@ -54,7 +52,6 @@ pub fn sync_new_gleam_releases(
   let latest = queries.upsert_most_recent_hex_timestamp(ctx.db, latest)
   wisp.log_info("")
   wisp.log_info("Up to date!")
-  pgo.disconnect(ctx.db)
   latest
 }
 

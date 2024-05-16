@@ -10,7 +10,6 @@
   "dependencies": {
     "@gleam-lang/highlight.js-gleam": "^1.5.0",
     "@sentry/browser": "^8.0.0",
-    "firebase": "^10.10.0",
     "highlight.js": "^11.9.0",
     "html-encoder-decoder": "^1.3.10",
     "showdown": "^2.1.0"
@@ -19,6 +18,7 @@
     "@sentry/vite-plugin": "^2.16.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "dotenv": "^16.4.5",
+    "gleam-lang": "^1.1.0",
     "prettier": "^3.2.5",
     "ts-gleam": "^1.0.1",
     "typescript": "^5.4.2",

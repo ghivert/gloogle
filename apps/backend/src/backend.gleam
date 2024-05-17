@@ -1,13 +1,15 @@
-import backend/config.{type Context}
+import backend/config
 import backend/postgres/postgres
 import backend/router
 import dot_env
 import gleam/erlang/process
+import gleam/function
 import gleam/otp/supervisor
 import mist
 import periodic
 import setup
 import tasks/hex
+import tasks/ranking
 import wisp
 import wisp/logger
 
@@ -30,27 +32,26 @@ pub fn main() {
     |> mist.start_http()
 
   let assert Ok(_) =
-    supervisor.start(fn(children) {
-      let assert Ok(_) = start_hex_sync(ctx, children)
-      children
+    supervisor.start(fn(periodic_children) {
+      use _ <- function.tap(periodic_children)
+      let assert Ok(_) =
+        supervisor.start(fn(children) {
+          add_periodic_worker(periodic_children, waiting: 6 * 1000, do: fn() {
+            hex.sync_new_gleam_releases(ctx, children)
+          })
+          add_periodic_worker(periodic_children, waiting: 86_400, do: fn() {
+            ranking.compute_ranking(ctx)
+          })
+        })
     })
 
   process.sleep_forever()
 }
 
-fn supervise(start: fn() -> _) {
-  use children <- supervisor.start()
+fn add_periodic_worker(children, waiting delay, do work) {
+  use _ <- function.tap(children)
   supervisor.add(children, {
     use _ <- supervisor.worker()
-    start()
+    periodic.periodically(do: work, waiting: delay)
   })
-}
-
-fn sync_hex(ctx: Context, children: supervisor.Children(Nil)) {
-  hex.sync_new_gleam_releases(ctx, children)
-}
-
-fn start_hex_sync(ctx: Context, children: supervisor.Children(Nil)) {
-  use <- supervise()
-  periodic.periodically(do: fn() { sync_hex(ctx, children) }, waiting: 6 * 1000)
 }

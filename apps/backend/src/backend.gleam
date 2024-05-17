@@ -39,7 +39,7 @@ pub fn main() {
           add_periodic_worker(periodic_children, waiting: 6 * 1000, do: fn() {
             hex.sync_new_gleam_releases(ctx, children)
           })
-          add_periodic_worker(periodic_children, waiting: 86_400, do: fn() {
+          add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
             ranking.compute_ranking(ctx)
           })
         })

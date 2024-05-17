@@ -546,3 +546,21 @@ pub fn search(db: pgo.Connection, q: String) {
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
+
+pub fn select_gleam_toml(db: pgo.Connection, offset: Int) {
+  "SELECT gleam_toml
+   FROM package_release
+   WHERE gleam_toml IS NOT NULL
+   ORDER BY id
+   LIMIT 100
+   OFFSET $1"
+  |> pgo.execute(db, [pgo.int(offset)], dynamic.element(0, dynamic.string))
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+pub fn update_package_rank(db: pgo.Connection, package: String, rank: Int) {
+  "UPDATE package SET rank = $2 WHERE name = $1"
+  |> pgo.execute(db, [pgo.text(package), pgo.int(rank)], dynamic.dynamic)
+  |> result.map_error(error.DatabaseError)
+}

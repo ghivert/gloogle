@@ -119,7 +119,9 @@ CREATE TABLE public.package (
     licenses jsonb,
     description text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    rank integer DEFAULT 0 NOT NULL,
+    favorites integer DEFAULT 0 NOT NULL
 );
 
 
@@ -474,4 +476,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240506110519'),
     ('20240512211227'),
     ('20240512214036'),
-    ('20240514214138');
+    ('20240514214138'),
+    ('20240517083006');

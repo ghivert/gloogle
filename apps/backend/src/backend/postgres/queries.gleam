@@ -7,7 +7,6 @@ import gleam/bool
 import gleam/dict
 import gleam/dynamic
 import gleam/hexpm
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option}
@@ -45,7 +44,6 @@ pub fn upsert_most_recent_hex_timestamp(db: pgo.Connection, latest: Time) {
      SET last_check = $1
    RETURNING *"
   |> pgo.execute(db, [timestamp], hex_read.decode)
-  |> result.map_error(io.debug)
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
     let err = "Upsert most recent hex timestamp failed"
@@ -421,15 +419,16 @@ pub fn upsert_package_type_fun_signature(
 
 pub fn name_search(db: pgo.Connection, query: String) {
   let query = pgo.text(query)
-  "SELECT DISTINCT ON (type_name, kind, module_name)
+  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
-     s.kind,
+     s.kind signature_kind,
      s.metadata,
      s.json_signature,
      m.name module_name,
      p.name,
      r.version,
+     p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
@@ -439,7 +438,7 @@ pub fn name_search(db: pgo.Connection, query: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE s.name = $1
-   ORDER BY s.name, s.kind, m.name, ordering DESC
+   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -455,21 +454,21 @@ fn transform_query(q: String) {
   |> string.split(" ")
   |> list.filter(fn(item) { !string.is_empty(item) })
   |> string.join(" ")
-  |> io.debug
 }
 
 pub fn content_search(db: pgo.Connection, query: String) {
   let pattern = pgo.text(transform_query(query))
   let query = pgo.text(query)
-  "SELECT DISTINCT ON (type_name, kind, module_name)
+  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
-     s.kind,
+     s.kind signature_kind,
      s.metadata,
      s.json_signature,
      m.name module_name,
      p.name,
      r.version,
+     p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
@@ -485,7 +484,7 @@ pub fn content_search(db: pgo.Connection, query: String) {
       OR replace(s.signature_, ' ', '') ILIKE '%' || $1 || '%'
       OR replace(s.signature_, ' ', '') LIKE '%' || replace($2, ' ', '%') || '%'
     )
-   ORDER BY s.name, s.kind, m.name, ordering DESC
+   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
    LIMIT 100"
   |> pgo.execute(db, [query, pattern], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -522,15 +521,16 @@ pub fn type_search_to_json(item) {
 
 pub fn search(db: pgo.Connection, q: String) {
   let query = pgo.text("'" <> q <> "'")
-  "SELECT DISTINCT ON (type_name, kind, module_name)
+  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
-     s.kind,
+     s.kind signature_kind,
      s.metadata,
      s.json_signature,
      m.name module_name,
      p.name,
      r.version,
+     p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
@@ -540,7 +540,7 @@ pub fn search(db: pgo.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ to_tsquery($1)
-   ORDER BY s.name, s.kind, m.name, ordering DESC
+   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)

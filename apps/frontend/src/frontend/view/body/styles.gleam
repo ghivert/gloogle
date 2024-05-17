@@ -1,22 +1,28 @@
 import frontend/colors/palette
 import gleam/bool
+import gleam/list
+import lustre/element
 import sketch as s
 import sketch/lustre/extra as l
 import sketch/size.{px}
 
 pub fn implementations_pill(background, color, attributes, children) {
   let id = "implementations-pill-" <> background
-  l.dynamic("div", attributes, children, id, [
+  s.dynamic(id, [
     s.background(background),
     s.color(color),
     s.padding_("4px 9px"),
     s.border_radius(px(6)),
     s.font_size(px(10)),
   ])
+  |> s.memo()
+  |> s.to_lustre()
+  |> list.prepend(attributes, _)
+  |> element.element("div", _, children)
 }
 
 pub fn implementations_pill_wrapper(attributes, children) {
-  l.element("div", attributes, children, [
+  l.memo("div", attributes, children, [
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(6)),
@@ -34,7 +40,7 @@ pub fn search_result(attributes, children) {
 }
 
 pub fn search_results_wrapper(attributes, children) {
-  l.element("div", attributes, children, [
+  l.memo("div", attributes, children, [
     s.display("grid"),
     s.padding_("0 48px"),
     s.gap(px(24)),
@@ -53,7 +59,7 @@ pub fn search_details(attributes, children) {
 }
 
 pub fn search_details_title(attributes, children) {
-  l.element("div", attributes, children, [
+  l.memo("div", attributes, children, [
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(12)),
@@ -61,7 +67,7 @@ pub fn search_details_title(attributes, children) {
 }
 
 pub fn qualified_name(attributes, children) {
-  l.element("a", attributes, children, [
+  l.memo("a", attributes, children, [
     s.overflow("hidden"),
     s.text_overflow("ellipsis"),
     s.direction("rtl"),
@@ -271,7 +277,7 @@ pub fn empty_state_subtitle(attributes, children) {
 }
 
 pub fn sidebar_wrapper(attributes, children) {
-  l.element("div", attributes, children, [
+  l.memo("div", attributes, children, [
     s.position("sticky"),
     s.top(px(130)),
     s.display("flex"),
@@ -292,7 +298,7 @@ pub fn sidebar_wrapper(attributes, children) {
 }
 
 pub fn sidebar_package_name(attributes, children) {
-  l.element("div", attributes, children, [
+  l.memo("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.padding(px(6)),
     s.border_radius(px(6)),
@@ -302,7 +308,7 @@ pub fn sidebar_package_name(attributes, children) {
 }
 
 pub fn sidebar_module_name(attributes, children) {
-  l.element("button", attributes, children, [
+  l.memo("button", attributes, children, [
     s.text_overflow("ellipsis"),
     s.overflow("hidden"),
     s.direction("rtl"),
@@ -323,7 +329,7 @@ pub fn sidebar_module_name(attributes, children) {
 }
 
 pub fn sidebar_package_wrapper(attributes, children) {
-  l.element("div", attributes, children, [
+  l.memo("div", attributes, children, [
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(9)),

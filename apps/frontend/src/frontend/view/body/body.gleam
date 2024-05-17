@@ -1,22 +1,10 @@
-import data/implementations
-import data/kind
-import data/model.{type Index, type Model}
+import data/model.{type Model}
 import data/msg
 import data/search_result
-import frontend/colors/palette
 import frontend/images
 import frontend/strings as frontend_strings
-import frontend/view/body/signature
 import frontend/view/body/styles as s
-import frontend/view/documentation
-import frontend/view/types as t
-import gleam/bool
-import gleam/dict.{type Dict}
-import gleam/list
-import gleam/option
-import gleam/result
 import lustre/attribute as a
-import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
 
@@ -75,7 +63,7 @@ pub fn body(model: Model) {
           title: "No match found!",
           content: frontend_strings.retry_query,
         )
-      search_result.SearchResults(exact, others, searches) -> model.view_cache
+      search_result.SearchResults(_, _, _) -> model.view_cache
     },
   ])
 }

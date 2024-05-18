@@ -1,6 +1,6 @@
 // @ts-ignore
 import gleamHljs from '@gleam-lang/highlight.js-gleam'
-import hljs from 'highlight.js'
+import hljs from 'highlight.js/lib/core'
 // @ts-ignore
 import { main } from './frontend.gleam'
 

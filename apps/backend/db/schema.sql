@@ -360,6 +360,13 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: package_type_fun_signature_documentation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_documentation ON public.package_type_fun_signature USING gin (to_tsvector('english'::regconfig, documentation));
+
+
+--
 -- Name: package_type_fun_signature_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -477,4 +484,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240512211227'),
     ('20240512214036'),
     ('20240514214138'),
-    ('20240517083006');
+    ('20240517083006'),
+    ('20240518232212');

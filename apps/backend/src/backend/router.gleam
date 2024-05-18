@@ -34,7 +34,9 @@ fn isolate_filters(query: String) -> #(String, List(String)) {
   |> pair.map_first(string.join(_, " "))
   |> pair.map_second(fn(filters) {
     let no_filters = list.is_empty(filters)
-    use <- bool.guard(when: no_filters, return: ["in:signature", "in:name"])
+    use <- bool.guard(when: no_filters, return: [
+      "in:signature", "in:name", "in:documentation",
+    ])
     filters
   })
 }

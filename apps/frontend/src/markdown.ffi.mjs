@@ -1,5 +1,4 @@
 import hljs from 'highlight.js/lib/core'
-import { decode as decodeHtml } from 'html-encoder-decoder'
 import showdown from 'showdown'
 
 export function convert(content) {
@@ -21,7 +20,6 @@ export function showdownHighlight({ pre = false, auto_detection = true } = {}) {
     }
 
     const replacement = (wholeMatch, match, left, right) => {
-      match = decodeHtml(match)
       const lang = (left.match(/class=\"([^ \"]+)/) || [])[1]
       if (!lang && !auto_detection) {
         return wholeMatch

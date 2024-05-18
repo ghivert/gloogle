@@ -1,5 +1,6 @@
 import data/msg.{type Msg}
 import data/search_result.{type SearchResult, type SearchResults}
+import frontend/router
 import frontend/view/body/cache
 import gleam/list
 import gleam/pair
@@ -16,6 +17,7 @@ pub type Model {
     index: Index,
     loading: Bool,
     view_cache: Element(Msg),
+    route: router.Route,
   )
 }
 
@@ -28,7 +30,12 @@ pub fn init() {
     index: index,
     loading: False,
     view_cache: element.none(),
+    route: router.Home,
   )
+}
+
+pub fn update_route(model: Model, route: router.Route) {
+  Model(..model, route: route)
 }
 
 pub fn toggle_loading(model: Model) {
@@ -42,7 +49,7 @@ pub fn update_input(model: Model, content: String) {
 pub fn update_search_results(model: Model, search_results: SearchResults) {
   let index = compute_index(search_results)
   let view_cache = case search_results {
-    search_result.Start | search_result.NoSearchResults -> element.none()
+    search_result.Start | search_result.InternalServerError -> element.none()
     search_result.SearchResults(e, m, s) ->
       cache.cache_search_results(index, e, m, s)
   }
@@ -56,18 +63,18 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
 
 pub fn reset(_model: Model) {
   Model(
-    search_results: search_result.Start,
+    search_results: search_result.SearchResults([], [], []),
     input: "",
     index: [],
     loading: False,
     view_cache: element.none(),
+    route: router.Home,
   )
 }
 
 fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
-    search_result.Start -> []
-    search_result.NoSearchResults -> []
+    search_result.Start | search_result.InternalServerError -> []
     search_result.SearchResults(exact, others, searches) -> {
       []
       |> insert_module_names(exact)

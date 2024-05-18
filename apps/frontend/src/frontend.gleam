@@ -1,11 +1,13 @@
 import data/model.{type Model}
 import data/msg.{type Msg}
 import data/search_result
+import frontend/router
 import frontend/view
 import gleam/bool
-import gleam/option
+import gleam/option.{None}
 import gleam/pair
 import gleam/result
+import gleam/uri.{type Uri}
 import grille_pain
 import grille_pain/lustre/toast
 import grille_pain/options
@@ -13,6 +15,7 @@ import lustre
 import lustre/effect
 import lustre/update
 import lustre_http as http
+import modem
 import sketch/lustre as sketch
 import sketch/options as sketch_options
 import tardis
@@ -28,8 +31,6 @@ fn scroll_to_element(id: String) -> Nil
 fn capture_message(content: String) -> String
 
 pub fn main() {
-  let init = fn(_) { #(model.init(), effect.none()) }
-
   let debugger_ = case is_dev() {
     False -> Error(Nil)
     True ->
@@ -60,6 +61,21 @@ pub fn main() {
     |> apply_debugger(tardis.activate)
 }
 
+fn init(_) {
+  let initial =
+    modem.initial_uri()
+    |> result.map(router.parse_uri)
+    |> result.unwrap(router.Home)
+    |> handle_route_change(model.init(), _)
+  submit_search(initial.0)
+  |> update.add_effect(modem.init(on_url_change))
+}
+
+fn on_url_change(uri: Uri) -> Msg {
+  router.parse_uri(uri)
+  |> msg.OnRouteChange()
+}
+
 fn update(model: Model, msg: Msg) {
   case msg {
     msg.UpdateInput(content) -> update_input(model, content)
@@ -67,8 +83,9 @@ fn update(model: Model, msg: Msg) {
     msg.Reset -> reset(model)
     msg.None -> update.none(model)
     msg.ScrollTo(id) -> scroll_to(model, id)
-    msg.SearchResults(search_results) ->
-      handle_search_results(model, search_results)
+    msg.OnRouteChange(route) -> handle_route_change(model, route)
+    msg.SearchResults(input, search_results) ->
+      handle_search_results(model, input, search_results)
   }
 }
 
@@ -92,7 +109,9 @@ fn submit_search(model: Model) {
   use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
   use <- bool.guard(when: model.loading, return: #(model, effect.none()))
   let new_model = model.toggle_loading(model)
-  http.expect_json(search_result.decode_search_results, msg.SearchResults)
+  http.expect_json(search_result.decode_search_results, {
+    msg.SearchResults(input: model.input, result: _)
+  })
   |> http.get(endpoint <> "/search?q=" <> model.input, _)
   |> pair.new(new_model, _)
 }
@@ -104,14 +123,29 @@ fn scroll_to(model: Model, id: String) {
 
 fn handle_search_results(
   model: Model,
+  input: String,
   search_results: Result(search_result.SearchResults, http.HttpError),
 ) {
   let toast = display_toast(search_results)
-  search_results
-  |> result.map(model.update_search_results(model, _))
-  |> result.unwrap(model)
-  |> model.toggle_loading()
-  |> pair.new(toast)
+  let up =
+    search_results
+    |> result.map(model.update_search_results(model, _))
+    |> result.map(model.update_route(_, router.Search(input)))
+    |> result.unwrap(model)
+    |> model.toggle_loading()
+    |> update.effect(toast)
+  uri.parse("/search?q=" <> input)
+  |> result.map(modem.push(_))
+  |> result.map(update.add_effect(up, _))
+  |> result.unwrap(up)
+}
+
+fn handle_route_change(model: Model, route: router.Route) {
+  let model = model.update_route(model, route)
+  update.none(case route {
+    router.Home -> model.update_input(model, "")
+    router.Search(q) -> model.update_input(model, q)
+  })
 }
 
 fn display_toast(

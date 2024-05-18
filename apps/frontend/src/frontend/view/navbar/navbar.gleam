@@ -1,6 +1,6 @@
 import data/model.{type Model}
 import data/msg
-import data/search_result
+import frontend/router
 import frontend/view/navbar/styles as s
 import lustre/attribute as a
 import lustre/element/html as h
@@ -21,11 +21,11 @@ fn navbar_links() {
 
 pub fn navbar(model: Model) {
   s.navbar([a.class("navbar")], [
-    case model.search_results {
-      search_result.Start -> h.div([], [])
-      search_result.NoSearchResults | search_result.SearchResults(_, _, _) ->
+    case model.route {
+      router.Home -> h.div([], [])
+      router.Search(_) ->
         s.navbar_search([], [
-          s.navbar_search_title([e.on_click(msg.Reset)], [
+          s.navbar_search_title([a.href("/")], [
             s.search_lucy([a.src("/images/lucy.svg")]),
             h.text("Gloogle"),
           ]),

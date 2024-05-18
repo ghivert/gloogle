@@ -2,6 +2,7 @@ import data/model.{type Model}
 import data/msg
 import data/search_result
 import frontend/images
+import frontend/router
 import frontend/strings as frontend_strings
 import frontend/view/body/styles as s
 import lustre/attribute as a
@@ -49,21 +50,30 @@ fn empty_state(
 
 pub fn body(model: Model) {
   s.main([], [
-    case model.search_results {
-      search_result.Start -> view_search_input(model)
-      search_result.NoSearchResults ->
-        empty_state(
-          image: images.internal_error,
-          title: "Internal server error",
-          content: frontend_strings.internal_server_error,
-        )
-      search_result.SearchResults([], [], []) ->
-        empty_state(
-          image: images.shadow_lucy,
-          title: "No match found!",
-          content: frontend_strings.retry_query,
-        )
-      search_result.SearchResults(_, _, _) -> model.view_cache
+    case model.route {
+      router.Home -> view_search_input(model)
+      router.Search(_) ->
+        case model.search_results {
+          search_result.Start ->
+            empty_state(
+              image: images.loading,
+              title: "Loading…",
+              content: frontend_strings.loading,
+            )
+          search_result.InternalServerError ->
+            empty_state(
+              image: images.internal_error,
+              title: "Internal server error",
+              content: frontend_strings.internal_server_error,
+            )
+          search_result.SearchResults([], [], []) ->
+            empty_state(
+              image: images.shadow_lucy,
+              title: "No match found!",
+              content: frontend_strings.retry_query,
+            )
+          search_result.SearchResults(_, _, _) -> model.view_cache
+        }
     },
   ])
 }

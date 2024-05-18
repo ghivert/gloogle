@@ -19,12 +19,12 @@ pub type SearchResult {
 
 pub type SearchResults {
   Start
+  InternalServerError
   SearchResults(
     exact_matches: List(SearchResult),
     matches: List(SearchResult),
     searches: List(SearchResult),
   )
-  NoSearchResults
 }
 
 pub fn decode_search_result(dyn) {
@@ -43,7 +43,7 @@ pub fn decode_search_result(dyn) {
 
 pub fn decode_search_results(dyn) {
   dynamic.any([
-    dynamic.decode1(fn(_) { NoSearchResults }, {
+    dynamic.decode1(fn(_) { InternalServerError }, {
       dynamic.field("error", dynamic.string)
     }),
     dynamic.decode3(

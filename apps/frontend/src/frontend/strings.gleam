@@ -9,3 +9,5 @@ pub const searches_match = "Matched from a document search in functions, constan
 pub const retry_query = "Retry with a different query. You can match functions, types or constants names, as well as functions types directly!"
 
 pub const internal_server_error = "Internal server error. The error should be fixed soon. Please, retry later."
+
+pub const loading = "Your content is loading. Please wait…"

@@ -1,5 +1,4 @@
 import frontend/colors/palette
-import gleam/bool
 import gleam/list
 import lustre/element
 import sketch as s
@@ -159,48 +158,6 @@ pub fn search_title_wrapper(attributes, children) {
 
 pub fn search_lucy(attributes) {
   l.memo("img", attributes, [], [s.width(px(40))])
-}
-
-pub fn search_input(loading: Bool, attributes) {
-  let id = "search-input-wrapper-" <> bool.to_string(loading)
-  let id_ = "search-input-" <> bool.to_string(loading)
-  let content =
-    l.dynamic("input", attributes, [], id_, [
-      s.appearance("none"),
-      s.border("none"),
-      s.padding(
-        px(case loading {
-          True -> 18
-          False -> 22
-        }),
-      ),
-      s.outline("none"),
-      s.color(palette.dark.charcoal),
-      s.width(size.percent(100)),
-      s.background(palette.dark.white),
-      s.border_radius(px(14)),
-      s.transition("padding .3s"),
-    ])
-
-  l.dynamic("div", [], [content], id, [
-    s.border_radius(px(18)),
-    s.overflow("hidden"),
-    s.grid_area("input"),
-    s.padding(
-      px(case loading {
-        True -> 4
-        False -> 0
-      }),
-    ),
-    s.background("linear-gradient(-45deg, #4ce7ff, #c651e5, #e3d8be, #4ce7ff)"),
-    s.property("background-size", "400% 400%"),
-    s.transition("padding .3s"),
-    s.animation("bg-spin 3s linear infinite"),
-    s.animation_play_state(case loading {
-      True -> "running"
-      False -> "paused"
-    }),
-  ])
 }
 
 pub fn search_submit(attributes) {

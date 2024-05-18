@@ -6,8 +6,6 @@ import sketch/size.{px}
 
 pub const search_lucy = body_styles.search_lucy
 
-pub const search_input = body_styles.search_input
-
 pub fn search_input_wrapper(attributes, children) {
   l.memo("form", attributes, children, [s.width_("100%")])
 }

@@ -143,7 +143,7 @@ fn handle_search_results(
 fn handle_route_change(model: Model, route: router.Route) {
   let model = model.update_route(model, route)
   update.none(case route {
-    router.Home -> model.update_input(model, "")
+    router.Home -> model.update_input(model, "in:name in:signature ")
     router.Search(q) -> model.update_input(model, q)
   })
 }

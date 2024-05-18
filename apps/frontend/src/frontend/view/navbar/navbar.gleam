@@ -2,6 +2,7 @@ import data/model.{type Model}
 import data/msg
 import frontend/router
 import frontend/view/navbar/styles as s
+import frontend/view/search_input/search_input
 import lustre/attribute as a
 import lustre/element/html as h
 import lustre/event as e
@@ -30,11 +31,7 @@ pub fn navbar(model: Model) {
             h.text("Gloogle"),
           ]),
           s.search_input_wrapper([e.on_submit(msg.SubmitSearch)], [
-            s.search_input(model.loading, [
-              a.placeholder("Search for a function, or a type"),
-              e.on_input(msg.UpdateInput),
-              a.value(model.input),
-            ]),
+            search_input.view(model.loading, model.input),
           ]),
         ])
     },

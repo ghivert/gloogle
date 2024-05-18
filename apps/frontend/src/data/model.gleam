@@ -25,7 +25,7 @@ pub fn init() {
   let search_results = search_result.Start
   let index = compute_index(search_results)
   Model(
-    input: "",
+    input: "in:name in:signature ",
     search_results: search_results,
     index: index,
     loading: False,
@@ -64,7 +64,7 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
 pub fn reset(_model: Model) {
   Model(
     search_results: search_result.SearchResults([], [], []),
-    input: "",
+    input: "in:name in:signature ",
     index: [],
     loading: False,
     view_cache: element.none(),

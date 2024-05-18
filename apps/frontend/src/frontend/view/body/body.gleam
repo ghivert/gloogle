@@ -5,6 +5,7 @@ import frontend/images
 import frontend/router
 import frontend/strings as frontend_strings
 import frontend/view/body/styles as s
+import frontend/view/search_input/search_input
 import lustre/attribute as a
 import lustre/element/html as h
 import lustre/event as e
@@ -21,11 +22,7 @@ fn view_search_input(model: Model) {
       ]),
       h.text(frontend_strings.gloogle_description),
     ]),
-    s.search_input(model.loading, [
-      a.placeholder("Search for a function, or a type"),
-      e.on_input(msg.UpdateInput),
-      a.value(model.input),
-    ]),
+    search_input.view(model.loading, model.input),
     s.search_submit([
       a.type_("submit"),
       a.value("Submit"),

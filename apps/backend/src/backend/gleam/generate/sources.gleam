@@ -35,22 +35,14 @@ pub fn type_definition_to_string(type_name: String, type_def: TypeDefinition) {
   let params = int_parameters_to_string(type_def.parameters)
   let base = type_name <> params
   use <- bool.guard(when: type_def.constructors == [], return: base)
-  "type "
-  <> base
-  <> " {\n"
+  { "type " <> base <> " {\n" }
   <> type_constructors_to_string(type_def.constructors)
   <> "\n}"
 }
 
 fn type_constructors_to_string(constructors: List(TypeConstructor)) {
   constructors
-  |> list.map(fn(c) {
-    let params = parameters_to_string(c.parameters)
-    let const_ = "  " <> c.name <> params
-    c.documentation
-    |> option.map(fn(d) { string.join(["  -- " <> d, const_], "\n") })
-    |> option.unwrap(const_)
-  })
+  |> list.map(fn(c) { "  " <> c.name <> parameters_to_string(c.parameters) })
   |> string.join("\n")
 }
 

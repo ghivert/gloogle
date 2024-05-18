@@ -4,10 +4,13 @@ import backend/error
 import backend/postgres/queries
 import backend/web
 import cors_builder as cors
+import gleam/bool
 import gleam/http
 import gleam/json
 import gleam/list
+import gleam/pair
 import gleam/result
+import gleam/string
 import gleam/string_builder
 import tasks/hex as syncing
 import wisp.{type Request, type Response}
@@ -19,28 +22,67 @@ fn empty_json() {
   |> wisp.json_response(200)
 }
 
+fn isolate_filters(query: String) -> #(String, List(String)) {
+  string.split(query, " ")
+  |> list.fold(#([], []), fn(acc, val) {
+    case val {
+      "in:signature" | "in:name" | "in:documentation" -> #(acc.0, [val, ..acc.1])
+      _ -> #([val, ..acc.0], acc.1)
+    }
+  })
+  |> pair.map_first(list.reverse)
+  |> pair.map_first(string.join(_, " "))
+  |> pair.map_second(fn(filters) {
+    let no_filters = list.is_empty(filters)
+    use <- bool.guard(when: no_filters, return: ["in:signature", "in:name"])
+    filters
+  })
+}
+
 fn search(query: String, ctx: Context) {
   wisp.log_notice("Searching for " <> query)
-  let exact_matches =
-    queries.name_search(ctx.db, query)
-    |> result.map_error(error.debug_log)
-    |> result.unwrap([])
-  let matches =
-    queries.content_search(ctx.db, query)
-    |> result.map_error(error.debug_log)
-    |> result.unwrap([])
-    |> list.filter(fn(i) { !list.contains(exact_matches, i) })
-  json.object([
-    #("exact-matches", json.array(exact_matches, queries.type_search_to_json)),
-    #("matches", json.array(matches, queries.type_search_to_json)),
-    #("searches", {
-      queries.search(ctx.db, query)
+  let #(query, filters) = isolate_filters(query)
+  let exact_matches = case list.contains(filters, "in:name") {
+    False -> []
+    True ->
+      queries.name_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
+      |> result.unwrap([])
+  }
+  let matches = case list.contains(filters, "in:signature") {
+    False -> []
+    True ->
+      queries.content_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
+      |> result.unwrap([])
+      |> list.filter(fn(i) { !list.contains(exact_matches, i) })
+  }
+  let signature_searches = case list.contains(filters, "in:signature") {
+    False -> []
+    True ->
+      queries.signature_search(ctx.db, query)
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> list.filter(fn(i) {
         !list.contains(list.append(exact_matches, matches), i)
       })
-      |> json.array(queries.type_search_to_json)
+  }
+  let documentation_searches = case list.contains(filters, "in:documentation") {
+    False -> []
+    True ->
+      queries.documentation_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
+      |> result.unwrap([])
+      |> list.filter(fn(i) {
+        !list.contains(list.append(exact_matches, matches), i)
+      })
+  }
+  json.object([
+    #("exact-matches", json.array(exact_matches, queries.type_search_to_json)),
+    #("matches", json.array(matches, queries.type_search_to_json)),
+    #("searches", json.array(signature_searches, queries.type_search_to_json)),
+    #("docs-searches", {
+      json.array(documentation_searches, queries.type_search_to_json)
     }),
   ])
 }

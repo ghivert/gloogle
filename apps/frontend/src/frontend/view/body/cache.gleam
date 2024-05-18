@@ -111,6 +111,7 @@ pub fn cache_search_results(
   exact: List(search_result.SearchResult),
   others: List(search_result.SearchResult),
   searches: List(search_result.SearchResult),
+  docs_searches: List(search_result.SearchResult),
 ) {
   s.search_results_wrapper([], [
     sidebar(index),
@@ -121,6 +122,12 @@ pub fn cache_search_results(
       view_search_results(others),
       match_title(searches, "Searches matches", frontend_strings.searches_match),
       view_search_results(searches),
+      match_title(
+        docs_searches,
+        "Documentation matches",
+        frontend_strings.docs_match,
+      ),
+      view_search_results(docs_searches),
     ]),
   ])
 }

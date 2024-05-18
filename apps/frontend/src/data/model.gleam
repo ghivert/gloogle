@@ -25,7 +25,7 @@ pub fn init() {
   let search_results = search_result.Start
   let index = compute_index(search_results)
   Model(
-    input: "in:name in:signature ",
+    input: "",
     search_results: search_results,
     index: index,
     loading: False,
@@ -50,8 +50,8 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> element.none()
-    search_result.SearchResults(e, m, s) ->
-      cache.cache_search_results(index, e, m, s)
+    search_result.SearchResults(e, m, s, d) ->
+      cache.cache_search_results(index, e, m, s, d)
   }
   Model(
     ..model,
@@ -63,8 +63,8 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
 
 pub fn reset(_model: Model) {
   Model(
-    search_results: search_result.SearchResults([], [], []),
-    input: "in:name in:signature ",
+    search_results: search_result.SearchResults([], [], [], []),
+    input: "",
     index: [],
     loading: False,
     view_cache: element.none(),
@@ -75,11 +75,12 @@ pub fn reset(_model: Model) {
 fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
     search_result.Start | search_result.InternalServerError -> []
-    search_result.SearchResults(exact, others, searches) -> {
+    search_result.SearchResults(exact, others, searches, docs) -> {
       []
       |> insert_module_names(exact)
       |> insert_module_names(others)
       |> insert_module_names(searches)
+      |> insert_module_names(docs)
       |> list.map(fn(i) { pair.map_second(i, list.reverse) })
     }
   }

@@ -14,7 +14,7 @@ import lustre/element as el
 import lustre/element/html as h
 
 fn do_render_parameters(from: Int, to: Int, acc: List(el.Element(a))) {
-  use <- bool.guard(when: from == to, return: acc)
+  use <- bool.guard(when: from > to, return: acc)
   let assert Ok(utf_a) =
     string.to_utf_codepoints("a")
     |> list.first()

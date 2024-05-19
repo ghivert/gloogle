@@ -1,3 +1,4 @@
+import gleam/dynamic
 import gleam/function
 import gleam/io
 import gleam/list
@@ -12,12 +13,23 @@ import grille_pain/internals/view.{view}
 import grille_pain/options.{type Options}
 import lustre
 import lustre/effect
+import plinth/browser/document
+import plinth/browser/element
+import plinth/browser/shadow
 import sketch/lustre as sketch
 import sketch/options as sketch_options
 import tardis
 
 pub fn setup(opts: Options) {
-  ffi.create_node()
+  let node = document.create_element("div")
+  let lustre_root_ = document.create_element("div")
+  let shadow_root = shadow.attach_shadow(node, shadow.Open)
+  let lustre_root = dynamic.unsafe_coerce(dynamic.from(lustre_root_))
+  shadow.append_child(shadow_root, lustre_root_)
+  element.set_attribute(node, "class", "grille-pain")
+  document.body()
+  |> element.append_child(node)
+  ffi.add_keyframe(shadow_root)
 
   let #(wrapper, activate) =
     opts.debug
@@ -26,8 +38,9 @@ pub fn setup(opts: Options) {
     |> option.unwrap(#(function.identity, function.identity))
 
   let render =
-    sketch_options.node()
+    sketch_options.shadow(shadow_root)
     |> sketch.setup()
+    |> result.map_error(io.debug)
     |> result.map(sketch.compose(view, _))
     |> result.unwrap(view)
 
@@ -35,7 +48,7 @@ pub fn setup(opts: Options) {
     fn(_) { #(model.new(opts.timeout), effect.none()) }
     |> lustre.application(update, render)
     |> wrapper()
-    |> lustre.start("#grille-pain", Nil)
+    |> lustre.start(lustre_root, Nil)
     |> activate()
 
   dispatcher

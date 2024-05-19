@@ -34,9 +34,16 @@ export function computeToastSize(id) {
   return 0
 }
 
-export function createNode() {
-  const node = document.createElement('div')
-  node.setAttribute('id', 'grille-pain')
-  node.setAttribute('class', 'grille-pain')
-  document.body.appendChild(node)
+export function addKeyframe(shadowRoot) {
+  const stylesheet = new CSSStyleSheet()
+  stylesheet.replace(`@keyframes progress_bar {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}`)
+  shadowRoot.adoptedStyleSheets.push(stylesheet)
 }

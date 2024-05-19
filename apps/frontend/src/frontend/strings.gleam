@@ -13,3 +13,5 @@ pub const retry_query = "Retry with a different query. You can match functions, 
 pub const internal_server_error = "Internal server error. The error should be fixed soon. Please, retry later."
 
 pub const loading = "Your content is loading. Please wait…"
+
+pub const advanced_search = "Pro-tip: you can filter by name, signature or documentation! Type in:name, in:signature, in:documentation or any combination of all to select your filters. By default, it searches in names and signatures."

@@ -36,16 +36,6 @@ body {
   }
 }
 
-@keyframes progress_bar {
-  from {
-    width: 100%;
-  }
-
-  to {
-    width: 0%;
-  }
-}
-
 h1,
 h2,
 h3,

@@ -1,5 +1,6 @@
 import grille_pain/internals/data/msg.{type Msg}
 import lustre.{type Action, type ClientSpa}
+import plinth/browser/shadow.{type ShadowRoot}
 
 pub type Dispatch =
   fn(Action(Msg, ClientSpa)) -> Nil
@@ -22,5 +23,5 @@ pub fn is_dark_theme() -> Bool {
 @external(javascript, "../../grille_pain.ffi.mjs", "computeToastSize")
 pub fn compute_toast_size(id: Int) -> Int
 
-@external(javascript, "../../grille_pain.ffi.mjs", "createNode")
-pub fn create_node() -> Nil
+@external(javascript, "../../grille_pain.ffi.mjs", "addKeyframe")
+pub fn add_keyframe(root: ShadowRoot) -> Nil

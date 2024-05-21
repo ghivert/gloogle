@@ -54,6 +54,35 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: analytics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.analytics (
+    id integer NOT NULL,
+    foreign_id integer NOT NULL,
+    table_name text NOT NULL,
+    content jsonb NOT NULL,
+    day timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: analytics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.analytics ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.analytics_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: hex_read; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -256,6 +285,22 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: analytics analytics_foreign_id_table_name_day_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.analytics
+    ADD CONSTRAINT analytics_foreign_id_table_name_day_key UNIQUE (foreign_id, table_name, day);
+
+
+--
+-- Name: analytics analytics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.analytics
+    ADD CONSTRAINT analytics_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hex_read hex_read_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -381,6 +426,13 @@ CREATE INDEX package_type_fun_signature_signature ON public.package_type_fun_sig
 
 
 --
+-- Name: analytics analytics_moddatetime; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER analytics_moddatetime BEFORE UPDATE ON public.analytics FOR EACH ROW EXECUTE FUNCTION public.moddatetime('updated_at');
+
+
+--
 -- Name: hex_user hex_user_moddatetime; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -486,4 +538,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240514214138'),
     ('20240517083006'),
     ('20240518232212'),
-    ('20240521174525');
+    ('20240521174525'),
+    ('20240521204341');

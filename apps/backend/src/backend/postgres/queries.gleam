@@ -9,7 +9,7 @@ import gleam/dynamic
 import gleam/hexpm
 import gleam/json
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{type Option, None, Some}
 import gleam/package_interface
 import gleam/pair
 import gleam/pgo
@@ -623,8 +623,16 @@ pub fn update_package_rank(db: pgo.Connection, package: String, rank: Int) {
 }
 
 pub fn select_package_repository_address(db: pgo.Connection, offset: Int) {
-  let decoder = dynamic.element(0, dynamic.optional(dynamic.string))
-  "SELECT repository FROM package LIMIT 100 OFFSET $1"
+  let decoder = fn(dyn) {
+    dynamic.tuple2(dynamic.int, dynamic.optional(dynamic.string))(dyn)
+    |> result.map(fn(content) {
+      case content {
+        #(id, Some(repo)) -> Some(#(id, repo))
+        #(_, None) -> None
+      }
+    })
+  }
+  "SELECT id, repository FROM package LIMIT 100 OFFSET $1"
   |> pgo.execute(db, [pgo.int(offset)], decoder)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -689,5 +697,33 @@ pub fn select_package_by_popularity(db: pgo.Connection, page: Int) {
     ),
   )
   |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn insert_analytics(
+  db: pgo.Connection,
+  id: Int,
+  table_name: String,
+  content: Dict(String, Int),
+) {
+  let day =
+    birl.now()
+    |> birl.to_erlang_universal_datetime()
+    |> pair.map_second(fn(_) { #(0, 0, 0) })
+    |> dynamic.from()
+    |> dynamic.unsafe_coerce()
+  let content =
+    content
+    |> dict.to_list()
+    |> list.map(pair.map_second(_, json.int))
+    |> json.object()
+    |> json.to_string()
+    |> pgo.text()
+  let parameters = [pgo.int(id), pgo.text(table_name), content, day]
+  "INSERT INTO analytics (foreign_id, table_name, content, day)
+   VALUES ($1, $2, $3, $4)
+   ON CONFLICT (foreign_id, table_name, day) DO UPDATE
+     SET content = $3"
+  |> pgo.execute(db, parameters, dynamic.dynamic)
   |> result.map_error(error.DatabaseError)
 }

@@ -34,11 +34,13 @@ fn do_compute_popularity(ctx: Context, offset offset: Int) {
   |> result.try(fn(_) { do_compute_popularity(ctx, offset: offset + 100) })
 }
 
-fn update_repo_popularity(ctx: Context, repo: String) {
-  wisp.log_debug("Syncing " <> repo)
-  use count <- result.try(github.get_stargazer_count(ctx.github_token, repo))
-  dict.from_list([#("github", count)])
-  |> queries.update_package_popularity(ctx.db, repo, _)
+fn update_repo_popularity(ctx: Context, repo: #(Int, String)) {
+  wisp.log_debug("Syncing " <> repo.1)
+  use count <- result.try(github.get_stargazer_count(ctx.github_token, repo.1))
+  let content = dict.from_list([#("github", count)])
+  let _ = queries.insert_analytics(ctx.db, repo.0, "package", content)
+  content
+  |> queries.update_package_popularity(ctx.db, repo.1, _)
   |> result.replace(Nil)
-  |> function.tap(fn(_) { wisp.log_debug("Synced " <> repo) })
+  |> function.tap(fn(_) { wisp.log_debug("Synced " <> repo.1) })
 }

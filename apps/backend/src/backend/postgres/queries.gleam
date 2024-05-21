@@ -576,6 +576,34 @@ pub fn documentation_search(db: pgo.Connection, q: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+pub fn module_search(db: pgo.Connection, q: String) {
+  let query = pgo.text(q)
+  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+     s.name type_name,
+     s.documentation,
+     s.kind signature_kind,
+     s.metadata,
+     s.json_signature,
+     m.name module_name,
+     p.name,
+     r.version,
+     p.rank package_rank,
+     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+   FROM package_type_fun_signature s
+   JOIN package_module m
+     ON m.id = s.package_module_id
+   JOIN package_release r
+     ON m.package_release_id = r.id
+   JOIN package p
+     ON p.id = r.package_id
+   WHERE m.name = $1
+   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   LIMIT 100"
+  |> pgo.execute(db, [query], decode_type_search)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
 pub fn select_gleam_toml(db: pgo.Connection, offset: Int) {
   "SELECT gleam_toml
    FROM package_release

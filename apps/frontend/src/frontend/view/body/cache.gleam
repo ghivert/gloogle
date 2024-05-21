@@ -112,6 +112,7 @@ pub fn cache_search_results(
   others: List(search_result.SearchResult),
   searches: List(search_result.SearchResult),
   docs_searches: List(search_result.SearchResult),
+  modules_searches: List(search_result.SearchResult),
 ) {
   s.search_results_wrapper([], [
     sidebar(index),
@@ -128,6 +129,12 @@ pub fn cache_search_results(
         frontend_strings.docs_match,
       ),
       view_search_results(docs_searches),
+      match_title(
+        modules_searches,
+        "Module matches",
+        frontend_strings.modules_match,
+      ),
+      view_search_results(modules_searches),
     ]),
   ])
 }

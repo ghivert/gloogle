@@ -50,8 +50,8 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> element.none()
-    search_result.SearchResults(e, m, s, d) ->
-      cache.cache_search_results(index, e, m, s, d)
+    search_result.SearchResults(e, m, s, d, mods) ->
+      cache.cache_search_results(index, e, m, s, d, mods)
   }
   Model(
     ..model,
@@ -63,7 +63,7 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
 
 pub fn reset(_model: Model) {
   Model(
-    search_results: search_result.SearchResults([], [], [], []),
+    search_results: search_result.SearchResults([], [], [], [], []),
     input: "",
     index: [],
     loading: False,
@@ -75,12 +75,13 @@ pub fn reset(_model: Model) {
 fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
     search_result.Start | search_result.InternalServerError -> []
-    search_result.SearchResults(exact, others, searches, docs) -> {
+    search_result.SearchResults(exact, others, searches, docs, modules) -> {
       []
       |> insert_module_names(exact)
       |> insert_module_names(others)
       |> insert_module_names(searches)
       |> insert_module_names(docs)
+      |> insert_module_names(modules)
       |> list.map(fn(i) { pair.map_second(i, list.reverse) })
     }
   }

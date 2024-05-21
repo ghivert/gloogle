@@ -25,6 +25,7 @@ pub type SearchResults {
     matches: List(SearchResult),
     signature_searches: List(SearchResult),
     docs_searches: List(SearchResult),
+    module_searches: List(SearchResult),
   )
 }
 
@@ -47,12 +48,13 @@ pub fn decode_search_results(dyn) {
     dynamic.decode1(fn(_) { InternalServerError }, {
       dynamic.field("error", dynamic.string)
     }),
-    dynamic.decode4(
+    dynamic.decode5(
       SearchResults,
       dynamic.field("exact-matches", dynamic.list(decode_search_result)),
       dynamic.field("matches", dynamic.list(decode_search_result)),
       dynamic.field("searches", dynamic.list(decode_search_result)),
       dynamic.field("docs-searches", dynamic.list(decode_search_result)),
+      dynamic.field("module-searches", dynamic.list(decode_search_result)),
     ),
   ])(dyn)
 }

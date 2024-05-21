@@ -26,7 +26,10 @@ fn isolate_filters(query: String) -> #(String, List(String)) {
   string.split(query, " ")
   |> list.fold(#([], []), fn(acc, val) {
     case val {
-      "in:signature" | "in:name" | "in:documentation" -> #(acc.0, [val, ..acc.1])
+      "in:signature" | "in:name" | "in:documentation" | "in:module" -> #(acc.0, [
+        val,
+        ..acc.1
+      ])
       _ -> #([val, ..acc.0], acc.1)
     }
   })
@@ -35,7 +38,7 @@ fn isolate_filters(query: String) -> #(String, List(String)) {
   |> pair.map_second(fn(filters) {
     let no_filters = list.is_empty(filters)
     use <- bool.guard(when: no_filters, return: [
-      "in:signature", "in:name", "in:documentation",
+      "in:signature", "in:name", "in:documentation", "in:module",
     ])
     filters
   })
@@ -79,12 +82,25 @@ fn search(query: String, ctx: Context) {
         !list.contains(list.append(exact_matches, matches), i)
       })
   }
+  let module_searches = case list.contains(filters, "in:module") {
+    False -> []
+    True ->
+      queries.module_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
+      |> result.unwrap([])
+      |> list.filter(fn(i) {
+        !list.contains(list.append(exact_matches, matches), i)
+      })
+  }
   json.object([
     #("exact-matches", json.array(exact_matches, queries.type_search_to_json)),
     #("matches", json.array(matches, queries.type_search_to_json)),
     #("searches", json.array(signature_searches, queries.type_search_to_json)),
     #("docs-searches", {
       json.array(documentation_searches, queries.type_search_to_json)
+    }),
+    #("module-searches", {
+      json.array(module_searches, queries.type_search_to_json)
     }),
   ])
 }

@@ -63,13 +63,13 @@ pub fn body(model: Model) {
               title: "Internal server error",
               content: frontend_strings.internal_server_error,
             )
-          search_result.SearchResults([], [], [], []) ->
+          search_result.SearchResults([], [], [], [], []) ->
             empty_state(
               image: images.shadow_lucy,
               title: "No match found!",
               content: frontend_strings.retry_query,
             )
-          search_result.SearchResults(_, _, _, _) -> model.view_cache
+          search_result.SearchResults(_, _, _, _, _) -> model.view_cache
         }
     },
   ])

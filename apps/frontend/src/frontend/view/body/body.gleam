@@ -21,7 +21,7 @@ fn view_search_input(model: Model) {
         s.search_lucy([a.src("/images/lucy.svg")]),
         s.search_title_with_hint([], [
           h.text("Gloogle"),
-          s.pre_alpha_title([], [h.text("Pre Alpha")]),
+          s.pre_alpha_title([], [h.text("Alpha")]),
         ]),
       ]),
       h.text(frontend_strings.gloogle_description),

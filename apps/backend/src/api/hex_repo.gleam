@@ -1,5 +1,6 @@
 import backend/error
 import gleam/bit_array
+import gleam/erlang/process
 import gleam/http
 import gleam/http/request
 import gleam/httpc
@@ -89,8 +90,14 @@ fn get_tarball(name: String, version: String) {
   |> request.set_scheme(http.Https)
   |> httpc.send_bits()
   |> result.map_error(error.FetchError)
-  |> result.map(fn(res) {
-    create_archive(archives_path, name, version, res.body)
+  |> result.try(fn(res) {
+    case res.status {
+      200 -> Ok(create_archive(archives_path, name, version, res.body))
+      _ -> {
+        process.sleep(1000)
+        get_tarball(name, version)
+      }
+    }
   })
 }
 

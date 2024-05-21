@@ -57,7 +57,7 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
             t.dark_white(package_id),
             t.dark_white("."),
             t.keyword(item.module_name),
-            t.dark_white("#"),
+            t.dark_white("."),
             t.fun(item.name),
           ],
         ),
@@ -91,14 +91,14 @@ fn sidebar(index: List(#(#(String, String), List(#(String, String))))) {
     s.sidebar_package_wrapper([], [
       s.sidebar_package_name([], [
         h.text(package.0),
-        t.dark_white("#" <> package.1),
+        t.dark_white("@" <> package.1),
       ]),
       ..list.map(modules, fn(module) {
         let #(module, name) = module
         let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
         s.sidebar_module_name([e.on_click(msg.ScrollTo(id))], [
           t.keyword(module),
-          h.text("#"),
+          h.text("."),
           t.fun(name),
         ])
       })

@@ -6,7 +6,7 @@ import wisp
 import wisp/logger
 
 pub type Context {
-  Context(db: pgo.Connection, hex_api_key: String)
+  Context(db: pgo.Connection, hex_api_key: String, github_token: String)
 }
 
 pub type Config {
@@ -15,12 +15,14 @@ pub type Config {
     hex_api_key: String,
     port: Int,
     level: logger.Level,
+    github_token: String,
   )
 }
 
 pub fn read_config() {
   let assert Ok(database_url) = os.get_env("DATABASE_URL")
   let assert Ok(hex_api_key) = os.get_env("HEX_API_KEY")
+  let assert Ok(github_token) = os.get_env("GITHUB_TOKEN")
   let assert Ok(port) =
     os.get_env("PORT")
     |> result.try(int.parse)
@@ -28,7 +30,7 @@ pub fn read_config() {
     os.get_env("LOG_LEVEL")
     |> result.try(logger.parse)
     |> result.unwrap(logger.Info)
-  Config(database_url, hex_api_key, port, level)
+  Config(database_url, hex_api_key, port, level, github_token)
 }
 
 pub fn get_secret_key_base() {

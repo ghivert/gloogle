@@ -13,7 +13,13 @@ pub fn connect(cnf: Config) {
   let assert Ok(config) = parse_database_url(cnf.database_url)
   config
   |> pgo.connect()
-  |> fn(db) { Context(db: db, hex_api_key: cnf.hex_api_key) }
+  |> fn(db) {
+    Context(
+      db: db,
+      hex_api_key: cnf.hex_api_key,
+      github_token: cnf.github_token,
+    )
+  }
 }
 
 fn parse_database_url(database_url: String) {

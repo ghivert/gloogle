@@ -24,6 +24,7 @@ tom = ">= 1.0.0 and < 2.0.0"
 verl = ">= 1.1.1 and < 2.0.0"
 wisp = "~> 0.14"
 cors_builder = ">= 1.0.0 and < 2.0.0"
+decipher = ">= 1.2.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

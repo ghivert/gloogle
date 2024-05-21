@@ -9,6 +9,7 @@ import mist
 import periodic
 import setup
 import tasks/hex
+import tasks/popularity
 import tasks/ranking
 import wisp
 import wisp/logger
@@ -41,6 +42,9 @@ pub fn main() {
           })
           add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
             ranking.compute_ranking(ctx)
+          })
+          add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
+            popularity.compute_popularity(ctx)
           })
         })
     })

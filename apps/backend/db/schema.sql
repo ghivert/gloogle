@@ -121,7 +121,7 @@ CREATE TABLE public.package (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     rank integer DEFAULT 0 NOT NULL,
-    favorites integer DEFAULT 0 NOT NULL
+    popularity jsonb
 );
 
 
@@ -485,4 +485,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240512214036'),
     ('20240514214138'),
     ('20240517083006'),
-    ('20240518232212');
+    ('20240518232212'),
+    ('20240521174525');

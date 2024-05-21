@@ -4,13 +4,14 @@ import backend/error
 import backend/gleam/context
 import birl.{type Time}
 import gleam/bool
-import gleam/dict
+import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/json
 import gleam/list
 import gleam/option.{type Option}
 import gleam/package_interface
+import gleam/pair
 import gleam/pgo
 import gleam/result
 import gleam/string
@@ -590,5 +591,29 @@ pub fn select_gleam_toml(db: pgo.Connection, offset: Int) {
 pub fn update_package_rank(db: pgo.Connection, package: String, rank: Int) {
   "UPDATE package SET rank = $2 WHERE name = $1"
   |> pgo.execute(db, [pgo.text(package), pgo.int(rank)], dynamic.dynamic)
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn select_package_repository_address(db: pgo.Connection, offset: Int) {
+  let decoder = dynamic.element(0, dynamic.optional(dynamic.string))
+  "SELECT repository FROM package LIMIT 100 OFFSET $1"
+  |> pgo.execute(db, [pgo.int(offset)], decoder)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+pub fn update_package_popularity(
+  db: pgo.Connection,
+  url: String,
+  popularity: Dict(String, Int),
+) {
+  let popularity =
+    dict.to_list(popularity)
+    |> list.map(pair.map_second(_, json.int))
+    |> json.object()
+    |> json.to_string()
+    |> pgo.text()
+  "UPDATE package SET popularity = $2 WHERE repository = $1"
+  |> pgo.execute(db, [pgo.text(url), popularity], dynamic.dynamic)
   |> result.map_error(error.DatabaseError)
 }

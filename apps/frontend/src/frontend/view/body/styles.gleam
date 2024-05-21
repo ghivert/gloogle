@@ -328,3 +328,45 @@ pub fn search_title_with_hint(attributes, children) {
 pub fn pre_alpha_title(attributes, children) {
   l.memo("div", attributes, children, [s.font_size(px(16))])
 }
+
+pub fn loading_trending(attributes, children) {
+  l.memo("div", attributes, children, [])
+}
+
+pub fn no_trendings(attributes, children) {
+  l.memo("div", attributes, children, [])
+}
+
+pub fn trendings_wrapper(attributes, children) {
+  l.element("div", attributes, children, [s.padding_("12px 48px")])
+}
+
+pub fn trendings_title(attributes, children) {
+  l.element("div", attributes, children, [s.margin_bottom(px(24))])
+}
+
+pub fn trendings_grid(attributes, children) {
+  l.element("div", attributes, children, [
+    s.display("grid"),
+    // s.grid_template_columns("repeat(auto-fill, minmax(350px, 1fr))"),
+    s.align_items("start"),
+    s.gap(px(24)),
+  ])
+}
+
+pub fn trendings_card(attributes, children) {
+  l.element("div", attributes, children, [
+    s.background(palette.dark.unexpected_aubergine),
+  ])
+}
+
+pub fn documentation_links(attributes, children) {
+  l.element("div", attributes, children, [
+    s.display("flex"),
+    s.justify_content("space-between"),
+  ])
+}
+
+pub fn licenses(attributes, children) {
+  l.element("div", attributes, children, [s.display("flex"), s.gap(px(6))])
+}

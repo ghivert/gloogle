@@ -1,8 +1,10 @@
 import data/msg.{type Msg}
+import data/package.{type Package}
 import data/search_result.{type SearchResult, type SearchResults}
 import frontend/router
 import frontend/view/body/cache
 import gleam/list
+import gleam/option.{type Option}
 import gleam/pair
 import gleam/result
 import lustre/element.{type Element}
@@ -18,6 +20,7 @@ pub type Model {
     loading: Bool,
     view_cache: Element(Msg),
     route: router.Route,
+    trendings: Option(List(Package)),
   )
 }
 
@@ -31,11 +34,20 @@ pub fn init() {
     loading: False,
     view_cache: element.none(),
     route: router.Home,
+    trendings: option.None,
   )
 }
 
 pub fn update_route(model: Model, route: router.Route) {
   Model(..model, route: route)
+}
+
+pub fn update_trendings(model: Model, trendings: List(Package)) {
+  model.trendings
+  |> option.unwrap([])
+  |> list.append(trendings)
+  |> option.Some
+  |> fn(t) { Model(..model, trendings: t) }
 }
 
 pub fn toggle_loading(model: Model) {
@@ -61,7 +73,7 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
   )
 }
 
-pub fn reset(_model: Model) {
+pub fn reset(model: Model) {
   Model(
     search_results: search_result.SearchResults([], [], [], [], []),
     input: "",
@@ -69,6 +81,7 @@ pub fn reset(_model: Model) {
     loading: False,
     view_cache: element.none(),
     route: router.Home,
+    trendings: model.trendings,
   )
 }
 

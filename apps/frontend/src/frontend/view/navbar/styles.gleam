@@ -43,6 +43,13 @@ pub fn trending(attributes, children) {
   ])
 }
 
+pub fn nav_link(attributes, children) {
+  l.memo("a", attributes, children, [
+    s.color(palette.dark.white),
+    s.text_decoration("none"),
+  ])
+}
+
 pub fn navbar(attributes, children) {
   l.memo("div", attributes, children, [
     s.position("sticky"),

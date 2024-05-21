@@ -5,8 +5,18 @@ import gleam/result
 import wisp
 import wisp/logger
 
+pub type Environment {
+  Development
+  Production
+}
+
 pub type Context {
-  Context(db: pgo.Connection, hex_api_key: String, github_token: String)
+  Context(
+    db: pgo.Connection,
+    hex_api_key: String,
+    github_token: String,
+    env: Environment,
+  )
 }
 
 pub type Config {
@@ -16,6 +26,7 @@ pub type Config {
     port: Int,
     level: logger.Level,
     github_token: String,
+    env: Environment,
   )
 }
 
@@ -23,6 +34,10 @@ pub fn read_config() {
   let assert Ok(database_url) = os.get_env("DATABASE_URL")
   let assert Ok(hex_api_key) = os.get_env("HEX_API_KEY")
   let assert Ok(github_token) = os.get_env("GITHUB_TOKEN")
+  let env = case result.unwrap(os.get_env("GLEAM_ENV"), "") {
+    "development" -> Development
+    _ -> Production
+  }
   let assert Ok(port) =
     os.get_env("PORT")
     |> result.try(int.parse)
@@ -30,7 +45,7 @@ pub fn read_config() {
     os.get_env("LOG_LEVEL")
     |> result.try(logger.parse)
     |> result.unwrap(logger.Info)
-  Config(database_url, hex_api_key, port, level, github_token)
+  Config(database_url, hex_api_key, port, level, github_token, env)
 }
 
 pub fn get_secret_key_base() {

@@ -6,11 +6,13 @@ import gleam/uri.{type Uri}
 pub type Route {
   Home
   Search(query: String)
+  Trending
 }
 
 pub fn parse_uri(uri: Uri) -> Route {
   case uri.path_segments(uri.path) {
     ["search"] -> handle_search_path(uri)
+    ["trending"] -> Trending
     _ -> Home
   }
 }

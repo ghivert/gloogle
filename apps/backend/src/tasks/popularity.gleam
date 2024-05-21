@@ -10,9 +10,14 @@ import gleam/result
 import wisp
 
 pub fn compute_popularity(ctx: Context) {
-  wisp.log_info("Syncing popularity")
-  do_compute_popularity(ctx, offset: 0)
-  |> function.tap(fn(_) { wisp.log_info("Syncing package ranks finished!") })
+  case ctx.env {
+    config.Development -> Ok(Nil)
+    config.Production -> {
+      wisp.log_info("Syncing popularity")
+      do_compute_popularity(ctx, offset: 0)
+      |> function.tap(fn(_) { wisp.log_info("Syncing popularity finished!") })
+    }
+  }
 }
 
 fn do_compute_popularity(ctx: Context, offset offset: Int) {

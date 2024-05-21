@@ -1,9 +1,11 @@
 import data/model.{type Model}
 import data/msg.{type Msg}
+import data/package
 import data/search_result
 import frontend/router
 import frontend/view
 import gleam/bool
+import gleam/dynamic
 import gleam/option.{None}
 import gleam/pair
 import gleam/result
@@ -29,6 +31,13 @@ fn scroll_to_element(id: String) -> Nil
 
 @external(javascript, "./config.ffi.mjs", "captureMessage")
 fn capture_message(content: String) -> String
+
+pub fn api_endpoint() {
+  case is_dev() {
+    True -> "http://localhost:3000"
+    False -> "https://api.gloogle.run"
+  }
+}
 
 pub fn main() {
   let debugger_ = case is_dev() {
@@ -69,6 +78,10 @@ fn init(_) {
     |> handle_route_change(model.init(), _)
   submit_search(initial.0)
   |> update.add_effect(modem.init(on_url_change))
+  |> update.add_effect(
+    http.expect_json(dynamic.list(package.decoder), msg.Trendings)
+    |> http.get(api_endpoint() <> "/trendings", _),
+  )
 }
 
 fn on_url_change(uri: Uri) -> Msg {
@@ -86,6 +99,7 @@ fn update(model: Model, msg: Msg) {
     msg.OnRouteChange(route) -> handle_route_change(model, route)
     msg.SearchResults(input, search_results) ->
       handle_search_results(model, input, search_results)
+    msg.Trendings(trendings) -> handle_trendings(model, trendings)
   }
 }
 
@@ -102,17 +116,13 @@ fn reset(model: Model) {
 }
 
 fn submit_search(model: Model) {
-  let endpoint = case is_dev() {
-    True -> "http://localhost:3000"
-    False -> "https://api.gloogle.run"
-  }
   use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
   use <- bool.guard(when: model.loading, return: #(model, effect.none()))
   let new_model = model.toggle_loading(model)
   http.expect_json(search_result.decode_search_results, {
     msg.SearchResults(input: model.input, result: _)
   })
-  |> http.get(endpoint <> "/search?q=" <> model.input, _)
+  |> http.get(api_endpoint() <> "/search?q=" <> model.input, _)
   |> pair.new(new_model, _)
 }
 
@@ -145,6 +155,7 @@ fn handle_route_change(model: Model, route: router.Route) {
   update.none(case route {
     router.Home -> model.update_input(model, "")
     router.Search(q) -> model.update_input(model, q)
+    router.Trending -> model.update_input(model, "")
   })
 }
 
@@ -159,4 +170,14 @@ fn display_toast(
   })
   |> result.unwrap_error(option.None)
   |> option.unwrap(effect.none())
+}
+
+fn handle_trendings(
+  model: Model,
+  trendings: Result(List(package.Package), http.HttpError),
+) {
+  trendings
+  |> result.map(fn(trendings) { model.update_trendings(model, trendings) })
+  |> result.unwrap(model)
+  |> update.none()
 }

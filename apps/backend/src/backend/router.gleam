@@ -6,6 +6,7 @@ import backend/web
 import cors_builder as cors
 import gleam/bool
 import gleam/http
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/pair
@@ -108,6 +109,20 @@ fn search(query: String, ctx: Context) {
 pub fn handle_get(req: Request, ctx: Context) {
   case wisp.path_segments(req) {
     ["healthcheck"] -> wisp.ok()
+    ["trendings"] ->
+      wisp.get_query(req)
+      |> list.find(fn(item) { item.0 == "page" })
+      |> result.try(fn(item) { int.parse(item.1) })
+      |> result.try_recover(fn(_) { Ok(0) })
+      |> result.unwrap(0)
+      |> queries.select_package_by_popularity(ctx.db, _)
+      |> result.map(fn(content) {
+        content
+        |> json.preprocessed_array()
+        |> json.to_string_builder()
+        |> wisp.json_response(200)
+      })
+      |> result.unwrap(wisp.internal_server_error())
     ["search"] -> {
       wisp.get_query(req)
       |> list.find(fn(item) { item.0 == "q" })

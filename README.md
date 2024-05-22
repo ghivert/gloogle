@@ -15,14 +15,15 @@ Some features are already implemented, and some others are still on the roadmap!
 - Navigate in the documentation by clicking on types
 - Head back to [HexDocs](https://hexdocs.pm) when looking for something specific
 - Find a way to expose the database
+- Get GitHub stars for each package on a regular basis
+- Enables Search in documentation directly
 
 ## Future developments
 
 - Use a proper parser to draw a graph of the function calls
 - Add analytics to extract trends
-- Get GitHub stars for each package on a regular basis
 - Get Hex data for each package on a regular basis
-- Enables Search in documentation directly
+- Do something with the GitHub stars
 
 <!-- Is it really useful? -->
 <!-- - Implements a full-mirror of hex, in case hex is down (because we can, so why not) -->

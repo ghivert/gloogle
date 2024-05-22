@@ -1,5 +1,6 @@
 import frontend/colors/palette
 import frontend/view/body/styles as body_styles
+import gleam/bool
 import sketch as s
 import sketch/lustre/extra as l
 import sketch/media
@@ -52,8 +53,9 @@ pub fn nav_link(attributes, children) {
   ])
 }
 
-pub fn navbar(attributes, children) {
-  l.memo("nav", attributes, children, [
+pub fn navbar(transparent: Bool, attributes, children) {
+  let id = "navbar-transparent-" <> bool.to_string(transparent)
+  l.dynamic("nav", attributes, children, id, [
     s.position("sticky"),
     s.top(px(0)),
     s.display("flex"),
@@ -62,7 +64,10 @@ pub fn navbar(attributes, children) {
     s.grid_area("navbar"),
     s.padding_left(px(48)),
     s.gap(px(48)),
-    s.background(palette.dark.underwater_blue),
+    s.background(case transparent {
+      True -> "transparent"
+      False -> palette.dark.underwater_blue
+    }),
     s.height(px(130)),
     s.z_index(1000),
     s.media(media.max_width(px(700)), [

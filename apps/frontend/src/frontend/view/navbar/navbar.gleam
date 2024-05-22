@@ -18,7 +18,8 @@ fn navbar_links() {
 }
 
 pub fn navbar(model: Model) {
-  s.navbar([a.class("navbar")], [
+  let transparent = model.route == router.Home
+  s.navbar(transparent, [a.class("navbar")], [
     case model.route {
       router.Home -> h.div([], [])
       router.Search(_) | router.Trending ->

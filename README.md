@@ -3,7 +3,7 @@
 Gloogle is a search engine, able to query the entirety of the Gleam ecosystem!
 Search for a function or a type, and let the magic happen!
 
-[First pre-alpha version is available!](https://gloogle.run)
+[First alpha version is available!](https://gloogle.run)
 
 ## Features
 

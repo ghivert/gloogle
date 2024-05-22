@@ -225,6 +225,7 @@ pub fn empty_state(attributes, children) {
     s.max_width(px(700)),
     s.width(size.percent(100)),
     s.margin_("auto"),
+    s.padding(px(24)),
   ])
 }
 

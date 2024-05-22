@@ -2,7 +2,8 @@ import frontend/colors/palette
 import frontend/view/body/styles as body_styles
 import sketch as s
 import sketch/lustre/extra as l
-import sketch/size.{px}
+import sketch/media
+import sketch/size.{px, vw}
 
 pub const search_lucy = body_styles.search_lucy
 
@@ -25,6 +26,7 @@ pub fn nav_links(attributes, children) {
     s.align_items("baseline"),
     s.gap(px(48)),
     s.padding(px(48)),
+    s.media(media.max_width(px(700)), [s.display("none")]),
   ])
 }
 
@@ -51,7 +53,7 @@ pub fn nav_link(attributes, children) {
 }
 
 pub fn navbar(attributes, children) {
-  l.memo("div", attributes, children, [
+  l.memo("nav", attributes, children, [
     s.position("sticky"),
     s.top(px(0)),
     s.display("flex"),
@@ -63,6 +65,13 @@ pub fn navbar(attributes, children) {
     s.background(palette.dark.underwater_blue),
     s.height(px(130)),
     s.z_index(1000),
+    s.media(media.max_width(px(700)), [
+      s.padding_left(px(24)),
+      s.padding_right(px(24)),
+      s.gap(px(24)),
+      s.max_width(vw(100)),
+      s.height(px(115)),
+    ]),
   ])
 }
 
@@ -72,5 +81,10 @@ pub fn navbar_search(attributes, children) {
     s.gap(px(48)),
     s.align_items("center"),
     s.flex("1"),
+    s.media(media.max_width(px(700)), [s.gap(px(24))]),
   ])
+}
+
+pub fn title(a, c) {
+  l.memo("div", a, c, [s.media(media.max_width(px(700)), [s.display("none")])])
 }

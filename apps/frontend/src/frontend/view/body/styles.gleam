@@ -3,7 +3,8 @@ import gleam/list
 import lustre/element
 import sketch as s
 import sketch/lustre/extra as l
-import sketch/size.{px}
+import sketch/media
+import sketch/size.{px, vw}
 
 pub fn implementations_pill(background, color, attributes, children) {
   let id = "implementations-pill-" <> background
@@ -45,6 +46,10 @@ pub fn search_results_wrapper(attributes, children) {
     s.gap(px(24)),
     s.grid_template_columns("min-content minmax(auto, 1fr)"),
     s.justify_items("center"),
+    s.media(media.max_width(px(700)), [
+      s.grid_template_columns("calc(100vw - 48px)"),
+      s.padding_("0 24px"),
+    ]),
   ])
 }
 
@@ -54,6 +59,7 @@ pub fn search_details(attributes, children) {
     s.display("flex"),
     s.gap(px(12)),
     s.justify_content("space-between"),
+    s.media(media.max_width(px(700)), [s.flex_direction("column")]),
   ])
 }
 
@@ -89,6 +95,7 @@ pub fn signature(attributes, children) {
     s.white_space("pre-wrap"),
     s.display("block"),
     s.line_height("1.6"),
+    s.overflow("auto"),
   ])
 }
 
@@ -124,6 +131,15 @@ pub fn search_wrapper(attributes, children) {
     s.max_width(px(700)),
     s.width(size.percent(100)),
     s.margin_("auto"),
+    s.media(media.max_width(px(700)), [
+      s.max_width(vw(100)),
+      s.padding(px(24)),
+      s.grid_template_areas(
+        "\"title title title\"
+         \"input input input\"
+         \".     .     submit\"",
+      ),
+    ]),
   ])
 }
 
@@ -189,6 +205,7 @@ pub fn matches_titles(attributes, children) {
     s.align_items("baseline"),
     s.gap(px(6)),
     s.font_size(px(12)),
+    s.media(media.max_width(px(700)), [s.flex_direction("column")]),
   ])
 }
 
@@ -251,6 +268,7 @@ pub fn sidebar_wrapper(attributes, children) {
         rgba(255, 255, 255, 0)
       )"
     }),
+    s.media(media.max_width(px(700)), [s.display("none")]),
   ])
 }
 
@@ -311,6 +329,7 @@ pub fn items_wrapper(attributes, children) {
     s.gap(px(24)),
     s.padding_top(px(12)),
     s.max_width(px(700)),
+    s.width(size.percent(100)),
   ])
 }
 

@@ -4,7 +4,7 @@ import sketch/lustre/extra as l
 import sketch/size.{px}
 
 pub fn footer(attributes, children) {
-  l.memo("div", attributes, children, [
+  l.memo("footer", attributes, children, [
     s.background(palette.dark.charcoal),
     s.display("flex"),
     s.flex_direction("column"),

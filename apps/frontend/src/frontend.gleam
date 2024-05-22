@@ -41,7 +41,7 @@ pub fn api_endpoint() {
 
 pub fn main() {
   let debugger_ = case is_dev() {
-    False -> Error(Nil)
+    False | True -> Error(Nil)
     True ->
       tardis.single("Gloogle")
       |> result.nil_error()

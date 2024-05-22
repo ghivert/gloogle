@@ -44,10 +44,10 @@ pub fn search_results_wrapper(attributes, children) {
     s.display("grid"),
     s.padding_("0 48px"),
     s.gap(px(24)),
-    s.grid_template_columns("min-content minmax(auto, 1fr)"),
+    s.grid_template_columns("min-content 1fr"),
     s.justify_items("center"),
     s.media(media.max_width(px(700)), [
-      s.grid_template_columns("calc(100vw - 48px)"),
+      s.grid_template_columns("1fr"),
       s.padding_("0 24px"),
     ]),
   ])
@@ -331,6 +331,7 @@ pub fn items_wrapper(attributes, children) {
     s.padding_top(px(12)),
     s.max_width(px(700)),
     s.width(size.percent(100)),
+    s.overflow("hidden"),
   ])
 }
 

@@ -17,6 +17,7 @@ Some features are already implemented, and some others are still on the roadmap!
 - Find a way to expose the database
 - Get GitHub stars for each package on a regular basis
 - Enables Search in documentation directly
+- Filters included with `in:module`, `in:name`, `in:signature` and `in:documentation`
 
 ## Future developments
 

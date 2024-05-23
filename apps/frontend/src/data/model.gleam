@@ -3,6 +3,7 @@ import data/package.{type Package}
 import data/search_result.{type SearchResult, type SearchResults}
 import frontend/router
 import frontend/view/body/cache
+import gleam/dict.{type Dict}
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
@@ -15,12 +16,13 @@ pub type Index =
 pub type Model {
   Model(
     input: String,
-    search_results: SearchResults,
+    search_results: Dict(String, SearchResults),
     index: Index,
     loading: Bool,
-    view_cache: Element(Msg),
+    view_cache: Dict(String, Element(Msg)),
     route: router.Route,
     trendings: Option(List(Package)),
+    submitted_input: String,
   )
 }
 
@@ -29,17 +31,22 @@ pub fn init() {
   let index = compute_index(search_results)
   Model(
     input: "",
-    search_results: search_results,
+    search_results: dict.new(),
     index: index,
     loading: False,
-    view_cache: element.none(),
+    view_cache: dict.new(),
     route: router.Home,
     trendings: option.None,
+    submitted_input: "",
   )
 }
 
 pub fn update_route(model: Model, route: router.Route) {
   Model(..model, route: route)
+}
+
+pub fn update_submitted_input(model: Model) {
+  Model(..model, submitted_input: model.input)
 }
 
 pub fn update_trendings(model: Model, trendings: List(Package)) {
@@ -58,16 +65,21 @@ pub fn update_input(model: Model, content: String) {
   Model(..model, input: content)
 }
 
-pub fn update_search_results(model: Model, search_results: SearchResults) {
+pub fn update_search_results(
+  model: Model,
+  key: String,
+  search_results: SearchResults,
+) {
   let index = compute_index(search_results)
   let view_cache = case search_results {
-    search_result.Start | search_result.InternalServerError -> element.none()
+    search_result.Start | search_result.InternalServerError -> model.view_cache
     search_result.SearchResults(e, m, s, d, mods) ->
       cache.cache_search_results(index, e, m, s, d, mods)
+      |> dict.insert(model.view_cache, key, _)
   }
   Model(
     ..model,
-    search_results: search_results,
+    search_results: dict.insert(model.search_results, key, search_results),
     index: index,
     view_cache: view_cache,
   )
@@ -75,13 +87,14 @@ pub fn update_search_results(model: Model, search_results: SearchResults) {
 
 pub fn reset(model: Model) {
   Model(
-    search_results: search_result.SearchResults([], [], [], [], []),
+    search_results: model.search_results,
     input: "",
     index: [],
     loading: False,
-    view_cache: element.none(),
+    view_cache: model.view_cache,
     route: router.Home,
     trendings: model.trendings,
+    submitted_input: "",
   )
 }
 

@@ -6,9 +6,11 @@ import frontend/router
 import frontend/strings as frontend_strings
 import frontend/view/body/styles as s
 import frontend/view/search_input/search_input
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/result
 import gleam/string
 import lustre/attribute as a
 import lustre/element as el
@@ -133,7 +135,10 @@ pub fn body(model: Model) {
       router.Home -> view_search_input(model)
       router.Trending -> view_trending(model)
       router.Search(_) ->
-        case model.search_results {
+        case
+          dict.get(model.search_results, model.submitted_input)
+          |> result.unwrap(search_result.Start)
+        {
           search_result.Start ->
             empty_state(
               image: images.loading,
@@ -152,7 +157,10 @@ pub fn body(model: Model) {
               title: "No match found!",
               content: frontend_strings.retry_query,
             )
-          search_result.SearchResults(_, _, _, _, _) -> model.view_cache
+          search_result.SearchResults(_, _, _, _, _) -> {
+            dict.get(model.view_cache, model.submitted_input)
+            |> result.unwrap(el.none())
+          }
         }
     },
   ])

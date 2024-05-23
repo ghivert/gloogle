@@ -5,10 +5,10 @@ import data/search_result
 import frontend/router
 import frontend/view
 import gleam/bool
+import gleam/dict
 import gleam/dynamic
 import gleam/list
 import gleam/option.{None}
-import gleam/pair
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
@@ -136,12 +136,16 @@ fn reset(model: Model) {
 fn submit_search(model: Model) {
   use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
   use <- bool.guard(when: model.loading, return: #(model, effect.none()))
-  let new_model = model.toggle_loading(model)
-  http.expect_json(search_result.decode_search_results, {
-    msg.SearchResults(input: model.input, result: _)
-  })
-  |> http.get(api_endpoint() <> "/search?q=" <> model.input, _)
-  |> pair.new(new_model, _)
+  let new_model = model.update_submitted_input(model)
+  case dict.get(new_model.search_results, new_model.submitted_input) {
+    Ok(_) -> update.none(new_model)
+    Error(_) ->
+      http.expect_json(search_result.decode_search_results, {
+        msg.SearchResults(input: model.input, result: _)
+      })
+      |> http.get(api_endpoint() <> "/search?q=" <> model.input, _)
+      |> update.effect(model.toggle_loading(new_model), _)
+  }
 }
 
 fn scroll_to(model: Model, id: String) {
@@ -157,7 +161,7 @@ fn handle_search_results(
   let toast = display_toast(search_results)
   let up =
     search_results
-    |> result.map(model.update_search_results(model, _))
+    |> result.map(model.update_search_results(model, input, _))
     |> result.map(model.update_route(_, router.Search(input)))
     |> result.unwrap(model)
     |> model.toggle_loading()
@@ -172,7 +176,9 @@ fn handle_route_change(model: Model, route: router.Route) {
   let model = model.update_route(model, route)
   update.none(case route {
     router.Home -> model.update_input(model, "")
-    router.Search(q) -> model.update_input(model, q)
+    router.Search(q) ->
+      model.update_input(model, q)
+      |> model.update_submitted_input()
     router.Trending -> model.update_input(model, "")
   })
 }

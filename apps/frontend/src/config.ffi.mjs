@@ -18,3 +18,7 @@ export function captureMessage(content) {
     Sentry.captureMessage(content)
   return content
 }
+
+export function updateTitle(title) {
+  document.title = title
+}

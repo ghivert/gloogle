@@ -42,6 +42,7 @@ pub fn init() {
 }
 
 pub fn update_route(model: Model, route: router.Route) {
+  router.update_page_title(route)
   Model(..model, route: route)
 }
 

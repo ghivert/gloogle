@@ -3,6 +3,9 @@ import gleam/option
 import gleam/result
 import gleam/uri.{type Uri}
 
+@external(javascript, "../config.ffi.mjs", "updateTitle")
+fn update_title(title: String) -> Nil
+
 pub type Route {
   Home
   Search(query: String)
@@ -28,4 +31,12 @@ fn handle_search_path(uri: Uri) {
   })
   |> option.map(Search)
   |> option.unwrap(Home)
+}
+
+pub fn update_page_title(route: Route) {
+  case route {
+    Home -> update_title("Gloogle")
+    Search(q) -> update_title("Gloogle — Search " <> q)
+    Trending -> update_title("Gloogle — Trending")
+  }
 }

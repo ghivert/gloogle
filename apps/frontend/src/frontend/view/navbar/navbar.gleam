@@ -29,7 +29,7 @@ pub fn navbar(model: Model) {
             s.title([], [h.text("Gloogle")]),
           ]),
           s.search_input_wrapper([e.on_submit(msg.SubmitSearch)], [
-            search_input.view(model.loading, model.input),
+            search_input.view(model.loading, model.input, False),
           ]),
         ])
     },

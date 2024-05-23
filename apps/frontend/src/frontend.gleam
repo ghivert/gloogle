@@ -6,9 +6,11 @@ import frontend/router
 import frontend/view
 import gleam/bool
 import gleam/dynamic
+import gleam/list
 import gleam/option.{None}
 import gleam/pair
 import gleam/result
+import gleam/string
 import gleam/uri.{type Uri}
 import grille_pain
 import grille_pain/lustre/toast
@@ -92,6 +94,7 @@ fn on_url_change(uri: Uri) -> Msg {
 fn update(model: Model, msg: Msg) {
   case msg {
     msg.UpdateInput(content) -> update_input(model, content)
+    msg.UpdateFilters(filter) -> update_filter(model, filter)
     msg.SubmitSearch -> submit_search(model)
     msg.Reset -> reset(model)
     msg.None -> update.none(model)
@@ -107,6 +110,21 @@ fn update_input(model: Model, content: String) {
   model
   |> model.update_input(content)
   |> update.none()
+}
+
+fn update_filter(model: Model, filter: String) {
+  update.none(case string.contains(model.input, filter) {
+    True ->
+      model.input
+      |> string.split(" ")
+      |> list.filter(fn(word) { word != filter })
+      |> string.join(" ")
+      |> model.update_input(model, _)
+    False ->
+      model.input
+      |> string.append(filter <> " ", _)
+      |> model.update_input(model, _)
+  })
 }
 
 fn reset(model: Model) {

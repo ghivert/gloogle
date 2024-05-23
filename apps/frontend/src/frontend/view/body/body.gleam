@@ -9,12 +9,21 @@ import frontend/view/search_input/search_input
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/string
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
 
 fn view_search_input(model: Model) {
+  let has_content = {
+    model.input
+    |> string.split(" ")
+    |> list.filter(fn(word) { !list.contains(search_input.valid_filters, word) })
+    |> string.join(" ")
+    |> string.length()
+    |> fn(input) { input != 0 }
+  }
   s.search_wrapper([e.on_submit(msg.SubmitSearch)], [
     s.search_title_wrapper([], [
       s.search_title([], [
@@ -26,11 +35,11 @@ fn view_search_input(model: Model) {
       ]),
       h.text(frontend_strings.gloogle_description),
     ]),
-    search_input.view(model.loading, model.input),
+    search_input.view(model.loading, model.input, True),
     s.search_submit([
       a.type_("submit"),
       a.value("Submit"),
-      a.disabled(model.loading),
+      a.disabled(model.loading || !has_content),
     ]),
   ])
 }

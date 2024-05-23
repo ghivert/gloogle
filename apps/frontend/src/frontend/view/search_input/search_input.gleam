@@ -38,6 +38,8 @@ pub fn view(
           a.placeholder("Search for a function, or a type"),
           e.on_input(msg.UpdateInput),
           a.value(input),
+          a.attribute("autocorrect", "off"),
+          a.attribute("autocapitalize", "none"),
         ]),
       ]),
     ]),

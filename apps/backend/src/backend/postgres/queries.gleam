@@ -596,7 +596,7 @@ pub fn module_search(db: pgo.Connection, q: String) {
      ON m.package_release_id = r.id
    JOIN package p
      ON p.id = r.package_id
-   WHERE m.name = $1
+   WHERE m.name LIKE '%' || $1 || '%'
    ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)

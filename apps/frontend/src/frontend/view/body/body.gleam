@@ -85,24 +85,24 @@ pub fn view_trending(model: Model) {
               s.qualified_name([], [
                 item.repository
                   |> option.map(fn(r) {
-                  h.a([a.href(r), a.target("_blank"), a.rel("noreferrer")], [
-                    h.text("Code"),
-                  ])
-                })
+                    h.a([a.href(r), a.target("_blank"), a.rel("noreferrer")], [
+                      h.text("Code"),
+                    ])
+                  })
                   |> option.unwrap(el.none()),
                 item.documentation
                   |> option.map(fn(d) {
-                  h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
-                    h.text("Docs"),
-                  ])
-                })
+                    h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
+                      h.text("Docs"),
+                    ])
+                  })
                   |> option.unwrap(el.none()),
                 item.hex_url
                   |> option.map(fn(d) {
-                  h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
-                    h.text("Hex"),
-                  ])
-                })
+                    h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
+                      h.text("Hex"),
+                    ])
+                  })
                   |> option.unwrap(el.none()),
               ]),
             ]),
@@ -159,6 +159,13 @@ pub fn body(model: Model) {
             )
           search_result.SearchResults(_, _, _, _, _) -> {
             dict.get(model.view_cache, model.submitted_input)
+            |> result.map(fn(content) {
+              el.element(
+                "cache-signatures",
+                [a.property("content", content)],
+                [],
+              )
+            })
             |> result.unwrap(el.none())
           }
         }

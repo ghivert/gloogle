@@ -4,9 +4,11 @@ import data/package
 import data/search_result
 import frontend/router
 import frontend/view
+import frontend/view/body/cache
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleam/option.{None}
 import gleam/result
@@ -62,6 +64,8 @@ pub fn main() {
     result.map(debugger_, fun(app, _))
     |> result.unwrap(app)
   }
+
+  let assert Ok(_) = lustre.register(cache.component(), "cache-signatures")
 
   let assert Ok(_) =
     view.view
@@ -138,7 +142,20 @@ fn submit_search(model: Model) {
   use <- bool.guard(when: model.loading, return: #(model, effect.none()))
   let new_model = model.update_submitted_input(model)
   case dict.get(new_model.search_results, new_model.submitted_input) {
-    Ok(_) -> update.none(new_model)
+    Ok(_) ->
+      case new_model.route {
+        router.Search(old_input) if old_input == new_model.submitted_input ->
+          update.none(new_model)
+        _ ->
+          new_model
+          |> model.update_route(router.Search(new_model.submitted_input))
+          |> update.none()
+          |> update.add_effect({
+            uri.parse("/search?q=" <> new_model.submitted_input)
+            |> result.map(modem.push(_))
+            |> result.unwrap(effect.none())
+          })
+      }
     Error(_) ->
       http.expect_json(search_result.decode_search_results, {
         msg.SearchResults(input: model.input, result: _)

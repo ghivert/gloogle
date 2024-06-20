@@ -12,7 +12,7 @@ packages = [
   { name = "gleam_stdlib", version = "0.37.0", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "5398BD6C2ABA17338F676F42F404B9B7BABE1C8DC7380031ACB05BBE1BCF3742" },
   { name = "gleeunit", version = "1.1.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleeunit", source = "hex", outer_checksum = "72CDC3D3F719478F26C4E2C5FED3E657AC81EC14A47D2D2DEBB8693CA3220C3B" },
   { name = "grille_pain", version = "1.0.1", build_tools = ["gleam"], requirements = ["birl", "gleam_stdlib", "lustre", "plinth", "sketch", "tardis"], otp_app = "grille_pain", source = "hex", outer_checksum = "F0CA9AA0BD4D03B8E190AB4CBB9429DE9389BC2152CF566C3410261F5729827C" },
-  { name = "lustre", version = "4.2.4", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_json", "gleam_otp", "gleam_stdlib"], otp_app = "lustre", source = "hex", outer_checksum = "09B94E1380CBC400DCD594B36A845E5CB2E143DF89E95460B2CA59E44499CAC9" },
+  { name = "lustre", version = "4.3.0", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_json", "gleam_otp", "gleam_stdlib"], otp_app = "lustre", source = "hex", outer_checksum = "43642C0602D3E2D6FEC3E24173D68A1F8E646969B53A2B0A5EB61238DDA739C4" },
   { name = "lustre_http", version = "0.5.2", build_tools = ["gleam"], requirements = ["gleam_fetch", "gleam_http", "gleam_javascript", "gleam_json", "gleam_stdlib", "lustre"], otp_app = "lustre_http", source = "hex", outer_checksum = "FB0478CBFA6B16DBE8ECA326DAE2EC15645E04900595EF2C4F039ABFA0512ABA" },
   { name = "modem", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "lustre"], otp_app = "modem", source = "hex", outer_checksum = "4C6E448089B09A57C179455D44526A717E4E217D4000B91201617FD2D9F18E68" },
   { name = "plinth", version = "0.2.0", build_tools = ["gleam"], requirements = ["gleam_javascript", "gleam_json", "gleam_stdlib"], otp_app = "plinth", source = "hex", outer_checksum = "83211E672D83F3CE14681D0ECD3AD883EE7588E423E7C9DDDB460014AD60AC24" },
@@ -28,7 +28,7 @@ gleam_json = { version = ">= 1.0.1 and < 2.0.0" }
 gleam_stdlib = { version = "~> 0.34 or ~> 1.0" }
 gleeunit = { version = "~> 1.0" }
 grille_pain = { version = ">= 1.0.0 and < 2.0.0" }
-lustre = { version = ">= 4.2.0 and < 5.0.0" }
+lustre = { version = ">= 4.3.0 and < 5.0.0"}
 lustre_http = { version = "~> 0.5" }
 modem = { version = ">= 1.1.0 and < 2.0.0" }
 plinth = { version = ">= 0.2.0 and < 1.0.0" }

@@ -9,9 +9,14 @@ import frontend/view/body/styles as s
 import frontend/view/documentation
 import frontend/view/types as t
 import gleam/bool
+import gleam/dict
+import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleam/option
+import lustre
 import lustre/attribute as a
+import lustre/effect as eff
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
@@ -137,4 +142,23 @@ pub fn cache_search_results(
       view_search_results(modules_searches),
     ]),
   ])
+}
+
+pub type MsgComponent {
+  UpdateContent(el.Element(MsgComponent))
+}
+
+pub fn component() {
+  lustre.component(
+    fn(_flags) { #(el.none(), eff.none()) },
+    fn(_model, msg) {
+      case msg {
+        UpdateContent(c) -> #(c, eff.none())
+      }
+    },
+    fn(model) { model },
+    dict.from_list([
+      #("content", fn(dyn) { Ok(UpdateContent(dynamic.unsafe_coerce(dyn))) }),
+    ]),
+  )
 }

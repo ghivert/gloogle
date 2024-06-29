@@ -3,8 +3,9 @@ export function is_dev() {
 }
 
 export function scrollTo(id) {
-  const elem = document.getElementById(id)
-  if (!elem) return
+  const cache = document.getElementsByTagName('cache-signatures')
+  if (!cache?.[0]) return
+  const elem = cache[0].shadowRoot.getElementById(id)
   const elemRect = elem.getBoundingClientRect()
   const navbarRect = document.getElementsByClassName('navbar')?.[0]?.getBoundingClientRect()
   const bodyRect = document.body.getBoundingClientRect()
@@ -21,4 +22,12 @@ export function captureMessage(content) {
 
 export function updateTitle(title) {
   document.title = title
+}
+
+export function coerce(a) {
+  return a
+}
+
+export function coerce_event(a) {
+  return a.detail
 }

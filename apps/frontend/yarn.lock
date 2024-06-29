@@ -353,6 +353,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chouqueth/gleam@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@chouqueth/gleam@npm:1.2.1"
+  dependencies:
+    cachedir: "npm:^2.4.0"
+    tar: "npm:^7.1.0"
+  bin:
+    gleam: bin/cli.mjs
+  checksum: 10c0/f9b7daaa24c9672ef5e6976f76a687cddb2df2a701670e7cbdf36231eb919d75a51e38ad8b69305e5559c2d2d589718b936bddf289b7a591934aa7d7f9be8a30
+  languageName: node
+  linkType: hard
+
 "@esbuild/aix-ppc64@npm:0.19.12":
   version: 0.19.12
   resolution: "@esbuild/aix-ppc64@npm:0.19.12"
@@ -1690,6 +1702,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "frontend@workspace:."
   dependencies:
+    "@chouqueth/gleam": "npm:^1.2.1"
     "@gleam-lang/highlight.js-gleam": "npm:^1.5.0"
     "@sentry/browser": "npm:^8.0.0"
     "@sentry/vite-plugin": "npm:^2.16.1"
@@ -1697,7 +1710,6 @@ __metadata:
     "@types/dompurify": "npm:^3.0.5"
     dompurify: "npm:^3.1.4"
     dotenv: "npm:^16.4.5"
-    gleam-lang: "npm:^1.1.0"
     highlight.js: "npm:^11.9.0"
     marked: "npm:^12.0.2"
     marked-highlight: "npm:^2.1.1"
@@ -1760,18 +1772,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gleam-lang@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "gleam-lang@npm:1.1.0"
-  dependencies:
-    cachedir: "npm:^2.4.0"
-    tar: "npm:^7.1.0"
-  bin:
-    gleam: bin/cli.mjs
-  checksum: 10c0/851d41ce6e2e4969e611cb65ee33abc80d5efd579fa170e896534f8f91b5b79d996f41c6a96ae4ec7160d53dc8d94530ec8ff954187b0a30179705271851bef9
-  languageName: node
-  linkType: hard
-
 "glob-parent@npm:~5.1.2":
   version: 5.1.2
   resolution: "glob-parent@npm:5.1.2"
@@ -1781,7 +1781,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^10.2.2, glob@npm:^10.3.10":
+"glob@npm:^10.2.2, glob@npm:^10.3.10, glob@npm:^10.3.7":
   version: 10.4.2
   resolution: "glob@npm:10.4.2"
   dependencies:
@@ -1794,21 +1794,6 @@ __metadata:
   bin:
     glob: dist/esm/bin.mjs
   checksum: 10c0/2c7296695fa75a935f3ad17dc62e4e170a8bb8752cf64d328be8992dd6ad40777939003754e10e9741ff8fbe43aa52fba32d6930d0ffa0e3b74bc3fb5eebaa2f
-  languageName: node
-  linkType: hard
-
-"glob@npm:^10.3.7":
-  version: 10.3.15
-  resolution: "glob@npm:10.3.15"
-  dependencies:
-    foreground-child: "npm:^3.1.0"
-    jackspeak: "npm:^2.3.6"
-    minimatch: "npm:^9.0.1"
-    minipass: "npm:^7.0.4"
-    path-scurry: "npm:^1.11.0"
-  bin:
-    glob: dist/esm/bin.mjs
-  checksum: 10c0/cda748ddc181b31b3df9548c0991800406d5cc3b3f8110e37a8751ec1e39f37cdae7d7782d5422d7df92775121cdf00599992dff22f7ff1260344843af227c2b
   languageName: node
   linkType: hard
 
@@ -1982,19 +1967,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jackspeak@npm:^2.3.6":
-  version: 2.3.6
-  resolution: "jackspeak@npm:2.3.6"
-  dependencies:
-    "@isaacs/cliui": "npm:^8.0.2"
-    "@pkgjs/parseargs": "npm:^0.11.0"
-  dependenciesMeta:
-    "@pkgjs/parseargs":
-      optional: true
-  checksum: 10c0/f01d8f972d894cd7638bc338e9ef5ddb86f7b208ce177a36d718eac96ec86638a6efa17d0221b10073e64b45edc2ce15340db9380b1f5d5c5d000cbc517dc111
-  languageName: node
-  linkType: hard
-
 "jackspeak@npm:^3.1.2":
   version: 3.4.0
   resolution: "jackspeak@npm:3.4.0"
@@ -2135,7 +2107,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^9.0.1, minimatch@npm:^9.0.4":
+"minimatch@npm:^9.0.4":
   version: 9.0.4
   resolution: "minimatch@npm:9.0.4"
   dependencies:
@@ -2218,14 +2190,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minipass@npm:^5.0.0 || ^6.0.2 || ^7.0.0, minipass@npm:^7.0.4, minipass@npm:^7.1.0":
+"minipass@npm:^5.0.0 || ^6.0.2 || ^7.0.0":
   version: 7.1.1
   resolution: "minipass@npm:7.1.1"
   checksum: 10c0/fdccc2f99c31083f45f881fd1e6971d798e333e078ab3c8988fb818c470fbd5e935388ad9adb286397eba50baebf46ef8ff487c8d3f455a69c6f3efc327bdff9
   languageName: node
   linkType: hard
 
-"minipass@npm:^7.0.2, minipass@npm:^7.0.3, minipass@npm:^7.1.2":
+"minipass@npm:^7.0.2, minipass@npm:^7.0.3, minipass@npm:^7.0.4, minipass@npm:^7.1.2":
   version: 7.1.2
   resolution: "minipass@npm:7.1.2"
   checksum: 10c0/b0fd20bb9fb56e5fa9a8bfac539e8915ae07430a619e4b86ff71f5fc757ef3924b23b2c4230393af1eda647ed3d75739e4e0acb250a6b1eb277cf7f8fe449557
@@ -2400,7 +2372,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-scurry@npm:^1.11.0, path-scurry@npm:^1.11.1, path-scurry@npm:^1.6.1":
+"path-scurry@npm:^1.11.1, path-scurry@npm:^1.6.1":
   version: 1.11.1
   resolution: "path-scurry@npm:1.11.1"
   dependencies:
@@ -2754,16 +2726,16 @@ __metadata:
   linkType: hard
 
 "tar@npm:^7.1.0":
-  version: 7.1.0
-  resolution: "tar@npm:7.1.0"
+  version: 7.4.0
+  resolution: "tar@npm:7.4.0"
   dependencies:
     "@isaacs/fs-minipass": "npm:^4.0.0"
     chownr: "npm:^3.0.0"
-    minipass: "npm:^7.1.0"
+    minipass: "npm:^7.1.2"
     minizlib: "npm:^3.0.1"
     mkdirp: "npm:^3.0.1"
     yallist: "npm:^5.0.0"
-  checksum: 10c0/08d85076820a2885855e581623c9c41e17a9ca47ca203e073e4612ccbcecc9e963134a48ff4a392a12d5d2184ebe5f7ed1e4a68d964193cbb52514aa858a0d2a
+  checksum: 10c0/f4bab85fd101585f2cececc41eb8706191052ab65cc33f1a798198e0c7905f41b06ae3d6731fb2b6084847c53bc1e2265b77e05a105c0c44afaf6cb7a08ddf14
   languageName: node
   linkType: hard
 

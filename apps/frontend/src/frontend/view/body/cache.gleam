@@ -144,21 +144,24 @@ pub fn cache_search_results(
   ])
 }
 
-pub type MsgComponent {
-  UpdateContent(el.Element(MsgComponent))
+pub type MsgComponent(msg) {
+  UpdateContent(el.Element(msg))
+  Received(msg)
 }
+
+@external(javascript, "../../../config.ffi.mjs", "coerce")
+fn coerce(value: a) -> b
 
 pub fn component() {
   lustre.component(
     fn(_flags) { #(el.none(), eff.none()) },
-    fn(_model, msg) {
+    fn(model: el.Element(msg), msg: MsgComponent(msg)) {
       case msg {
         UpdateContent(c) -> #(c, eff.none())
+        Received(msg) -> #(model, e.emit("child", coerce(msg)))
       }
     },
-    fn(model) { model },
-    dict.from_list([
-      #("content", fn(dyn) { Ok(UpdateContent(dynamic.unsafe_coerce(dyn))) }),
-    ]),
+    fn(model) { el.map(model, Received) |> io.debug },
+    dict.from_list([#("content", fn(dyn) { Ok(UpdateContent(coerce(dyn))) })]),
   )
 }

@@ -18,7 +18,7 @@ modem = ">= 1.1.0 and < 2.0.0"
 plinth = ">= 0.2.0 and < 1.0.0"
 sketch = ">= 2.2.2 and < 3.0.0"
 tardis = ">= 0.1.0 and < 1.0.0"
-lustre = ">= 4.3.0 and < 5.0.0"
+lustre = { path = "../../packages/lustre" }
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

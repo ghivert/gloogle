@@ -8,6 +8,7 @@ import frontend/view/body/styles as s
 import frontend/view/search_input/search_input
 import gleam/dict
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
@@ -129,6 +130,13 @@ pub fn view_trending(model: Model) {
   }
 }
 
+fn on_coerce(value: a) {
+  Ok(coerce_event(value))
+}
+
+@external(javascript, "../../../config.ffi.mjs", "coerce_event")
+fn coerce_event(value: a) -> b
+
 pub fn body(model: Model) {
   s.main([], [
     case model.route {
@@ -162,7 +170,7 @@ pub fn body(model: Model) {
             |> result.map(fn(content) {
               el.element(
                 "cache-signatures",
-                [a.property("content", content)],
+                [a.property("content", content), e.on("child", on_coerce)],
                 [],
               )
             })

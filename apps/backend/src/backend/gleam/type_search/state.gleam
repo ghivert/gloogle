@@ -37,7 +37,7 @@ pub fn init(db: pgo.Connection) {
     |> process.selecting(process.new_subject(), function.identity)
     |> actor.Ready(State(db, search.1), _)
   }
-  actor.start_spec(actor.Spec(init, init_timeout: 10_000, loop: loop))
+  actor.start_spec(actor.Spec(init, init_timeout: 120_000, loop: loop))
 }
 
 fn loop(msg: Msg, state: State) -> actor.Next(Msg, State) {

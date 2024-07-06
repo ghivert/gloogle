@@ -607,6 +607,7 @@ pub fn module_search(db: pgo.Connection, q: String) {
 }
 
 pub fn exact_type_search(db: pgo.Connection, q: List(Int)) {
+  use <- bool.guard(when: list.is_empty(q), return: Ok([]))
   let ids =
     list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
     |> string.join(", ")

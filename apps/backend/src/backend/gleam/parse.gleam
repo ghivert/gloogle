@@ -2,6 +2,7 @@ import chomp.{do, return}
 import chomp/lexer
 import chomp/span
 import gleam/dict.{type Dict}
+import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/pair
@@ -13,6 +14,12 @@ pub type Kind {
   Index(String, Int)
   Custom(String, List(Kind))
   Function(List(Kind), Kind)
+}
+
+pub fn main() {
+  "fn inner_text(plinth/browser/element.Element) -> String"
+  |> parse_function
+  |> io.debug
 }
 
 // pub type SigKind(a) {
@@ -34,6 +41,12 @@ fn parse_qualified_name() {
 }
 
 fn parse_upper_name() {
+  use _ <- do({
+    parse_name()
+    |> chomp.sequence(chomp.token(token.Slash))
+    |> chomp.optional
+  })
+  use _ <- do(chomp.optional(chomp.token(token.Dot)))
   use token <- chomp.take_map()
   case token {
     token.UpperName(content) -> Some(Custom(content, []))
@@ -67,9 +80,14 @@ fn parse_return() {
 
 fn parse_fn() {
   use _ <- do(chomp.token(token.Fn))
+  use _ <- do(chomp.optional(parse_name()))
   use _ <- do(chomp.token(token.LeftParen))
   use content <- do(
-    chomp.one_of([parse_fn(), parse_name(), parse_qualified_name()])
+    chomp.one_of([
+      parse_fn(),
+      chomp.backtrackable(parse_qualified_name()),
+      parse_name(),
+    ])
     |> chomp.sequence(chomp.token(token.Comma)),
   )
   use _ <- do(chomp.token(token.RightParen))

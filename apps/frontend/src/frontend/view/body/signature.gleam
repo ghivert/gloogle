@@ -269,10 +269,10 @@ pub fn view_signature(
               [helpers.newline(), helpers.idt(2)],
               list.map(parameters, view_parameter(_, 2))
                 |> list.intersperse([
-                h.text(","),
-                helpers.newline(),
-                helpers.idt(2),
-              ])
+                  h.text(","),
+                  helpers.newline(),
+                  helpers.idt(2),
+                ])
                 |> list.concat(),
               [h.text(","), helpers.newline()],
             ])

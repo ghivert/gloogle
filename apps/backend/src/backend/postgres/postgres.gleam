@@ -19,6 +19,7 @@ pub fn connect(cnf: Config) {
       hex_api_key: cnf.hex_api_key,
       github_token: cnf.github_token,
       env: cnf.env,
+      type_search_subject: option.None,
     )
   }
 }

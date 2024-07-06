@@ -74,8 +74,8 @@ pub fn update_search_results(
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> model.view_cache
-    search_result.SearchResults(e, m, s, d, mods) ->
-      cache.cache_search_results(index, e, m, s, d, mods)
+    search_result.SearchResults(types, e, m, s, d, mods) ->
+      cache.cache_search_results(index, types, e, m, s, d, mods)
       |> dict.insert(model.view_cache, key, _)
   }
   Model(
@@ -102,8 +102,9 @@ pub fn reset(model: Model) {
 fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
     search_result.Start | search_result.InternalServerError -> []
-    search_result.SearchResults(exact, others, searches, docs, modules) -> {
+    search_result.SearchResults(types, exact, others, searches, docs, modules) -> {
       []
+      |> insert_module_names(types)
       |> insert_module_names(exact)
       |> insert_module_names(others)
       |> insert_module_names(searches)

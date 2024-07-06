@@ -2,7 +2,6 @@ import chomp.{do, return}
 import chomp/lexer
 import chomp/span
 import gleam/dict.{type Dict}
-import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/pair
@@ -14,22 +13,8 @@ pub type Kind {
   Index(String, Int)
   Custom(String, List(Kind))
   Function(List(Kind), Kind)
+  Tuple(List(Kind))
 }
-
-pub fn main() {
-  "fn inner_text(plinth/browser/element.Element) -> String"
-  |> parse_function
-  |> io.debug
-}
-
-// pub type SigKind(a) {
-//   Kind(Kind)
-//   Fn(a)
-// }
-
-// pub type Signature {
-//   Signature(children: Dict(Kind(Signature), List(Signature)), rows: List(Int))
-// }
 
 fn parse_qualified_name() {
   parse_upper_name()
@@ -62,37 +47,65 @@ fn parse_name() {
   }
 }
 
+fn parse_label() {
+  chomp.backtrackable({
+    use name <- do(
+      chomp.take_map(fn(token) {
+        case token {
+          token.Name(content) -> Some(Index(content, 0))
+          _ -> None
+        }
+      }),
+    )
+    use _ <- do(chomp.token(token.Colon))
+    return(name)
+  })
+}
+
 fn parse_type_parameter() {
   use _ <- do(chomp.token(token.LeftParen))
-  use content <- do(
-    chomp.one_of([parse_qualified_name(), parse_name()])
-    |> chomp.sequence(chomp.token(token.Comma)),
-  )
+  use content <- do(parse_kind() |> chomp.sequence(chomp.token(token.Comma)))
   use _ <- do(chomp.token(token.RightParen))
   return(content)
 }
 
 fn parse_return() {
   use _ <- do(chomp.token(token.RightArrow))
-  use content <- do(parse_upper_name())
+  use content <- do(parse_kind())
   return(content)
+}
+
+fn parse_tuple() {
+  use _ <- do(chomp.token(token.Hash))
+  use _ <- do(chomp.token(token.LeftParen))
+  use content <- do(parse_kind() |> chomp.sequence(chomp.token(token.Comma)))
+  use _ <- do(chomp.token(token.RightParen))
+  return(Tuple(content))
 }
 
 fn parse_fn() {
   use _ <- do(chomp.token(token.Fn))
   use _ <- do(chomp.optional(parse_name()))
-  use _ <- do(chomp.token(token.LeftParen))
+  use _ <- do(chomp.optional(chomp.token(token.LeftParen)))
   use content <- do(
-    chomp.one_of([
-      parse_fn(),
-      chomp.backtrackable(parse_qualified_name()),
-      parse_name(),
-    ])
+    {
+      use _ <- do(chomp.optional(parse_label()))
+      parse_kind()
+    }
     |> chomp.sequence(chomp.token(token.Comma)),
   )
-  use _ <- do(chomp.token(token.RightParen))
+  use _ <- do(chomp.optional(chomp.token(token.RightParen)))
   use content_ <- do(parse_return())
   return(Function(content, content_))
+}
+
+fn parse_kind() {
+  chomp.one_of([
+    parse_fn(),
+    parse_tuple(),
+    chomp.backtrackable(parse_qualified_name()),
+    parse_name(),
+  ])
 }
 
 pub fn parse_function(input: String) {
@@ -140,6 +153,14 @@ fn replace_indexed(
         })
       let #(return_value, accs) = replace_indexed(accs, return_value)
       #(Function(list.reverse(new_kinds), return_value), accs)
+    }
+    Tuple(kinds) -> {
+      let #(new_kinds, accs) =
+        list.fold(kinds, #([], #(indexes, current)), fn(acc, val) {
+          let res = replace_indexed(acc.1, val)
+          #([res.0, ..acc.0], res.1)
+        })
+      #(Tuple(list.reverse(new_kinds)), accs)
     }
   }
 }

@@ -30,7 +30,13 @@ fn do_add(searches: TypeSearch, kinds: List(#(Kind, option.Option(Int)))) {
     [#(kind, option.Some(id))] ->
       dict.get(searches.entries, kind)
       |> result.unwrap(empty())
-      |> fn(s) { TypeSearch(..s, rows: [id, ..s.rows]) }
+      |> fn(s: TypeSearch) {
+        let rows = case list.contains(s.rows, id) {
+          True -> s.rows
+          False -> [id, ..s.rows]
+        }
+        TypeSearch(..s, rows: rows)
+      }
       |> dict.insert(searches.entries, kind, _)
       |> fn(a) { TypeSearch(..searches, entries: a) }
     [#(kind, _), ..rest] ->

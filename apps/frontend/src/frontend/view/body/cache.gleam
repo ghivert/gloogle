@@ -10,7 +10,6 @@ import frontend/view/documentation
 import frontend/view/types as t
 import gleam/bool
 import gleam/dict
-import gleam/dynamic
 import gleam/io
 import gleam/list
 import gleam/option
@@ -113,6 +112,7 @@ fn sidebar(index: List(#(#(String, String), List(#(String, String))))) {
 
 pub fn cache_search_results(
   index: List(#(#(String, String), List(#(String, String)))),
+  types: List(search_result.SearchResult),
   exact: List(search_result.SearchResult),
   others: List(search_result.SearchResult),
   searches: List(search_result.SearchResult),
@@ -122,6 +122,8 @@ pub fn cache_search_results(
   s.search_results_wrapper([], [
     sidebar(index),
     s.items_wrapper([], [
+      match_title(types, "Types matches", frontend_strings.types_match),
+      view_search_results(types),
       match_title(exact, "Exact matches", frontend_strings.exact_match),
       view_search_results(exact),
       match_title(others, "Signature matches", frontend_strings.partial_match),

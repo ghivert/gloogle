@@ -1,14 +1,17 @@
 import api/hex
 import backend/config.{type Context}
 import backend/error
+import backend/gleam/type_search/state as type_search
 import backend/postgres/queries
 import backend/web
 import cors_builder as cors
 import gleam/bool
+import gleam/erlang/process
 import gleam/http
 import gleam/int
 import gleam/json
 import gleam/list
+import gleam/option
 import gleam/pair
 import gleam/result
 import gleam/string
@@ -48,21 +51,38 @@ fn isolate_filters(query: String) -> #(String, List(String)) {
 fn search(query: String, ctx: Context) {
   wisp.log_notice("Searching for " <> query)
   let #(query, filters) = isolate_filters(query)
+
+  let exact_type_searches =
+    option.then(ctx.type_search_subject, fn(subject) {
+      process.try_call(subject, type_search.Find(_, query), within: 10_000)
+      |> option.from_result
+      |> option.flatten
+    })
+    |> option.unwrap([])
+    |> queries.exact_type_search(ctx.db, _)
+    |> result.map_error(error.debug_log)
+    |> result.unwrap([])
+
   let exact_matches = case list.contains(filters, "in:name") {
     False -> []
     True ->
       queries.name_search(ctx.db, query)
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
+      |> list.filter(fn(i) { !list.contains(exact_type_searches, i) })
   }
+
   let matches = case list.contains(filters, "in:signature") {
     False -> []
     True ->
       queries.content_search(ctx.db, query)
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
-      |> list.filter(fn(i) { !list.contains(exact_matches, i) })
+      |> list.filter(fn(i) {
+        !list.contains(list.concat([exact_matches, exact_type_searches]), i)
+      })
   }
+
   let signature_searches = case list.contains(filters, "in:signature") {
     False -> []
     True ->
@@ -70,9 +90,13 @@ fn search(query: String, ctx: Context) {
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> list.filter(fn(i) {
-        !list.contains(list.append(exact_matches, matches), i)
+        !list.contains(
+          list.concat([exact_matches, exact_type_searches, matches]),
+          i,
+        )
       })
   }
+
   let documentation_searches = case list.contains(filters, "in:documentation") {
     False -> []
     True ->
@@ -80,9 +104,18 @@ fn search(query: String, ctx: Context) {
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> list.filter(fn(i) {
-        !list.contains(list.append(exact_matches, matches), i)
+        !list.contains(
+          list.concat([
+            exact_matches,
+            exact_type_searches,
+            matches,
+            signature_searches,
+          ]),
+          i,
+        )
       })
   }
+
   let module_searches = case list.contains(filters, "in:module") {
     False -> []
     True ->
@@ -90,10 +123,24 @@ fn search(query: String, ctx: Context) {
       |> result.map_error(error.debug_log)
       |> result.unwrap([])
       |> list.filter(fn(i) {
-        !list.contains(list.append(exact_matches, matches), i)
+        !list.contains(
+          list.concat([
+            exact_matches,
+            exact_type_searches,
+            matches,
+            signature_searches,
+            documentation_searches,
+          ]),
+          i,
+        )
       })
   }
+
   json.object([
+    #(
+      "exact-type-matches",
+      json.array(exact_type_searches, queries.type_search_to_json),
+    ),
     #("exact-matches", json.array(exact_matches, queries.type_search_to_json)),
     #("matches", json.array(matches, queries.type_search_to_json)),
     #("searches", json.array(signature_searches, queries.type_search_to_json)),

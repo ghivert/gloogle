@@ -21,6 +21,7 @@ pub type SearchResults {
   Start
   InternalServerError
   SearchResults(
+    exact_type_matches: List(SearchResult),
     exact_matches: List(SearchResult),
     matches: List(SearchResult),
     signature_searches: List(SearchResult),
@@ -48,8 +49,9 @@ pub fn decode_search_results(dyn) {
     dynamic.decode1(fn(_) { InternalServerError }, {
       dynamic.field("error", dynamic.string)
     }),
-    dynamic.decode5(
+    dynamic.decode6(
       SearchResults,
+      dynamic.field("exact-type-matches", dynamic.list(decode_search_result)),
       dynamic.field("exact-matches", dynamic.list(decode_search_result)),
       dynamic.field("matches", dynamic.list(decode_search_result)),
       dynamic.field("searches", dynamic.list(decode_search_result)),

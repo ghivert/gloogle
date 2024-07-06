@@ -1,4 +1,5 @@
 import backend/config
+import backend/gleam/type_search/state as type_search
 import backend/postgres/postgres
 import backend/router
 import dot_env
@@ -24,6 +25,15 @@ pub fn main() {
 
   logger.set_level(cnf.level)
   setup.radiate()
+
+  let assert Ok(subject) = type_search.init(ctx.db)
+  // let assert Ok(_) =
+  //   supervisor.start(fn(children) {
+  //     use _ <- function.tap(children)
+  //     supervisor.add(children, { supervisor.worker(fn(_) { Ok(subject) }) })
+  //   })
+
+  let ctx = ctx |> config.add_type_search_subject(subject)
 
   let assert Ok(_) =
     router.handle_request(_, ctx)

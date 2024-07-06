@@ -8,7 +8,6 @@ import frontend/view/body/styles as s
 import frontend/view/search_input/search_input
 import gleam/dict
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
@@ -159,13 +158,13 @@ pub fn body(model: Model) {
               title: "Internal server error",
               content: frontend_strings.internal_server_error,
             )
-          search_result.SearchResults([], [], [], [], []) ->
+          search_result.SearchResults([], [], [], [], [], []) ->
             empty_state(
               image: images.shadow_lucy,
               title: "No match found!",
               content: frontend_strings.retry_query,
             )
-          search_result.SearchResults(_, _, _, _, _) -> {
+          search_result.SearchResults(_, _, _, _, _, _) -> {
             dict.get(model.view_cache, model.submitted_input)
             |> result.map(fn(content) {
               el.element(

@@ -1,5 +1,8 @@
+import backend/gleam/type_search/state as type_search
 import gleam/erlang/os
+import gleam/erlang/process.{type Subject}
 import gleam/int
+import gleam/option.{type Option}
 import gleam/pgo
 import gleam/result
 import wisp
@@ -16,6 +19,7 @@ pub type Context {
     hex_api_key: String,
     github_token: String,
     env: Environment,
+    type_search_subject: Option(Subject(type_search.Msg)),
   )
 }
 
@@ -65,4 +69,8 @@ pub fn scaleway_keys() {
   let assert Ok(access_key) = os.get_env("SCALEWAY_ACCESS_KEY")
   let assert Ok(secret_key) = os.get_env("SCALEWAY_SECRET_KEY")
   #(access_key, secret_key)
+}
+
+pub fn add_type_search_subject(context, subject) {
+  Context(..context, type_search_subject: option.Some(subject))
 }

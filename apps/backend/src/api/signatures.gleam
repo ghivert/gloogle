@@ -8,9 +8,12 @@ import backend/gleam/generate/types.{
   constant_to_json, function_to_json, type_alias_to_json,
   type_definition_to_json,
 }
+import backend/gleam/type_search/state as type_search
 import backend/postgres/queries
 import gleam/bool
 import gleam/dict
+import gleam/erlang/process
+import gleam/function
 import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
@@ -132,6 +135,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   result.all({
     use #(function_name, function) <- list.map(all_functions)
     use gen <- result.try(function_to_json(ctx, function_name, function))
+    let signature = function_to_string(function_name, function)
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name: function_name,
@@ -139,13 +143,22 @@ fn upsert_functions(ctx: Context, module: context.Module) {
       documentation: function.documentation,
       metadata: Some(function.implementations)
         |> metadata.generate(function.deprecation, _),
-      signature: function_to_string(function_name, function),
+      signature: signature,
       json_signature: gen.0,
       parameters: gen.1,
       module_id: module.id,
       deprecation: function.deprecation,
       implementations: Some(function.implementations),
     )
+    |> function.tap(fn(content) {
+      case ctx.type_search_subject, content {
+        option.Some(subject), Ok([id]) -> {
+          process.send(subject, type_search.Add(signature, id))
+          content
+        }
+        _, _ -> content
+      }
+    })
   })
 }
 

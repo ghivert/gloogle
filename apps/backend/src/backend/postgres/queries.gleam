@@ -7,6 +7,7 @@ import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -385,7 +386,8 @@ pub fn upsert_package_type_fun_signature(
        parameters = $6,
        metadata = $7,
        deprecation = $9,
-       implementations = $10"
+       implementations = $10
+   RETURNING id"
   |> pgo.execute(
     db,
     [
@@ -412,10 +414,10 @@ pub fn upsert_package_type_fun_signature(
         |> option.map(pgo.text)
         |> option.unwrap(pgo.null()),
     ],
-    dynamic.dynamic,
+    dynamic.element(0, dynamic.int),
   )
   |> result.map_error(error.DatabaseError)
-  |> result.replace(Nil)
+  |> result.map(fn(r) { r.rows })
 }
 
 pub fn name_search(db: pgo.Connection, query: String) {
@@ -600,6 +602,35 @@ pub fn module_search(db: pgo.Connection, q: String) {
    ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+pub fn exact_type_search(db: pgo.Connection, q: List(Int)) {
+  let ids =
+    list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
+    |> string.join(", ")
+  { "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+     s.name type_name,
+     s.documentation,
+     s.kind signature_kind,
+     s.metadata,
+     s.json_signature,
+     m.name module_name,
+     p.name,
+     r.version,
+     p.rank package_rank,
+     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+   FROM package_type_fun_signature s
+   JOIN package_module m
+     ON m.id = s.package_module_id
+   JOIN package_release r
+     ON m.package_release_id = r.id
+   JOIN package p
+     ON p.id = r.package_id
+   WHERE s.id IN (" <> ids <> ")
+   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC" }
+  |> pgo.execute(db, list.map(q, pgo.int), decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }

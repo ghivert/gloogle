@@ -5,9 +5,11 @@ import backend/config.{type Context}
 import backend/data/hex_read.{type HexRead}
 import backend/error.{type Error}
 import backend/gleam/context
+import backend/gleam/type_search/state as type_search
 import backend/postgres/queries
 import birl.{type Time}
 import birl/duration
+import gleam/erlang/process.{type Subject}
 import gleam/function
 import gleam/hexpm.{type Package}
 import gleam/int
@@ -29,6 +31,7 @@ type State {
     hex_api_key: String,
     last_logged: Time,
     db: pgo.Connection,
+    type_search_subject: Option(Subject(type_search.Msg)),
   )
 }
 
@@ -46,6 +49,7 @@ pub fn sync_new_gleam_releases(
       hex_api_key: ctx.hex_api_key,
       last_logged: birl.now(),
       db: ctx.db,
+      type_search_subject: ctx.type_search_subject,
     ),
     children,
   ))
@@ -122,6 +126,7 @@ pub fn sync_package(ctx: Context, package: hexpm.Package) {
       hex_api_key: ctx.hex_api_key,
       last_logged: birl.now(),
       db: ctx.db,
+      type_search_subject: ctx.type_search_subject,
     ),
     package,
   )
@@ -272,7 +277,13 @@ fn do_extract_package(
   use #(package, gleam_toml) <- result.try({
     extract_release_interfaces(state, id, package, release, interfaces)
   })
-  context.Context(state.db, package, gleam_toml, ignore_errors)
+  context.Context(
+    state.db,
+    package,
+    gleam_toml,
+    ignore_errors,
+    state.type_search_subject,
+  )
   |> signatures.extract_signatures()
   |> result.map(fn(content) {
     let release = package.name <> " v" <> release.version

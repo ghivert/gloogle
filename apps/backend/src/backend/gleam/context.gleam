@@ -1,4 +1,7 @@
+import backend/gleam/type_search/state as type_search
 import gleam/dict.{type Dict}
+import gleam/erlang/process.{type Subject}
+import gleam/option.{type Option}
 import gleam/package_interface
 import gleam/pgo
 import tom
@@ -11,6 +14,7 @@ pub type Context {
     /// Allow to bypass parameters relations if activated.
     /// This allows to ignore internals for example.
     ignore_parameters_errors: Bool,
+    type_search_subject: Option(Subject(type_search.Msg)),
   )
 }
 

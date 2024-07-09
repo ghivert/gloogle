@@ -163,7 +163,7 @@ pub fn component() {
         Received(msg) -> #(model, e.emit("child", coerce(msg)))
       }
     },
-    fn(model) { el.map(model, Received) |> io.debug },
+    fn(model) { el.map(model, Received) },
     dict.from_list([#("content", fn(dyn) { Ok(UpdateContent(coerce(dyn))) })]),
   )
 }

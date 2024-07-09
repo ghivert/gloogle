@@ -8,6 +8,7 @@ package_interface_path(ContentDest, BaseName) ->
   unicode:characters_to_binary(Path).
 
 save_file(ContentDest, HttpBody) ->
+  wisp:log_debug("Using HexDocs for package-interface.json"),
   PackageInterfacePath = <<ContentDest/binary, "/package-interface.json">>,
   file:write_file(PackageInterfacePath, HttpBody),
   {unicode:characters_to_binary(PackageInterfacePath), <<"">>}.
@@ -25,8 +26,8 @@ extract_tar(Binary, BaseName, Version, Slug) ->
       erl_tar:extract(Content, [{cwd, ContentDest}, compressed]),
       {PackageInterface, Result} =
         case httpc:request(Url) of
-          {ok, {_, _, HttpBody}} -> save_file(ContentDest, HttpBody);
-          {ok, {_, HttpBody}} -> save_file(ContentDest, HttpBody);
+          {ok, {{_, 200, _}, _, HttpBody}} -> save_file(ContentDest, HttpBody);
+          {ok, {200, HttpBody}} -> save_file(ContentDest, HttpBody);
           {error, _} ->
             BuildCmd = <<"cd ", ContentDest/binary, " && gleam docs build">>,
             Res = os:cmd(binary_to_list(BuildCmd)),

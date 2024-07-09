@@ -19,6 +19,7 @@ pub fn get_home() -> Result(String, Nil)
 fn extract_tar(
   tarbin: BitArray,
   base_name: String,
+  version: String,
   slug: String,
 ) -> Result(#(String, String, String), Nil)
 
@@ -136,7 +137,7 @@ fn extract_package_infos(name: String, version: String) {
   use body <- result.try(req)
   use #(interface_s, toml_s, res) <- result.try({
     body
-    |> extract_tar(name, slug)
+    |> extract_tar(name, version, slug)
     |> result.map_error(fn(_) {
       let content = "Impossible to extract tar for " <> package_name
       wisp.log_warning(content)

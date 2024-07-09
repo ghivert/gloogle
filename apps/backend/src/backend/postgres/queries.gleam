@@ -448,6 +448,38 @@ pub fn name_search(db: pgo.Connection, query: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+pub fn module_and_name_search(db: pgo.Connection, query: String) {
+  let query = pgo.text(query)
+  "WITH splitted_name AS (SELECT string_to_array($1, '.') AS full_name)
+   SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+     s.name type_name,
+     s.documentation,
+     s.kind signature_kind,
+     s.metadata,
+     s.json_signature,
+     m.name module_name,
+     p.name,
+     r.version,
+     p.rank package_rank,
+     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+   FROM package_type_fun_signature s
+   JOIN package_module m
+     ON m.id = s.package_module_id
+   JOIN package_release r
+     ON m.package_release_id = r.id
+   JOIN package p
+     ON p.id = r.package_id
+   JOIN splitted_name s_n
+     ON true
+   WHERE s.name = s_n.full_name[2]
+   AND m.name LIKE '%' || s_n.full_name[1] || '%'
+   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   LIMIT 100"
+  |> pgo.execute(db, [query], decode_type_search)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
 fn transform_query(q: String) {
   q
   |> string.replace("(", " ")

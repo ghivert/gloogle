@@ -63,7 +63,7 @@ fn search(query: String, ctx: Context) {
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
 
-  let exact_matches = case list.contains(filters, "in:name") {
+  let exact_name_matches = case list.contains(filters, "in:name") {
     False -> []
     True ->
       queries.name_search(ctx.db, query)
@@ -71,7 +71,21 @@ fn search(query: String, ctx: Context) {
       |> result.unwrap([])
       |> list.filter(fn(i) { !list.contains(exact_type_searches, i) })
   }
-
+  let exact_module_and_name_matches = case list.contains(filters, "in:name") {
+    False -> []
+    True ->
+      queries.module_and_name_search(ctx.db, query)
+      |> result.map_error(error.debug_log)
+      |> result.unwrap([])
+      |> list.filter(fn(i) {
+        !list.contains(
+          list.concat([exact_type_searches, exact_name_matches]),
+          i,
+        )
+      })
+  }
+  let exact_matches =
+    list.concat([exact_name_matches, exact_module_and_name_matches])
   let matches = case list.contains(filters, "in:signature") {
     False -> []
     True ->

@@ -3,6 +3,9 @@ import data/metadata.{type Metadata}
 import data/signature.{type Signature}
 import frontend/view/helpers
 import gleam/dynamic
+import gleam/list
+import gleam/option.{None, Some}
+import gleam/result
 
 pub type SearchResult {
   SearchResult(
@@ -42,6 +45,14 @@ pub fn decode_search_result(dyn) {
     dynamic.field("metadata", metadata.decode_metadata),
     dynamic.field("version", dynamic.string),
   )(dyn)
+  |> result.map(Some)
+  |> result.try_recover(fn(_) { Ok(None) })
+}
+
+pub fn decode_search_results_list(dyn) {
+  use data <- result.map(dynamic.list(decode_search_result)(dyn))
+  use item <- list.filter_map(data)
+  option.to_result(item, "")
 }
 
 pub fn decode_search_results(dyn) {
@@ -51,12 +62,12 @@ pub fn decode_search_results(dyn) {
     }),
     dynamic.decode6(
       SearchResults,
-      dynamic.field("exact-type-matches", dynamic.list(decode_search_result)),
-      dynamic.field("exact-matches", dynamic.list(decode_search_result)),
-      dynamic.field("matches", dynamic.list(decode_search_result)),
-      dynamic.field("searches", dynamic.list(decode_search_result)),
-      dynamic.field("docs-searches", dynamic.list(decode_search_result)),
-      dynamic.field("module-searches", dynamic.list(decode_search_result)),
+      dynamic.field("exact-type-matches", decode_search_results_list),
+      dynamic.field("exact-matches", decode_search_results_list),
+      dynamic.field("matches", decode_search_results_list),
+      dynamic.field("searches", decode_search_results_list),
+      dynamic.field("docs-searches", decode_search_results_list),
+      dynamic.field("module-searches", decode_search_results_list),
     ),
   ])(dyn)
 }

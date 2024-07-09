@@ -23,7 +23,6 @@ connect(Config) ->
         user = User,
         password = Password,
         ssl = Ssl,
-        ssl_options = SslOptions,
         connection_parameters = ConnectionParameters,
         pool_size = PoolSize,
         queue_target = QueueTarget,
@@ -32,6 +31,17 @@ connect(Config) ->
         trace = Trace,
         ip_version = IpVersion
     } = Config,
+    SslOptions = case Ssl of
+      false -> [];
+      true -> [
+        {verify, verify_peer},
+        {cacerts, public_key:cacerts_get()},
+        {server_name_indication, binary_to_list(Host)},
+        {customize_hostname_check, [
+          {match_fun, public_key:pkix_verify_hostname_match_fun(https)}
+        ]}
+      ]
+    end,
     Options1 = #{
         host => Host,
         port => Port,
@@ -75,8 +85,8 @@ convert_error(none_available) ->
 convert_error({pgo_protocol, {parameters, Expected, Got}}) ->
     {unexpected_argument_count, Expected, Got};
 convert_error({pgsql_error, #{
-    message := Message, 
-    constraint := Constraint, 
+    message := Message,
+    constraint := Constraint,
     detail := Detail
 }}) ->
     {constraint_violated, Message, Constraint, Detail};

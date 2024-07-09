@@ -20,7 +20,7 @@ prng = ">= 3.0.3 and < 4.0.0"
 radiate = ">= 0.4.0 and < 1.0.0"
 ranger = ">= 1.2.0 and < 2.0.0"
 simplifile = ">= 1.7.0 and < 2.0.0"
-tom = ">= 1.0.0 and < 2.0.0"
+tom = { path ="../../packages/tom" }
 verl = ">= 1.1.1 and < 2.0.0"
 wisp = "~> 0.14"
 cors_builder = ">= 1.0.0 and < 2.0.0"

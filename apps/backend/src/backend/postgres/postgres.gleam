@@ -4,7 +4,6 @@ import gleam/bool
 import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/pgo.{Config}
-import gleam/pgo/ssl
 import gleam/result
 import gleam/string
 import gleam/uri
@@ -44,11 +43,7 @@ fn parse_database_url(database_url: String) {
     |> result.then(list.key_find(_, "sslmode"))
     |> result.map(fn(ssl) {
       let is_ssl_enabled = ssl != "disable"
-      let ssl_options = case is_ssl_enabled {
-        True -> [ssl.Verify(ssl.VerifyNone)]
-        False -> []
-      }
-      Config(..cnf, ssl: is_ssl_enabled, ssl_options: ssl_options)
+      Config(..cnf, ssl: is_ssl_enabled)
     })
     |> result.unwrap(cnf)
   })

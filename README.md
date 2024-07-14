@@ -17,7 +17,8 @@ Some features are already implemented, and some others are still on the roadmap!
 - Find a way to expose the database
 - Get GitHub stars for each package on a regular basis
 - Enables Search in documentation directly
-- Filters included with `in:module`, `in:name`, `in:signature` and `in:documentation`
+- Filters included with `in:module`, `in:name`, `in:signature` and
+  `in:documentation`
 
 ## Future developments
 
@@ -40,8 +41,8 @@ Open an issue on the repo! That would be extremely helpful!
 
 ## Copyrights
 
-All rights for Lucy (the gleam mascott) belongs to their creators. Every Lucy will
-be removed upon demands.
+All rights for Lucy (the gleam mascott) belongs to their creators. Every Lucy
+will be removed upon demands.
 
 This project can have lived thanks to Louis Pilfold, who did an amazing work on
 [Gleam Packages](https://github.com/gleam-lang/packages), that has been used as

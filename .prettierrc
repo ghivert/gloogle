@@ -1,0 +1,16 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "arrowParens": "avoid",
+  "trailingComma": "es5",
+  "proseWrap": "always",
+  "importOrder": [
+    "^\\@.*$",
+    "^[^@\\.].*$",
+    "^\\..*$"
+  ],
+  "importOrderSortSpecifiers": true,
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports"
+  ]
+}

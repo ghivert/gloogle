@@ -1,10 +1,10 @@
 import frontend/colors/palette
 import lustre/element/html as h
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/element
 
 fn span(text: String, color: String) {
-  l.memo("span", [], [h.text(text)], [s.color(color)])
+  element.element("span", [], [element.text(text)], [s.color(color)])
 }
 
 pub fn keyword(text: String) {

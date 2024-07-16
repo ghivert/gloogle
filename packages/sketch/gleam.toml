@@ -1,0 +1,26 @@
+name = "sketch"
+version = "2.3.0"
+
+description = "A CSS-in-Gleam package, made to work with frontend, backend, and directly with lustre!"
+internal_modules = ["sketch/internals", "sketch/internals/*"]
+licences = ["MIT"]
+links = [{title = "Sponsor", href = "https://github.com/sponsors/ghivert"}]
+repository = {type = "github", user = "ghivert", repo = "sketch"}
+
+[documentation]
+pages = [
+  {title = " ", path = "#", source = ""},
+  {title = "Internal Details", path = "internal-details.html", source = "./docs/internal-details.md"},
+  {title = "Usage with BEAM", path = "usage-with-beam.html", source = "./docs/usage-with-beam.md"},
+  {title = "Usage with Lustre SSR", path = "usage-with-lustre-ssr.html", source = "./docs/usage-with-lustre-ssr.md"},
+]
+
+[dependencies]
+gleam_erlang = ">= 0.25.0 and < 1.0.0"
+gleam_otp = ">= 0.10.0 and < 1.0.0"
+gleam_stdlib = "~> 0.34 or ~> 1.0"
+plinth = "~> 0.2"
+lustre = { path = "../lustre" }
+
+[dev-dependencies]
+gleeunit = "~> 1.0"

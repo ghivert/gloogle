@@ -8,7 +8,7 @@ import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
 import gleam/result
-import lustre/element.{type Element}
+import sketch/lustre/element.{type Element}
 
 pub type Index =
   List(#(#(String, String), List(#(String, String))))

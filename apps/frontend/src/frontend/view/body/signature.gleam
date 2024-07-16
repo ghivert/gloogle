@@ -10,8 +10,7 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
 import lustre/attribute as a
-import lustre/element as el
-import lustre/element/html as h
+import sketch/lustre/element as el
 
 fn do_render_parameters(from: Int, to: Int, acc: List(el.Element(a))) {
   use <- bool.guard(when: from > to, return: acc)
@@ -33,8 +32,8 @@ fn render_parameters(count: Int) {
     count ->
       do_render_parameters(0, int.max(count - 1, 0), [])
       |> list.reverse()
-      |> list.intersperse(h.text(", "))
-      |> fn(t) { list.concat([[h.text("(")], t, [h.text(")")]]) }
+      |> list.intersperse(el.text(", "))
+      |> fn(t) { list.concat([[el.text("(")], t, [el.text(")")]]) }
   }
 }
 
@@ -43,51 +42,51 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
     signature.Tuple(width, elements) -> {
       let inline = width + indent <= 80
       list.concat([
-        [helpers.idt(indent), h.text("#(")],
+        [helpers.idt(indent), el.text("#(")],
         case inline {
           False -> [
             helpers.newline(),
             ..{
               list.map(elements, view_type(_, indent + 2))
-              |> list.intersperse([h.text(","), helpers.newline()])
+              |> list.intersperse([el.text(","), helpers.newline()])
               |> list.concat()
             }
           ]
           True ->
             list.map(elements, view_type(_, 0))
-            |> list.intersperse([h.text(", ")])
+            |> list.intersperse([el.text(", ")])
             |> list.concat()
         },
         [
-          bool.guard(inline, h.text(""), fn() { helpers.idt(indent) }),
-          h.text(")"),
+          bool.guard(inline, el.text(""), fn() { helpers.idt(indent) }),
+          el.text(")"),
         ],
       ])
     }
     signature.Fn(width, parameters, return) -> {
       let inline = width + indent <= 80
       list.concat([
-        [helpers.idt(indent), t.keyword("fn"), h.text("(")],
+        [helpers.idt(indent), t.keyword("fn"), el.text("(")],
         case inline {
           True ->
             list.map(parameters, view_type(_, 0))
-            |> list.intersperse([h.text(", ")])
+            |> list.intersperse([el.text(", ")])
             |> list.concat()
           False -> [
             helpers.newline(),
             ..{
               list.map(parameters, view_type(_, indent + 2))
-              |> list.intersperse([h.text(","), helpers.newline()])
+              |> list.intersperse([el.text(","), helpers.newline()])
               |> list.concat()
             }
           ]
         },
-        bool.guard(inline, [h.text("")], fn() {
-          [h.text(","), helpers.newline(), helpers.idt(indent)]
+        bool.guard(inline, [el.text("")], fn() {
+          [el.text(","), helpers.newline(), helpers.idt(indent)]
         }),
         [
-          h.text(")"),
-          h.text(" -> "),
+          el.text(")"),
+          el.text(" -> "),
           ..view_type(return, case inline {
             False if return.width > 70 -> indent
             _ -> 0
@@ -97,18 +96,23 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
     }
     signature.Variable(_, id) -> {
       [
-        h.span([], {
-          let assert Ok(utf_a) =
-            string.to_utf_codepoints("a")
-            |> list.first()
-          let assert Ok(letter) =
-            { string.utf_codepoint_to_int(utf_a) + id }
-            |> string.utf_codepoint()
-          [
-            helpers.idt(indent),
-            t.variable(string.from_utf_codepoints([letter])),
-          ]
-        }),
+        el.element(
+          "span",
+          [],
+          {
+            let assert Ok(utf_a) =
+              string.to_utf_codepoints("a")
+              |> list.first()
+            let assert Ok(letter) =
+              { string.utf_codepoint_to_int(utf_a) + id }
+              |> string.utf_codepoint()
+            [
+              helpers.idt(indent),
+              t.variable(string.from_utf_codepoints([letter])),
+            ]
+          },
+          [],
+        ),
       ]
     }
     signature.Named(width, name, package, module, parameters, version) -> {
@@ -135,28 +139,28 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
               )
           },
           case is_params {
-            True -> h.text("(")
+            True -> el.text("(")
             False -> el.none()
           },
         ],
         case inline {
           True ->
             list.map(parameters, view_type(_, 0))
-            |> list.intersperse([h.text(", ")])
+            |> list.intersperse([el.text(", ")])
             |> list.concat()
           False -> [
             helpers.newline(),
             ..{
               list.map(parameters, view_type(_, indent + 2))
-              |> list.intersperse([h.text(","), helpers.newline()])
+              |> list.intersperse([el.text(","), helpers.newline()])
               |> list.concat()
             }
           ]
         },
         [
-          bool.guard(inline, h.text(""), fn() { helpers.idt(indent) }),
+          bool.guard(inline, el.text(""), fn() { helpers.idt(indent) }),
           case is_params {
-            True -> h.text(")")
+            True -> el.text(")")
             False -> el.none()
           },
         ],
@@ -170,7 +174,7 @@ fn view_parameter(parameter: Parameter, indent: Int) {
   list.concat([
     case label {
       None -> [el.none()]
-      Some(label) -> [helpers.idt(indent), t.label(label), h.text(": ")]
+      Some(label) -> [helpers.idt(indent), t.label(label), el.text(": ")]
     },
     case width > 80, label {
       False, _ -> view_type(type_, 0)
@@ -188,7 +192,7 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
       helpers.idt(indent),
       t.type_(constructor.name),
       case has_params {
-        True -> h.text("(")
+        True -> el.text("(")
         False -> el.none()
       },
     ],
@@ -197,19 +201,19 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
         list.concat([
           [helpers.newline()],
           list.map(constructor.parameters, view_parameter(_, { indent + 2 }))
-            |> list.intersperse([h.text(","), helpers.newline()])
+            |> list.intersperse([el.text(","), helpers.newline()])
             |> list.concat(),
-          [h.text(","), helpers.newline()],
+          [el.text(","), helpers.newline()],
         ])
       True ->
         list.map(constructor.parameters, view_parameter(_, 0))
-        |> list.intersperse([h.text(", ")])
+        |> list.intersperse([el.text(", ")])
         |> list.concat()
     },
     case has_params, inline {
       False, _ -> []
-      True, True -> [h.text(")")]
-      True, False -> [helpers.idt(indent), h.text(")")]
+      True, True -> [el.text(")")]
+      True, False -> [helpers.idt(indent), el.text(")")]
     },
   ])
 }
@@ -223,7 +227,7 @@ pub fn view_signature(
         [t.keyword("type "), t.fun(item.name), ..render_parameters(parameters)],
         case constructors {
           [] -> []
-          _ -> [h.text(" {"), helpers.newline()]
+          _ -> [el.text(" {"), helpers.newline()]
         },
         case constructors {
           [] -> []
@@ -235,12 +239,12 @@ pub fn view_signature(
         },
         case constructors {
           [] -> []
-          _ -> [helpers.newline(), h.text("}")]
+          _ -> [helpers.newline(), el.text("}")]
         },
       ])
     signature.Constant(width, type_) ->
       list.concat([
-        [t.keyword("const "), t.fun(item.name), h.text(" = ")],
+        [t.keyword("const "), t.fun(item.name), el.text(" = ")],
         case width > 80 {
           True -> [helpers.newline(), ..view_type(type_, 2)]
           False -> view_type(type_, 0)
@@ -253,7 +257,7 @@ pub fn view_signature(
           t.type_(item.name),
           ..render_parameters(parameters)
         ],
-        [h.text(" = ")],
+        [el.text(" = ")],
         case width > 80 {
           True -> [helpers.newline(), ..view_type(alias, 2)]
           False -> view_type(alias, 0)
@@ -262,27 +266,27 @@ pub fn view_signature(
     }
     signature.Function(_width, params_width, name, return, parameters) -> {
       list.concat([
-        [t.keyword("fn "), t.fun(name), h.text("(")],
+        [t.keyword("fn "), t.fun(name), el.text("(")],
         case params_width > 70 {
           True ->
             list.concat([
               [helpers.newline(), helpers.idt(2)],
               list.map(parameters, view_parameter(_, 2))
                 |> list.intersperse([
-                  h.text(","),
+                  el.text(","),
                   helpers.newline(),
                   helpers.idt(2),
                 ])
                 |> list.concat(),
-              [h.text(","), helpers.newline()],
+              [el.text(","), helpers.newline()],
             ])
           False ->
             list.map(parameters, view_parameter(_, 0))
-            |> list.intersperse([h.text(", ")])
+            |> list.intersperse([el.text(", ")])
             |> list.concat()
         },
         [
-          h.text(") -> "),
+          el.text(") -> "),
           ..case return.width + string.length(name) > 60 {
             True -> [helpers.newline(), ..view_type(return, 2)]
             False -> view_type(return, 0)

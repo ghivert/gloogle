@@ -13,9 +13,8 @@ import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import lustre/attribute as a
-import lustre/element as el
-import lustre/element/html as h
 import lustre/event as e
+import sketch/lustre/element as el
 
 fn view_search_input(model: Model) {
   let has_content = {
@@ -31,11 +30,11 @@ fn view_search_input(model: Model) {
       s.search_title([], [
         s.search_lucy([a.src("/images/lucy.svg")]),
         s.search_title_with_hint([], [
-          h.text("Gloogle"),
-          s.pre_alpha_title([], [h.text("Alpha")]),
+          el.text("Gloogle"),
+          s.pre_alpha_title([], [el.text("Alpha")]),
         ]),
       ]),
-      h.text(frontend_strings.gloogle_description),
+      el.text(frontend_strings.gloogle_description),
     ]),
     search_input.view(model.loading, model.input, True),
     s.search_submit([
@@ -54,8 +53,8 @@ fn empty_state(
   s.empty_state([], [
     s.empty_state_lucy([a.src(image)]),
     s.empty_state_titles([], [
-      h.div([], [h.text(title)]),
-      s.empty_state_subtitle([], [h.text(content)]),
+      el.element("div", [], [el.text(title)], []),
+      s.empty_state_subtitle([], [el.text(content)]),
     ]),
   ])
 }
@@ -76,50 +75,63 @@ pub fn view_trending(model: Model) {
       )
     Some(trendings) ->
       s.trendings_wrapper([], [
-        s.trendings_title([], [h.text("Trending")]),
+        s.trendings_title([], [el.text("Trending")]),
         s.trendings_grid([], {
           use item <- list.map(trendings)
           s.search_result([], [
             s.search_details([], [
-              s.search_details_title([], [h.text(item.name)]),
+              s.search_details_title([], [el.text(item.name)]),
               s.qualified_name([], [
                 item.repository
                   |> option.map(fn(r) {
-                    h.a([a.href(r), a.target("_blank"), a.rel("noreferrer")], [
-                      h.text("Code"),
-                    ])
+                    el.element(
+                      "a",
+                      [a.href(r), a.target("_blank"), a.rel("noreferrer")],
+                      [el.text("Code")],
+                      [],
+                    )
                   })
                   |> option.unwrap(el.none()),
                 item.documentation
                   |> option.map(fn(d) {
-                    h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
-                      h.text("Docs"),
-                    ])
+                    el.element(
+                      "a",
+                      [a.href(d), a.target("_blank"), a.rel("noreferrer")],
+                      [el.text("Docs")],
+                      [],
+                    )
                   })
                   |> option.unwrap(el.none()),
                 item.hex_url
                   |> option.map(fn(d) {
-                    h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
-                      h.text("Hex"),
-                    ])
+                    el.element(
+                      "a",
+                      [a.href(d), a.target("_blank"), a.rel("noreferrer")],
+                      [el.text("Hex")],
+                      [],
+                    )
                   })
                   |> option.unwrap(el.none()),
               ]),
             ]),
             s.search_body([], [
               item.description
-                |> option.map(fn(d) { h.div([], [h.text(d)]) })
+                |> option.map(fn(d) { el.element("div", [], [el.text(d)], []) })
                 |> option.unwrap(el.none()),
               s.documentation([], [
                 s.documentation_links([], [
                   item.licenses
-                    |> list.map(fn(d) { h.div([], [h.text(d)]) })
-                    |> list.prepend(h.text("Licences "))
+                    |> list.map(fn(d) {
+                      el.element("div", [], [el.text(d)], [])
+                    })
+                    |> list.prepend(el.text("Licences "))
                     |> s.licenses([], _),
-                  h.div([], [
-                    h.text("Stars "),
-                    h.text(int.to_string(item.popularity)),
-                  ]),
+                  el.element(
+                    "div",
+                    [],
+                    [el.text("Stars "), el.text(int.to_string(item.popularity))],
+                    [],
+                  ),
                 ]),
               ]),
             ]),
@@ -170,6 +182,7 @@ pub fn body(model: Model) {
               el.element(
                 "cache-signatures",
                 [a.property("content", content), e.on("child", on_coerce)],
+                [],
                 [],
               )
             })

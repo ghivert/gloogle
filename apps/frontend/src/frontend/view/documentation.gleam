@@ -1,7 +1,7 @@
 import gleam/list
 import gleam/string
 import lustre/attribute as a
-import lustre/element/html as h
+import sketch/lustre/element as el
 
 @external(javascript, "../../markdown.ffi.mjs", "convert")
 fn converter(content: String) -> String
@@ -21,5 +21,5 @@ pub fn view(document: String) {
     |> string.join("\n")
     |> converter()
     |> a.attribute("dangerous-unescaped-html", _)
-  h.div([content, a.class("documentation")], [])
+  el.element("div", [content, a.class("documentation")], [], [])
 }

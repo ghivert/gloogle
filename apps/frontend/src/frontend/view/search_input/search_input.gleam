@@ -4,9 +4,9 @@ import gleam/list
 import gleam/set
 import gleam/string
 import lustre/attribute as a
-import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
+import sketch/lustre/element as el
 
 pub const valid_filters = [
   "in:name", "in:signature", "in:documentation", "in:module",
@@ -54,7 +54,7 @@ pub fn view(
             e.prevent_default(event)
             Ok(msg.UpdateFilters(filter))
           }
-          s.filter_pill(active, [on_click, a.type_("button")], [h.text(filter)])
+          s.filter_pill(active, [on_click, a.type_("button")], [el.text(filter)])
         })
     },
   ])

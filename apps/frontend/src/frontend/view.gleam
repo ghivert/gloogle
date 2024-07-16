@@ -4,11 +4,11 @@ import frontend/view/body/body
 import frontend/view/footer/footer
 import frontend/view/navbar/navbar
 import sketch
-import sketch/lustre/extra as l
+import sketch/lustre/element
 import sketch/size
 
 fn layout(attributes, children) {
-  l.memo("div", attributes, children, [
+  element.element("div", attributes, children, [
     sketch.display("grid"),
     sketch.grid_template_areas(
       "\"navbar\"

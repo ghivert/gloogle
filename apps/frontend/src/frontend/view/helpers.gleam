@@ -1,13 +1,13 @@
 import gleam/function
 import gleam/string
-import lustre/element/html as h
+import sketch/lustre/element as el
 
 pub fn newline() {
-  h.text("\n")
+  el.text("\n")
 }
 
 pub fn idt(indent: Int) {
-  h.text(string.repeat(" ", indent))
+  el.text(string.repeat(" ", indent))
 }
 
 pub fn hexdocs_link(

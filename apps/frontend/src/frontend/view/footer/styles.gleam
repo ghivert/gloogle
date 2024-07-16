@@ -1,10 +1,10 @@
 import frontend/colors/palette
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/element
 import sketch/size.{px}
 
 pub fn footer(attributes, children) {
-  l.memo("footer", attributes, children, [
+  element.element("footer", attributes, children, [
     s.background(palette.dark.charcoal),
     s.display("flex"),
     s.flex_direction("column"),
@@ -16,7 +16,7 @@ pub fn footer(attributes, children) {
 }
 
 pub fn footer_built(attributes, children) {
-  l.memo("div", attributes, children, [
+  element.element("div", attributes, children, [
     s.display("flex"),
     s.flex_direction("column"),
     s.align_items("center"),
@@ -27,7 +27,7 @@ pub fn footer_built(attributes, children) {
 }
 
 pub fn footer_links(attributes, children) {
-  l.memo("div", attributes, children, [
+  element.element("div", attributes, children, [
     s.display("grid"),
     s.grid_template_columns("repeat(3, 1fr)"),
     s.grid_template_rows("repeat(6, auto)"),
@@ -38,7 +38,7 @@ pub fn footer_links(attributes, children) {
 }
 
 pub fn footer_section(attributes, children) {
-  l.memo("div", attributes, children, [
+  element.element("div", attributes, children, [
     s.display("grid"),
     s.grid_template_columns("1fr"),
     s.grid_template_rows("subgrid"),
@@ -47,7 +47,7 @@ pub fn footer_section(attributes, children) {
 }
 
 pub fn foot_title(attributes, children) {
-  l.memo("div", attributes, children, [
+  element.element("div", attributes, children, [
     s.color(palette.dark.dark_white),
     s.font_weight("500"),
     s.padding_("6px 0px"),
@@ -55,7 +55,7 @@ pub fn foot_title(attributes, children) {
 }
 
 pub fn foot_lk(attributes, children) {
-  l.memo("a", attributes, children, [
+  element.element("a", attributes, children, [
     s.font_size(size.rem_(0.9)),
     s.color(palette.dark.white),
     s.text_decoration("none"),

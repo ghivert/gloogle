@@ -13,17 +13,20 @@ import gleam/option.{None}
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
-import grille_pain
-import grille_pain/lustre/toast
-import grille_pain/options
+
+// import grille_pain
+// import grille_pain/lustre/toast
+// import grille_pain/options
 import lustre
 import lustre/effect
 import lustre/update
 import lustre_http as http
 import modem
-import sketch/lustre as sketch
-import sketch/options as sketch_options
-import tardis
+import sketch
+import sketch/lustre as sketch_lustre
+
+// import sketch/options as sketch_options
+// import tardis
 import toast/error as toast_error
 
 @external(javascript, "./config.ffi.mjs", "is_dev")
@@ -43,36 +46,36 @@ pub fn api_endpoint() {
 }
 
 pub fn main() {
-  let debugger_ = case is_dev() {
-    False -> Error(Nil)
-    True ->
-      tardis.single("Gloogle")
-      |> result.nil_error()
-  }
+  // let debugger_ = case is_dev() {
+  //   False -> Error(Nil)
+  //   True ->
+  //     tardis.single("Gloogle")
+  //     |> result.nil_error()
+  // }
 
-  let assert Ok(cache) =
-    sketch_options.node()
-    |> sketch.setup()
+  // let assert Ok(cache) =
+  //   sketch_options.node()
+  //   |> sketch.setup()
 
-  let assert Ok(_) =
-    options.default()
-    |> options.timeout(5000)
-    |> grille_pain.setup()
+  // let assert Ok(_) =
+  //   options.default()
+  //   |> options.timeout(5000)
+  //   |> grille_pain.setup()
 
-  let apply_debugger = fn(app: a, fun: fn(a, tardis.Instance) -> a) {
-    result.map(debugger_, fun(app, _))
-    |> result.unwrap(app)
-  }
+  // let apply_debugger = fn(app: a, fun: fn(a, tardis.Instance) -> a) {
+  //   result.map(debugger_, fun(app, _))
+  //   |> result.unwrap(app)
+  // }
 
   let assert Ok(_) = lustre.register(cache.component(), "cache-signatures")
 
   let assert Ok(_) =
     view.view
-    |> sketch.compose(cache)
+    |> sketch_lustre.compose(sketch.create_cache())
     |> lustre.application(init, update, _)
-    |> apply_debugger(tardis.wrap)
+    // |> apply_debugger(tardis.wrap)
     |> lustre.start("#app", Nil)
-    |> apply_debugger(tardis.activate)
+  // |> apply_debugger(tardis.activate)
 }
 
 fn init(_) {
@@ -206,7 +209,8 @@ fn display_toast(
   |> result.map_error(fn(error) {
     toast_error.describe_http_error(error)
     |> option.map(capture_message)
-    |> option.map(toast.error)
+    |> option.map(fn(_) { effect.none() })
+    // |> option.map(toast.error)
   })
   |> result.unwrap_error(option.None)
   |> option.unwrap(effect.none())

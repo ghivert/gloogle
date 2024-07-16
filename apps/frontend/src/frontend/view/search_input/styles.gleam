@@ -1,12 +1,12 @@
 import frontend/colors/palette
 import gleam/bool
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/element
 import sketch/media
 import sketch/size.{px}
 
 pub fn search_with_filters(attributes, children) {
-  l.element("div", attributes, children, [
+  element.element("div", attributes, children, [
     s.grid_area("input"),
     s.display("flex"),
     s.flex_direction("column"),
@@ -15,8 +15,7 @@ pub fn search_with_filters(attributes, children) {
 }
 
 pub fn search_input_wrapper(loading: Bool, children) {
-  let id = "search-input-wrapper-" <> bool.to_string(loading)
-  l.dynamic("div", [], children, id, [
+  element.element("div", [], children, [
     s.border_radius(px(18)),
     s.overflow("hidden"),
     s.padding(
@@ -37,8 +36,7 @@ pub fn search_input_wrapper(loading: Bool, children) {
 }
 
 pub fn search_input(loading, children) {
-  let id_ = "search-input-" <> bool.to_string(loading)
-  l.dynamic("div", [], children, id_, [
+  element.element("div", [], children, [
     s.display("flex"),
     s.gap(px(6)),
     s.border_radius(px(14)),
@@ -56,7 +54,7 @@ pub fn search_input(loading, children) {
 }
 
 pub fn search_input_content(attributes) {
-  l.element("input", attributes, [], [
+  element.element("input", attributes, [], [
     s.appearance("none"),
     s.border("none"),
     s.outline("none"),
@@ -66,7 +64,7 @@ pub fn search_input_content(attributes) {
 }
 
 pub fn filter_pills(attributes, children) {
-  l.element("div", attributes, children, [
+  element.element("div", attributes, children, [
     s.display("flex"),
     s.gap(px(12)),
     s.justify_content("end"),
@@ -75,8 +73,7 @@ pub fn filter_pills(attributes, children) {
 }
 
 pub fn filter_pill(active: Bool, attributes, children) {
-  let id = "filter_pill-active-" <> bool.to_string(active)
-  l.dynamic("button", attributes, children, id, [
+  element.element("button", attributes, children, [
     s.background(palette.dark.aged_plastic_yellow),
     s.color(palette.dark.charcoal),
     s.padding_("3px 12px"),

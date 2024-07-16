@@ -16,9 +16,10 @@ import gleam/option
 import lustre
 import lustre/attribute as a
 import lustre/effect as eff
-import lustre/element as el
-import lustre/element/html as h
 import lustre/event as e
+import sketch
+import sketch/lustre as sl
+import sketch/lustre/element as el
 
 fn implementations_pill(implementations: implementations.Implementations) {
   case implementations {
@@ -32,7 +33,7 @@ fn implementations_pill(implementations: implementations.Implementations) {
       |> list.filter(fn(item) { item.1 })
       |> list.map(fn(item) {
         let #(content, _, background, color) = item
-        s.implementations_pill(background, color, [], [h.text(content)])
+        s.implementations_pill(background, color, [], [el.text(content)])
       })
       |> s.implementations_pill_wrapper([], _)
   }
@@ -46,7 +47,7 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
     s.search_result([a.id(id)], [
       s.search_details([], [
         s.search_details_title([], [
-          h.text(kind.display_kind(item.kind)),
+          el.text(kind.display_kind(item.kind)),
           item.metadata.implementations
             |> option.map(implementations_pill)
             |> option.unwrap(el.none()),
@@ -72,7 +73,7 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
           "" -> el.none()
           _ ->
             s.documentation([], [
-              s.documentation_title([], [h.text("Documentation")]),
+              s.documentation_title([], [el.text("Documentation")]),
               documentation.view(item.documentation),
             ])
         },
@@ -84,8 +85,8 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
 fn match_title(results: List(a), title: String, content: String) {
   use <- bool.guard(when: list.is_empty(results), return: el.none())
   s.matches_titles([], [
-    s.matches_title([], [h.text(title)]),
-    h.div([], [h.text(content)]),
+    s.matches_title([], [el.text(title)]),
+    el.element("div", [], [el.text(content)], []),
   ])
 }
 
@@ -94,7 +95,7 @@ fn sidebar(index: List(#(#(String, String), List(#(String, String))))) {
     use #(package, modules) <- list.map(index)
     s.sidebar_package_wrapper([], [
       s.sidebar_package_name([], [
-        h.text(package.0),
+        el.text(package.0),
         t.dark_white("@" <> package.1),
       ]),
       ..list.map(modules, fn(module) {
@@ -102,7 +103,7 @@ fn sidebar(index: List(#(#(String, String), List(#(String, String))))) {
         let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
         s.sidebar_module_name([e.on_click(msg.ScrollTo(id))], [
           t.keyword(module),
-          h.text("."),
+          el.text("."),
           t.fun(name),
         ])
       })
@@ -163,7 +164,7 @@ pub fn component() {
         Received(msg) -> #(model, e.emit("child", coerce(msg)))
       }
     },
-    fn(model) { el.map(model, Received) },
+    sl.compose(fn(model) { el.map(model, Received) }, sketch.create_cache()),
     dict.from_list([#("content", fn(dyn) { Ok(UpdateContent(coerce(dyn))) })]),
   )
 }

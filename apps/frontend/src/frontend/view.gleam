@@ -21,7 +21,7 @@ fn layout(attributes, children) {
     sketch.grid_template_columns("auto 1fr"),
     sketch.grid_template_rows("auto 1fr auto"),
     sketch.min_height(size.vh(100)),
-    sketch.background(palette.dark.underwater_blue),
+    sketch.background("rgb(22, 25, 36)"),
     sketch.color(palette.dark.white),
   ])
 }

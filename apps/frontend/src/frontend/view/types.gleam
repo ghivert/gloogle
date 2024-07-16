@@ -30,3 +30,7 @@ pub fn variable(text: String) {
 pub fn dark_white(text: String) {
   span(text, palette.dark.dark_white)
 }
+
+pub fn white(text: String) {
+  span(text, palette.dark.white)
+}

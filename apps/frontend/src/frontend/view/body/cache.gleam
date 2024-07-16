@@ -3,6 +3,7 @@ import data/kind
 import data/msg
 import data/search_result
 import frontend/colors/palette
+import frontend/icons
 import frontend/strings as frontend_strings
 import frontend/view/body/signature
 import frontend/view/body/styles as s
@@ -32,7 +33,10 @@ fn implementations_pill(implementations: implementations.Implementations) {
       |> list.filter(fn(item) { item.1 })
       |> list.map(fn(item) {
         let #(content, _, background, color) = item
-        s.implementations_pill(background, color, [], [h.text(content)])
+        s.implementations_pill_container([], [
+          s.implementations_pill(background, color, [], []),
+          h.text(content),
+        ])
       })
       |> s.implementations_pill_wrapper([], _)
   }
@@ -40,53 +44,40 @@ fn implementations_pill(implementations: implementations.Implementations) {
 
 fn view_search_results(search_results: List(search_result.SearchResult)) {
   el.fragment({
-    use item <- list.map(search_results)
-    let package_id = item.package_name <> "@" <> item.version
-    let id = package_id <> "-" <> item.module_name <> "-" <> item.name
-    s.search_result([a.id(id)], [
-      s.search_details([], [
-        s.search_details_title([], [
-          h.text(kind.display_kind(item.kind)),
-          item.metadata.implementations
-            |> option.map(implementations_pill)
-            |> option.unwrap(el.none()),
+    list.map(search_results, fn(item) {
+      let package_id = item.package_name <> "@" <> item.version
+      let id = package_id <> "-" <> item.module_name <> "-" <> item.name
+      s.search_result([a.id(id)], [
+        s.search_details([], [
+          s.qualified_name(
+            [
+              a.target("_blank"),
+              a.rel("noreferrer"),
+              a.href(search_result.hexdocs_link(item)),
+            ],
+            [
+              t.white(item.package_name),
+              t.dark_white("@" <> item.version),
+              t.dark_white("."),
+              t.keyword(item.module_name),
+              t.dark_white("."),
+              t.fun(item.name),
+            ],
+          ),
+          s.external_icon_wrapper([], [icons.external_link()]),
         ]),
-        s.qualified_name(
-          [
-            a.target("_blank"),
-            a.rel("noreferrer"),
-            a.href(search_result.hexdocs_link(item)),
-          ],
-          [
-            t.dark_white(package_id),
-            t.dark_white("."),
-            t.keyword(item.module_name),
-            t.dark_white("."),
-            t.fun(item.name),
-          ],
-        ),
-      ]),
-      s.search_body([], [
-        s.signature([], signature.view_signature(item)),
+        s.search_body([], [s.signature([], signature.view_signature(item))]),
+        item.metadata.implementations
+          |> option.map(implementations_pill)
+          |> option.unwrap(el.none()),
         case item.documentation {
           "" -> el.none()
-          _ ->
-            s.documentation([], [
-              s.documentation_title([], [h.text("Documentation")]),
-              documentation.view(item.documentation),
-            ])
+          _ -> s.documentation([], [documentation.view(item.documentation)])
         },
-      ]),
-    ])
+      ])
+    })
+    |> list.intersperse(s.search_result_separator())
   })
-}
-
-fn match_title(results: List(a), title: String, content: String) {
-  use <- bool.guard(when: list.is_empty(results), return: el.none())
-  s.matches_titles([], [
-    s.matches_title([], [h.text(title)]),
-    h.div([], [h.text(content)]),
-  ])
 }
 
 fn sidebar(
@@ -116,6 +107,13 @@ fn sidebar(
   ])
 }
 
+fn maybe_separator(l) {
+  case list.is_empty(l) {
+    True -> el.none()
+    False -> s.search_result_separator()
+  }
+}
+
 pub fn cache_search_results(
   search: String,
   index: List(#(#(String, String), List(#(String, String)))),
@@ -129,25 +127,17 @@ pub fn cache_search_results(
   s.search_results_wrapper([], [
     sidebar(search, index),
     s.items_wrapper([], [
-      match_title(types, "Types matches", frontend_strings.types_match),
+      s.matches_titles([], [s.matches_title([], [h.text("Search results")])]),
       view_search_results(types),
-      match_title(exact, "Exact matches", frontend_strings.exact_match),
+      maybe_separator(types),
       view_search_results(exact),
-      match_title(others, "Signature matches", frontend_strings.partial_match),
+      maybe_separator(exact),
       view_search_results(others),
-      match_title(searches, "Searches matches", frontend_strings.searches_match),
+      maybe_separator(others),
       view_search_results(searches),
-      match_title(
-        docs_searches,
-        "Documentation matches",
-        frontend_strings.docs_match,
-      ),
+      maybe_separator(searches),
       view_search_results(docs_searches),
-      match_title(
-        modules_searches,
-        "Module matches",
-        frontend_strings.modules_match,
-      ),
+      maybe_separator(docs_searches),
       view_search_results(modules_searches),
     ]),
   ])

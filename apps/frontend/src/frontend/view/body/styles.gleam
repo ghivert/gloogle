@@ -6,16 +6,25 @@ import lustre/element
 import sketch as s
 import sketch/lustre/extra as el
 import sketch/media
-import sketch/size.{px, vh, vw}
+import sketch/size.{percent, px, vh, vw}
+
+pub fn implementations_pill_container(attrs, children) {
+  el.memo("div", attrs, children, [
+    s.display("flex"),
+    s.align_items("center"),
+    s.font_size(px(14)),
+    s.font_weight("300"),
+    s.gap(px(6)),
+  ])
+}
 
 pub fn implementations_pill(background, color, attributes, children) {
   let id = "implementations-pill-" <> background
   s.dynamic(id, [
     s.background(background),
-    s.color(color),
-    s.padding_("4px 9px"),
     s.border_radius(px(6)),
-    s.font_size(px(10)),
+    s.width(px(8)),
+    s.height(px(8)),
   ])
   |> s.memo()
   |> s.to_lustre()
@@ -27,17 +36,17 @@ pub fn implementations_pill_wrapper(attributes, children) {
   el.memo("div", attributes, children, [
     s.display("flex"),
     s.align_items("center"),
-    s.gap(px(6)),
+    s.gap(px(12)),
+    s.justify_content("end"),
   ])
 }
 
 pub fn search_result(attributes, children) {
   el.memo("div", attributes, children, [
-    s.background(palette.dark.unexpected_aubergine),
-    s.border_radius(px(14)),
     s.overflow("hidden"),
-    s.padding(px(12)),
-    s.box_shadow("0 0 3px 2px " <> palette.dark.black <> "4d"),
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(12)),
   ])
 }
 
@@ -45,7 +54,7 @@ pub fn search_results_wrapper(attributes, children) {
   el.memo("div", attributes, children, [
     s.display("grid"),
     s.padding_right(px(48)),
-    s.gap(px(24)),
+    s.gap(px(36)),
     s.grid_template_columns("min-content 1fr"),
     s.justify_items("center"),
     s.media(media.max_width(px(700)), [
@@ -55,12 +64,15 @@ pub fn search_results_wrapper(attributes, children) {
   ])
 }
 
+pub fn external_icon_wrapper(attrs, children) {
+  el.memo("div", attrs, children, [s.width(px(16)), s.height(px(16))])
+}
+
 pub fn search_details(attributes, children) {
   el.memo("div", attributes, children, [
-    s.background(palette.dark.unexpected_aubergine),
     s.display("flex"),
     s.gap(px(12)),
-    s.justify_content("space-between"),
+    s.align_items("center"),
     s.media(media.max_width(px(700)), [s.flex_direction("column")]),
   ])
 }
@@ -79,16 +91,16 @@ pub fn qualified_name(attributes, children) {
     s.text_overflow("ellipsis"),
     s.direction("rtl"),
     s.text_decoration("none"),
+    s.hover([s.text_decoration("underline")]),
   ])
 }
 
 pub fn search_body(attributes, children) {
   el.memo("div", attributes, children, [
-    s.background(palette.dark.black),
+    s.background("rgba(254, 254, 252, 0.05)"),
     s.border_radius(px(12)),
-    s.margin(px(-12)),
-    s.margin_top(px(12)),
-    s.padding(px(12)),
+    s.padding_("12px 24px"),
+    s.border("1px solid rgba(254, 254, 252, .1)"),
   ])
 }
 
@@ -103,14 +115,18 @@ pub fn signature(attributes, children) {
 
 pub fn documentation(attributes, children) {
   el.memo("div", attributes, children, [
-    s.background(palette.dark.charcoal),
-    s.padding(px(12)),
-    s.border_radius(px(10)),
-    s.margin(px(-12)),
-    s.margin_top(px(12)),
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(12)),
+    s.padding_top(px(6)),
+  ])
+}
+
+pub fn search_result_separator() {
+  el.memo("div", [], [], [
+    s.height(px(1)),
+    s.background("rgba(254, 254, 252, 0.1)"),
+    s.margin_("6px 0"),
   ])
 }
 
@@ -457,7 +473,7 @@ pub fn items_wrapper(attributes, children) {
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(24)),
-    s.padding_top(px(12)),
+    s.padding_top(px(24)),
     s.max_width(px(700)),
     s.width(size.percent(100)),
     s.overflow("hidden"),
@@ -465,10 +481,7 @@ pub fn items_wrapper(attributes, children) {
 }
 
 pub fn named_type_button(attributes, children) {
-  el.memo("a", attributes, children, [
-    s.text_decoration("none"),
-    s.hover([s.text_decoration("underline")]),
-  ])
+  el.memo("a", attributes, children, [s.color("#e5c07b")])
 }
 
 pub fn search_title_with_hint(attributes, children) {

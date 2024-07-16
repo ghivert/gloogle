@@ -17,7 +17,7 @@ pub fn search_with_filters(attributes, children) {
 pub fn search_input_wrapper(loading: Bool, children) {
   let id = "search-input-wrapper-" <> bool.to_string(loading)
   l.dynamic("div", [], children, id, [
-    s.border_radius(px(18)),
+    s.border_radius(px(12)),
     s.overflow("hidden"),
     s.padding(
       px(case loading {
@@ -36,20 +36,29 @@ pub fn search_input_wrapper(loading: Bool, children) {
   ])
 }
 
-pub fn search_input(loading, children) {
-  let id_ = "search-input-" <> bool.to_string(loading)
+pub fn search_input(loading, small, children) {
+  let id_ =
+    "search-input-" <> bool.to_string(loading) <> "-" <> bool.to_string(small)
   l.dynamic("div", [], children, id_, [
     s.display("flex"),
     s.gap(px(6)),
-    s.border_radius(px(14)),
-    s.color(palette.dark.charcoal),
-    s.background(palette.dark.white),
+    s.border_radius(px(8)),
+    s.color(case small {
+      True -> "#fefefc"
+      False -> palette.dark.charcoal
+    }),
+    s.background(case small {
+      True -> "rgb(74,75,90)"
+      False -> palette.dark.white
+    }),
     s.transition("padding .3s"),
     s.align_items("baseline"),
     s.padding(
-      px(case loading {
-        True -> 16
-        False -> 20
+      px(case loading, small {
+        True, False -> 16
+        False, False -> 20
+        True, True -> 6
+        False, True -> 10
       }),
     ),
   ])
@@ -62,6 +71,8 @@ pub fn search_input_content(attributes) {
     s.outline("none"),
     s.width(size.percent(100)),
     s.line_height("1.5"),
+    s.background("transparent"),
+    s.color("inherit"),
   ])
 }
 

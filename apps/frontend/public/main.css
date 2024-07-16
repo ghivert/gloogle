@@ -2,7 +2,17 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--text-color);
-  font-family: Lexend, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family:
+    Lexend,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Noto Sans',
+    Helvetica,
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
 }
 
 :root {
@@ -13,22 +23,22 @@ body {
   --text-color: #000;
   --text-grey-color: #555;
   --border-color: #ddd;
-  --green: #01FF70;
-  --purple: #8C3A96;
+  --green: #01ff70;
+  --purple: #8c3a96;
   --white: white;
-  --orange: #FF851B;
-  --link: #0074D9;
+  --orange: #ff851b;
+  --link: #0074d9;
   --disabled: #ddd;
   --text-disabled: #333;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #222;
+    --background: #292d3e;
     --card-background: #333;
     --border-color: #111;
     --input-background: #121212;
-    --text-color: #CCC;
+    --text-color: #ccc;
     --text-grey-color: #999;
     --border-color: #333;
     --disabled: #444;
@@ -51,7 +61,7 @@ h6 {
 
 @font-face {
   font-family: Lexend;
-  src: url("/Lexend-VariableFont_wght.ttf") format("woff2-variations");
+  src: url('/Lexend-VariableFont_wght.ttf') format('woff2-variations');
   font-weight: 100 1000;
   font-stretch: 25% 151%;
 }
@@ -62,14 +72,14 @@ a {
 
 @keyframes bg-spin {
   0% {
-      background-position: 0% 50%;
-    }
+    background-position: 0% 50%;
+  }
 
-    50% {
-      background-position: 100% 50%;
-    }
+  50% {
+    background-position: 100% 50%;
+  }
 
-    100% {
-      background-position: 0% 50%;
-    }
+  100% {
+    background-position: 0% 50%;
+  }
 }

@@ -1,10 +1,12 @@
 import frontend/colors/palette
+import gleam/int
 import gleam/list
+import lustre/attribute as a
 import lustre/element
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/extra as el
 import sketch/media
-import sketch/size.{px, vw}
+import sketch/size.{px, vh, vw}
 
 pub fn implementations_pill(background, color, attributes, children) {
   let id = "implementations-pill-" <> background
@@ -22,7 +24,7 @@ pub fn implementations_pill(background, color, attributes, children) {
 }
 
 pub fn implementations_pill_wrapper(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(6)),
@@ -30,7 +32,7 @@ pub fn implementations_pill_wrapper(attributes, children) {
 }
 
 pub fn search_result(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.border_radius(px(14)),
     s.overflow("hidden"),
@@ -40,7 +42,7 @@ pub fn search_result(attributes, children) {
 }
 
 pub fn search_results_wrapper(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.display("grid"),
     s.padding_("0 48px"),
     s.gap(px(24)),
@@ -54,7 +56,7 @@ pub fn search_results_wrapper(attributes, children) {
 }
 
 pub fn search_details(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.display("flex"),
     s.gap(px(12)),
@@ -64,7 +66,7 @@ pub fn search_details(attributes, children) {
 }
 
 pub fn search_details_title(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(12)),
@@ -72,7 +74,7 @@ pub fn search_details_title(attributes, children) {
 }
 
 pub fn qualified_name(attributes, children) {
-  l.memo("a", attributes, children, [
+  el.memo("a", attributes, children, [
     s.overflow("hidden"),
     s.text_overflow("ellipsis"),
     s.direction("rtl"),
@@ -81,7 +83,7 @@ pub fn qualified_name(attributes, children) {
 }
 
 pub fn search_body(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.background(palette.dark.black),
     s.border_radius(px(12)),
     s.margin(px(-12)),
@@ -91,7 +93,7 @@ pub fn search_body(attributes, children) {
 }
 
 pub fn signature(attributes, children) {
-  l.memo("code", attributes, children, [
+  el.memo("code", attributes, children, [
     s.white_space("pre-wrap"),
     s.display("block"),
     s.line_height("1.6"),
@@ -100,7 +102,7 @@ pub fn signature(attributes, children) {
 }
 
 pub fn documentation(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.background(palette.dark.charcoal),
     s.padding(px(12)),
     s.border_radius(px(10)),
@@ -113,11 +115,11 @@ pub fn documentation(attributes, children) {
 }
 
 pub fn documentation_title(attributes, children) {
-  l.memo("div", attributes, children, [s.color(palette.dark.dark_white)])
+  el.memo("div", attributes, children, [s.color(palette.dark.dark_white)])
 }
 
 pub fn search_wrapper(attributes, children) {
-  l.memo("form", attributes, children, [
+  el.memo("form", attributes, children, [
     s.display("grid"),
     s.grid_template_rows("auto auto auto"),
     s.grid_template_columns("auto auto auto"),
@@ -154,14 +156,14 @@ pub fn search_title_() {
 }
 
 pub fn search_title(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.compose(search_title_()),
     s.font_size(size.rem_(2.5)),
   ])
 }
 
 pub fn search_title_wrapper(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.grid_area("title"),
     s.display("flex"),
     s.flex_direction("column"),
@@ -172,12 +174,13 @@ pub fn search_title_wrapper(attributes, children) {
   ])
 }
 
-pub fn search_lucy(attributes) {
-  l.memo("img", attributes, [], [s.width(px(40))])
+pub fn search_lucy(size, attributes) {
+  let id = "search-lucy-" <> int.to_string(size)
+  el.dynamic("img", attributes, [], id, [s.width(px(size))])
 }
 
 pub fn search_submit(attributes) {
-  l.memo("input", attributes, [], [
+  el.memo("input", attributes, [], [
     s.grid_area("submit"),
     s.appearance("none"),
     s.border("none"),
@@ -198,7 +201,7 @@ pub fn search_submit(attributes) {
 }
 
 pub fn matches_titles(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.line_height("1.3"),
     s.color(palette.dark.dark_white),
     s.display("flex"),
@@ -210,14 +213,15 @@ pub fn matches_titles(attributes, children) {
 }
 
 pub fn matches_title(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.color(palette.dark.white),
     s.font_size(px(18)),
   ])
 }
 
 pub fn empty_state(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
+    s.grid_row("span 3"),
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(24)),
@@ -230,11 +234,11 @@ pub fn empty_state(attributes, children) {
 }
 
 pub fn empty_state_lucy(attributes) {
-  l.memo("img", attributes, [], [s.width(px(100))])
+  el.memo("img", attributes, [], [s.width(px(100))])
 }
 
 pub fn empty_state_titles(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.font_size(px(20)),
     s.display("flex"),
     s.flex_direction("column"),
@@ -245,14 +249,14 @@ pub fn empty_state_titles(attributes, children) {
 }
 
 pub fn empty_state_subtitle(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.font_size(px(16)),
     s.color(palette.dark.dark_white),
   ])
 }
 
 pub fn sidebar_wrapper(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.position("sticky"),
     s.top(px(130)),
     s.display("flex"),
@@ -274,7 +278,7 @@ pub fn sidebar_wrapper(attributes, children) {
 }
 
 pub fn sidebar_package_name(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
     s.padding(px(6)),
     s.border_radius(px(6)),
@@ -284,7 +288,7 @@ pub fn sidebar_package_name(attributes, children) {
 }
 
 pub fn sidebar_module_name(attributes, children) {
-  l.memo("button", attributes, children, [
+  el.memo("button", attributes, children, [
     s.text_overflow("ellipsis"),
     s.overflow("hidden"),
     s.direction("rtl"),
@@ -305,7 +309,7 @@ pub fn sidebar_module_name(attributes, children) {
 }
 
 pub fn sidebar_package_wrapper(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(9)),
@@ -315,7 +319,7 @@ pub fn sidebar_package_wrapper(attributes, children) {
 }
 
 pub fn main(attributes, children) {
-  l.memo("main", attributes, children, [
+  el.memo("main", attributes, children, [
     s.grid_area("main"),
     s.display("flex"),
     s.flex_direction("column"),
@@ -323,8 +327,129 @@ pub fn main(attributes, children) {
   ])
 }
 
+pub fn search_sidebar(attributes, children) {
+  el.memo("main", attributes, children, [
+    s.grid_area("sidebar"),
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.padding(px(16)),
+    s.border_right("1px solid #ffffff1a"),
+    s.background("#ffffff0d"),
+    s.width(px(320)),
+    s.gap(px(16)),
+    s.height(vh(100)),
+    s.position("sticky"),
+    s.top(px(0)),
+  ])
+}
+
+pub fn sidebar_title(attrs, children) {
+  el.element("a", attrs, children, [
+    s.display("flex"),
+    s.align_items("center"),
+    s.gap(px(16)),
+    s.color("inherit"),
+    s.text_decoration("none"),
+  ])
+}
+
+pub fn sidebar_title_inside(attrs, children) {
+  el.element("div", attrs, children, [])
+}
+
+pub fn form_wrapper(attrs, children) {
+  el.element("form", attrs, children, [])
+}
+
+pub fn sidebar_filter(attrs, children) {
+  el.element("div", attrs, children, [
+    s.padding_top(px(12)),
+    s.padding_left(px(12)),
+    s.color("rgba(254, 254, 252, .6)"),
+  ])
+}
+
+pub fn sidebar_filters(attrs, children) {
+  el.element("div", attrs, children, [
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(18)),
+    s.padding_("0 12px"),
+  ])
+}
+
+pub fn sidebar_checkbox(attrs) {
+  element.fragment([
+    el.element("div", [], [], [
+      s.width(px(16)),
+      s.height(px(16)),
+      s.background("rgba(254, 254, 252, .1)"),
+      s.border("1px solid rgba(254, 254, 252, .1)"),
+      s.border_radius(px(4)),
+    ]),
+    el.element("input", [a.type_("checkbox"), ..attrs], [], [
+      s.position("fixed"),
+      s.top(px(-1000)),
+      s.width(px(1)),
+      s.height(px(1)),
+    ]),
+  ])
+}
+
+pub fn sidebar_spacer(attrs, children) {
+  el.element("div", attrs, children, [s.flex("1")])
+}
+
+pub fn filter_separator(attrs, children) {
+  el.element("div", attrs, children, [
+    s.height(px(1)),
+    s.background("rgba(254, 254, 252, .1)"),
+  ])
+}
+
+pub fn sidebar_filter_line(attrs, children) {
+  el.element("label", attrs, children, [
+    s.display("flex"),
+    s.gap(px(9)),
+    s.cursor("pointer"),
+    s.align_items("center"),
+  ])
+}
+
+pub fn sidebar_filter_name(attrs, children) {
+  el.element("div", attrs, children, [s.color("white")])
+}
+
+pub fn sidebar_links(attrs, children) {
+  el.element("div", attrs, children, [
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(24)),
+    s.padding(px(12)),
+  ])
+}
+
+pub fn sidebar_link_wrapper(attrs, children) {
+  el.element("div", attrs, children, [
+    s.display("flex"),
+    s.align_items("baseline"),
+    s.gap(px(9)),
+  ])
+}
+
+pub fn sidebar_icon(attrs, children) {
+  el.element("div", attrs, children, [s.width(px(12)), s.height(px(12))])
+}
+
+pub fn sidebar_link(attrs, children) {
+  el.element("div", attrs, children, [
+    s.font_size(px(14)),
+    s.color("rgba(254, 254, 252, 0.6)"),
+  ])
+}
+
 pub fn items_wrapper(attributes, children) {
-  l.memo("div", attributes, children, [
+  el.memo("div", attributes, children, [
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(24)),
@@ -336,38 +461,38 @@ pub fn items_wrapper(attributes, children) {
 }
 
 pub fn named_type_button(attributes, children) {
-  l.memo("a", attributes, children, [
+  el.memo("a", attributes, children, [
     s.text_decoration("none"),
     s.hover([s.text_decoration("underline")]),
   ])
 }
 
 pub fn search_title_with_hint(attributes, children) {
-  l.memo("div", attributes, children, [s.display("flex"), s.gap(px(12))])
+  el.memo("div", attributes, children, [s.display("flex"), s.gap(px(12))])
 }
 
 pub fn pre_alpha_title(attributes, children) {
-  l.memo("div", attributes, children, [s.font_size(px(16))])
+  el.memo("div", attributes, children, [s.font_size(px(16))])
 }
 
 pub fn loading_trending(attributes, children) {
-  l.memo("div", attributes, children, [])
+  el.memo("div", attributes, children, [])
 }
 
 pub fn no_trendings(attributes, children) {
-  l.memo("div", attributes, children, [])
+  el.memo("div", attributes, children, [])
 }
 
 pub fn trendings_wrapper(attributes, children) {
-  l.element("div", attributes, children, [s.padding_("12px 48px")])
+  el.element("div", attributes, children, [s.padding_("12px 48px")])
 }
 
 pub fn trendings_title(attributes, children) {
-  l.element("div", attributes, children, [s.margin_bottom(px(24))])
+  el.element("div", attributes, children, [s.margin_bottom(px(24))])
 }
 
 pub fn trendings_grid(attributes, children) {
-  l.element("div", attributes, children, [
+  el.element("div", attributes, children, [
     s.display("grid"),
     // s.grid_template_columns("repeat(auto-fill, minmax(350px, 1fr))"),
     s.align_items("start"),
@@ -376,18 +501,18 @@ pub fn trendings_grid(attributes, children) {
 }
 
 pub fn trendings_card(attributes, children) {
-  l.element("div", attributes, children, [
+  el.element("div", attributes, children, [
     s.background(palette.dark.unexpected_aubergine),
   ])
 }
 
 pub fn documentation_links(attributes, children) {
-  l.element("div", attributes, children, [
+  el.element("div", attributes, children, [
     s.display("flex"),
     s.justify_content("space-between"),
   ])
 }
 
 pub fn licenses(attributes, children) {
-  l.element("div", attributes, children, [s.display("flex"), s.gap(px(6))])
+  el.element("div", attributes, children, [s.display("flex"), s.gap(px(6))])
 }

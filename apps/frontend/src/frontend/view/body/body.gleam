@@ -1,6 +1,7 @@
 import data/model.{type Model}
 import data/msg
 import data/search_result
+import frontend/icons
 import frontend/images
 import frontend/router
 import frontend/strings as frontend_strings
@@ -29,7 +30,7 @@ fn view_search_input(model: Model) {
   s.search_wrapper([e.on_submit(msg.SubmitSearch)], [
     s.search_title_wrapper([], [
       s.search_title([], [
-        s.search_lucy([a.src("/images/lucy.svg")]),
+        s.search_lucy(40, [a.src("/images/lucy.svg")]),
         s.search_title_with_hint([], [
           h.text("Gloogle"),
           s.pre_alpha_title([], [h.text("Alpha")]),
@@ -37,7 +38,12 @@ fn view_search_input(model: Model) {
       ]),
       h.text(frontend_strings.gloogle_description),
     ]),
-    search_input.view(model.loading, model.input, True),
+    search_input.view(
+      model.loading,
+      model.input,
+      show_filters: True,
+      small: False,
+    ),
     s.search_submit([
       a.type_("submit"),
       a.value("Submit"),
@@ -136,12 +142,69 @@ fn on_coerce(value: a) {
 @external(javascript, "../../../config.ffi.mjs", "coerce_event")
 fn coerce_event(value: a) -> b
 
+fn sidebar(model: Model) {
+  s.search_sidebar([], [
+    s.sidebar_title([a.href("/")], [
+      s.search_lucy(32, [a.src("/images/lucy.svg")]),
+      s.sidebar_title_inside([], [h.text("Gloogle")]),
+    ]),
+    s.form_wrapper([e.on_submit(msg.SubmitSearch)], [
+      search_input.view(
+        model.loading,
+        model.input,
+        show_filters: False,
+        small: True,
+      ),
+    ]),
+    s.sidebar_filter([], [el.text("Filters")]),
+    s.sidebar_filters([], [
+      s.sidebar_filter_line([], [
+        s.sidebar_checkbox([]),
+        s.sidebar_filter_name([], [el.text("Functions")]),
+      ]),
+      s.sidebar_filter_line([], [
+        s.sidebar_checkbox([]),
+        s.sidebar_filter_name([], [el.text("Types")]),
+      ]),
+      s.sidebar_filter_line([], [
+        s.sidebar_checkbox([]),
+        s.sidebar_filter_name([], [el.text("Types aliases")]),
+      ]),
+      s.filter_separator([], []),
+      s.sidebar_filter_line([], [
+        s.sidebar_checkbox([]),
+        s.sidebar_filter_name([], [el.text("Documented")]),
+      ]),
+    ]),
+    s.sidebar_spacer([], []),
+    s.sidebar_links([], [
+      s.sidebar_link_wrapper([], [
+        s.sidebar_icon([], [icons.trends()]),
+        s.sidebar_link([], [el.text("Trends")]),
+      ]),
+      s.sidebar_link_wrapper([], [
+        s.sidebar_icon([], [icons.shortcuts()]),
+        s.sidebar_link([], [el.text("Shortcuts")]),
+      ]),
+      s.sidebar_link_wrapper([], [
+        s.sidebar_icon([], [icons.gift()]),
+        s.sidebar_link([], [el.text("Resources")]),
+      ]),
+      s.sidebar_link_wrapper([], [
+        s.sidebar_icon([], [icons.heart()]),
+        s.sidebar_link([], [el.text("Sponsor")]),
+      ]),
+    ]),
+  ])
+}
+
 pub fn body(model: Model) {
-  s.main([], [
-    case model.route {
-      router.Home -> view_search_input(model)
-      router.Trending -> view_trending(model)
-      router.Search(_) ->
+  case model.route {
+    router.Home -> s.main([], [view_search_input(model)])
+    router.Trending -> s.main([], [view_trending(model)])
+    router.Search(_) ->
+      el.fragment([
+        sidebar(model),
         case
           dict.get(model.search_results, model.submitted_input)
           |> result.unwrap(search_result.Start)
@@ -175,7 +238,7 @@ pub fn body(model: Model) {
             })
             |> result.unwrap(el.none())
           }
-        }
-    },
-  ])
+        },
+      ])
+  }
 }

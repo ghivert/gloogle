@@ -75,7 +75,16 @@ pub fn update_search_results(
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> model.view_cache
     search_result.SearchResults(types, e, m, s, d, mods) ->
-      cache.cache_search_results(index, types, e, m, s, d, mods)
+      cache.cache_search_results(
+        model.submitted_input,
+        index,
+        types,
+        e,
+        m,
+        s,
+        d,
+        mods,
+      )
       |> dict.insert(model.view_cache, key, _)
   }
   Model(

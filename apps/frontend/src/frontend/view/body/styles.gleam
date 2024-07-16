@@ -44,7 +44,7 @@ pub fn search_result(attributes, children) {
 pub fn search_results_wrapper(attributes, children) {
   el.memo("div", attributes, children, [
     s.display("grid"),
-    s.padding_("0 48px"),
+    s.padding_right(px(48)),
     s.gap(px(24)),
     s.grid_template_columns("min-content 1fr"),
     s.justify_items("center"),
@@ -258,13 +258,14 @@ pub fn empty_state_subtitle(attributes, children) {
 pub fn sidebar_wrapper(attributes, children) {
   el.memo("div", attributes, children, [
     s.position("sticky"),
-    s.top(px(130)),
+    s.top(px(0)),
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(12)),
-    s.height_("calc(100vh - 130px)"),
+    s.height(vh(100)),
     s.overflow("auto"),
-    s.padding_("12px 0"),
+    s.padding_("12px"),
+    s.border_right("1px solid rgba(254, 254, 252, .1)"),
     s.property("mask", {
       "linear-gradient(
         180deg,
@@ -277,10 +278,13 @@ pub fn sidebar_wrapper(attributes, children) {
   ])
 }
 
+pub fn sidebar_wrapper_title(attrs, children) {
+  el.memo("div", attrs, children, [s.padding_("4px 4px"), s.color("#ffffff99")])
+}
+
 pub fn sidebar_package_name(attributes, children) {
   el.memo("div", attributes, children, [
-    s.background(palette.dark.unexpected_aubergine),
-    s.padding(px(6)),
+    s.padding_left(px(8)),
     s.border_radius(px(6)),
     s.overflow("hidden"),
     s.text_overflow("ellipsis"),
@@ -304,7 +308,7 @@ pub fn sidebar_module_name(attributes, children) {
     s.display("block"),
     s.property("padding-block", "0"),
     s.property("padding-inline", "0"),
-    s.padding_left(px(12)),
+    s.padding_left(px(16)),
   ])
 }
 

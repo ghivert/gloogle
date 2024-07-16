@@ -89,28 +89,35 @@ fn match_title(results: List(a), title: String, content: String) {
   ])
 }
 
-fn sidebar(index: List(#(#(String, String), List(#(String, String))))) {
-  s.sidebar_wrapper([], {
-    use #(package, modules) <- list.map(index)
-    s.sidebar_package_wrapper([], [
-      s.sidebar_package_name([], [
-        h.text(package.0),
-        t.dark_white("@" <> package.1),
-      ]),
-      ..list.map(modules, fn(module) {
-        let #(module, name) = module
-        let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
-        s.sidebar_module_name([e.on_click(msg.ScrollTo(id))], [
-          t.keyword(module),
-          h.text("."),
-          t.fun(name),
-        ])
-      })
-    ])
-  })
+fn sidebar(
+  search: String,
+  index: List(#(#(String, String), List(#(String, String)))),
+) {
+  s.sidebar_wrapper([], [
+    s.sidebar_wrapper_title([], [el.text("Packages for “" <> search <> "”")]),
+    ..{
+      use #(package, modules) <- list.map(index)
+      s.sidebar_package_wrapper([], [
+        s.sidebar_package_name([], [
+          h.text(package.0),
+          t.dark_white("@" <> package.1),
+        ]),
+        ..list.map(modules, fn(module) {
+          let #(module, name) = module
+          let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
+          s.sidebar_module_name([e.on_click(msg.ScrollTo(id))], [
+            t.keyword(module),
+            h.text("."),
+            t.fun(name),
+          ])
+        })
+      ])
+    }
+  ])
 }
 
 pub fn cache_search_results(
+  search: String,
   index: List(#(#(String, String), List(#(String, String)))),
   types: List(search_result.SearchResult),
   exact: List(search_result.SearchResult),
@@ -120,7 +127,7 @@ pub fn cache_search_results(
   modules_searches: List(search_result.SearchResult),
 ) {
   s.search_results_wrapper([], [
-    sidebar(index),
+    sidebar(search, index),
     s.items_wrapper([], [
       match_title(types, "Types matches", frontend_strings.types_match),
       view_search_results(types),

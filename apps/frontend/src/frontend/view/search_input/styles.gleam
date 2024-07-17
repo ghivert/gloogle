@@ -29,6 +29,7 @@ pub fn search_input_wrapper(loading: Bool, children) {
     s.property("background-size", "400% 400%"),
     s.transition("padding .3s"),
     s.animation("bg-spin 3s linear infinite"),
+    s.border("1px solid rgba(77, 79, 87, 1)"),
     s.animation_play_state(case loading {
       True -> "running"
       False -> "paused"
@@ -48,7 +49,7 @@ pub fn search_input(loading, small, children) {
       False -> palette.dark.charcoal
     }),
     s.background(case small {
-      True -> "rgb(74,75,90)"
+      True -> "rgb(57,59,68)"
       False -> palette.dark.white
     }),
     s.transition("padding .3s"),

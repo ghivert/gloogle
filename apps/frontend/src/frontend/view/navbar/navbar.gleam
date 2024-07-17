@@ -28,14 +28,6 @@ pub fn navbar(model: Model) {
             s.search_lucy(40, [a.src("/images/lucy.svg")]),
             s.title([], [h.text("Gloogle")]),
           ]),
-          s.search_input_wrapper([e.on_submit(msg.SubmitSearch)], [
-            search_input.view(
-              model.loading,
-              model.input,
-              show_filters: False,
-              small: False,
-            ),
-          ]),
         ])
     },
     navbar_links(),

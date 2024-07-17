@@ -295,7 +295,7 @@ cache-signatures:has(:not(:defined)) {
   gap: 12px;
   height: 100vh;
   overflow: auto;
-  padding: 12px;
+  padding: 20px;
   border-right: 1px solid rgba(254, 254, 252, 0.1);
   mask: linear-gradient(
     180deg,

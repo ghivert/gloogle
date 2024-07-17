@@ -81,7 +81,9 @@ pub fn cache_search_results(
     sidebar(search, index),
     h.div([a.class("items-wrapper")], [
       h.div([a.class("matches-titles")], [
-        h.div([a.class("matches-title")], [h.text("Search results")]),
+        h.div([a.class("matches-title")], [
+          h.text("Search results for “" <> search <> "”"),
+        ]),
       ]),
       view_search_results(types),
       maybe_separator(types),

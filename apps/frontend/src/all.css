@@ -44,17 +44,55 @@
 .external-icon-wrapper {
   width: 16px;
   height: 16px;
+  flex-shrink: 0;
 }
 
 .search-details {
   display: flex;
-  gap: 12px;
+  gap: 24px;
   align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
 
   @media (max-width: 700px) {
     .search-details {
       flex-direction: column;
     }
+  }
+}
+
+.search-details-name {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.search-details-arrow-expand {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.search-details-arrow-expand[data-opened='True'] svg {
+  transform: rotate(180deg);
+}
+
+.search-details-arrow-expand svg {
+  width: 16px !important;
+  height: 16px !important;
+  transition: all 0.3s;
+}
+
+@media (max-width: 700px) {
+  .search-details-arrow-expand span {
+    display: none;
   }
 }
 

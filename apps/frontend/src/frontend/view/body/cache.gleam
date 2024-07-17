@@ -22,72 +22,10 @@ import lustre/event as e
 import sketch/lustre as sketch_lustre
 import sketch/options as sketch_options
 
-fn implementations_pill(implementations: implementations.Implementations) {
-  case implementations {
-    implementations.Implementations(True, False, False) -> el.none()
-    implementations.Implementations(gleam, erl, js) ->
-      [
-        #("Gleam", gleam, palette.dark.faff_pink, palette.dark.blacker),
-        #("Erlang", erl, palette.erlang, palette.dark.white),
-        #("JavaScript", js, palette.javascript, palette.dark.blacker),
-      ]
-      |> list.filter(fn(item) { item.1 })
-      |> list.map(fn(item) {
-        let #(content, _, background, _) = item
-        h.div([a.class("implementations-pill-container")], [
-          h.div(
-            [
-              a.class("implementations-pill"),
-              a.style([#("background", background)]),
-            ],
-            [],
-          ),
-          h.text(content),
-        ])
-      })
-      |> h.div([a.class("implementations-pill-wrapper")], _)
-  }
-}
-
 fn view_search_results(search_results: List(search_result.SearchResult)) {
   el.fragment({
     list.map(search_results, fn(item) {
-      let package_id = item.package_name <> "@" <> item.version
-      let id = package_id <> "-" <> item.module_name <> "-" <> item.name
-      h.div([a.class("search-result"), a.id(id)], [
-        h.div([a.class("search-details")], [
-          h.a(
-            [
-              a.class("qualified-name"),
-              a.target("_blank"),
-              a.rel("noreferrer"),
-              a.href(search_result.hexdocs_link(item)),
-            ],
-            [
-              t.white(item.package_name),
-              t.dark_white("@" <> item.version),
-              t.dark_white("."),
-              t.keyword(item.module_name),
-              t.dark_white("."),
-              t.fun(item.name),
-            ],
-          ),
-          h.div([a.class("external-icon-wrapper")], [icons.external_link()]),
-        ]),
-        h.div([a.class("search-body")], [
-          h.code([a.class("signature")], signature.view_signature(item)),
-        ]),
-        item.metadata.implementations
-          |> option.map(implementations_pill)
-          |> option.unwrap(el.none()),
-        case item.documentation {
-          "" -> el.none()
-          _ ->
-            h.div([a.class("documentation")], [
-              documentation.view(item.documentation),
-            ])
-        },
-      ])
+      el.element("search-result", [a.property("item", item)], [])
     })
     |> list.intersperse(h.div([a.class("search-result-separator")], []))
   })

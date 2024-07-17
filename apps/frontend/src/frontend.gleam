@@ -5,6 +5,7 @@ import data/search_result
 import frontend/router
 import frontend/view
 import frontend/view/body/cache
+import frontend/view/body/search_result as sr
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
@@ -66,6 +67,7 @@ pub fn main() {
   }
 
   let assert Ok(_) = lustre.register(cache.component(), "cache-signatures")
+  let assert Ok(_) = sr.setup()
 
   let assert Ok(_) =
     view.view

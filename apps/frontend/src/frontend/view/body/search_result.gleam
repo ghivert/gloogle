@@ -102,25 +102,29 @@ fn view(model: Model) -> element.Element(Msg) {
             ),
             h.div([a.class("external-icon-wrapper")], [icons.external_link()]),
           ]),
-          h.button(
-            [
-              a.class("search-details-arrow-expand"),
-              a.attribute("data-opened", bool.to_string(model.opened)),
-              e.on_click(ToggleOpen),
-            ],
-            [
-              h.span([], [
-                element.text(
-                  case model.opened {
-                    True -> "Hide"
-                    False -> "Show"
-                  }
-                  <> " documentation",
-                ),
-              ]),
-              icons.arrow(),
-            ],
-          ),
+          case item.documentation, item.metadata.implementations {
+            "", option.None -> element.none()
+            _, _ ->
+              h.button(
+                [
+                  a.class("search-details-arrow-expand"),
+                  a.attribute("data-opened", bool.to_string(model.opened)),
+                  e.on_click(ToggleOpen),
+                ],
+                [
+                  h.span([], [
+                    element.text(
+                      case model.opened {
+                        True -> "Hide"
+                        False -> "Show"
+                      }
+                      <> " documentation",
+                    ),
+                  ]),
+                  icons.arrow(),
+                ],
+              )
+          },
         ]),
         h.div([a.class("search-body")], [
           h.code([a.class("signature")], signature.view_signature(item)),

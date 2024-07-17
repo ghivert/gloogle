@@ -112,7 +112,7 @@ pub fn update_search_results(
 pub fn update_search_results_filter(model: Model) {
   let default_key =
     model.submitted_input <> string.inspect([False, False, False, False])
-  let filters =
+  let or_filters =
     [
       #(model.keep_functions, fn(s: search_result.SearchResult) {
         s.kind == kind.Function
@@ -123,6 +123,11 @@ pub fn update_search_results_filter(model: Model) {
       #(model.keep_aliases, fn(s: search_result.SearchResult) {
         s.kind == kind.TypeAlias
       }),
+    ]
+    |> list.filter(fn(a) { a.0 })
+    |> list.map(pair.second)
+  let and_filters =
+    [
       #(model.keep_documented, fn(s: search_result.SearchResult) {
         string.length(s.documentation) > 0
       }),
@@ -130,8 +135,14 @@ pub fn update_search_results_filter(model: Model) {
     |> list.filter(fn(a) { a.0 })
     |> list.map(pair.second)
   let filter = fn(s) {
-    use <- bool.guard(when: list.is_empty(filters), return: True)
-    list.any(filters, function.apply1(_, s))
+    case list.is_empty(or_filters) {
+      True -> True
+      False -> list.any(or_filters, function.apply1(_, s))
+    }
+    && case list.is_empty(and_filters) {
+      True -> True
+      False -> list.any(and_filters, function.apply1(_, s))
+    }
   }
   let key =
     model.submitted_input

@@ -2,7 +2,6 @@
 import gleamHljs from '@gleam-lang/highlight.js-gleam'
 import hljs from 'highlight.js/lib/core'
 import plaintext from 'highlight.js/lib/languages/plaintext'
-import './all.css'
 // @ts-ignore
 import { main } from './frontend.gleam'
 

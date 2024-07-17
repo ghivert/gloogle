@@ -77,7 +77,7 @@ fn update(model, msg) {
 
 fn view(model: Model) -> element.Element(Msg) {
   case model.item {
-    option.None -> element.none()
+    option.None -> element.text("bloup")
     option.Some(item) -> {
       let package_id = item.package_name <> "@" <> item.version
       let id = package_id <> "-" <> item.module_name <> "-" <> item.name

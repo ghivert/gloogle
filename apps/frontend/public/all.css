@@ -1,3 +1,11 @@
+search-result:has(:not(:defined)) {
+  visibility: hidden;
+}
+
+cache-signatures:has(:not(:defined)) {
+  visibility: hidden;
+}
+
 .implementations-pill-container {
   display: flex;
   align-items: center;
@@ -125,6 +133,12 @@
   display: block;
   line-height: 1.6;
   overflow: auto;
+}
+
+@media (max-width: 700px) {
+  .signature {
+    font-size: 14px;
+  }
 }
 
 .documentation {

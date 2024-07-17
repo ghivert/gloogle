@@ -74,36 +74,25 @@ function makeComponent(init, update, view, on_attribute_change) {
       })
     }
 
-    connectedCallback() {
-      new Promise(async resolve => {
-        const links = [...document.querySelectorAll('link')].map(async link => {
-          if (link.rel === 'stylesheet') {
-            const res = await fetch(link.href)
-            const content = await res.text()
-            const styleSheet = new CSSStyleSheet()
-            await styleSheet.replace(content)
-            this.#shadow.adoptedStyleSheets.push(styleSheet)
-          }
+    async connectedCallback() {
+      await Promise.all(
+        [...document.styleSheets].map(stylesheet => {
+          return new Promise(resolve => {
+            const style = document.importNode(stylesheet.ownerNode, true)
+            style.addEventListener('load', resolve)
+            this.#shadow.appendChild(style)
+          })
         })
-        const styles = [...document.querySelectorAll('style')].map(
-          async style => {
-            const styleSheet = new CSSStyleSheet()
-            await styleSheet.replace(style.innerHTML)
-            this.#shadow.adoptedStyleSheets.push(styleSheet)
-          }
-        )
-        await Promise.all([...links, ...styles])
-        resolve()
-      }).then(() => {
-        this.#application = new LustreClientApplication(
-          init(),
-          update,
-          view,
-          this.#root,
-          true
-        )
-        this.#shadow.append(this.#root)
-      })
+      )
+
+      this.#application = new LustreClientApplication(
+        init(),
+        update,
+        view,
+        this.#root,
+        true
+      )
+      this.#shadow.append(this.#root)
     }
 
     attributeChangedCallback(key, _, next) {

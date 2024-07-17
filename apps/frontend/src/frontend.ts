@@ -4,6 +4,10 @@ import hljs from 'highlight.js/lib/core'
 import plaintext from 'highlight.js/lib/languages/plaintext'
 // @ts-ignore
 import { main } from './frontend.gleam'
+import './stylesheets/all.css'
+import './stylesheets/hljs-theme.css'
+import './stylesheets/main.css'
+import './stylesheets/normalize.css'
 
 // @ts-ignore
 Element.prototype._attachShadow = Element.prototype.attachShadow

@@ -37,6 +37,7 @@ cache-signatures:has(:not(:defined)) {
 .search-results-wrapper {
   display: grid;
   padding-right: 48px;
+  padding-bottom: 24px;
   gap: 36px;
   grid-template-columns: min-content 1fr;
   justify-items: center;

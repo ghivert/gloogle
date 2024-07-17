@@ -1,0 +1,4 @@
+/*.css
+cache-control: max-age=86400
+cache-control: public
+cache-control: must-revalidate

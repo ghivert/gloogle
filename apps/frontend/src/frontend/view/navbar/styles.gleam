@@ -2,7 +2,7 @@ import frontend/colors/palette
 import frontend/view/body/styles as body_styles
 import gleam/bool
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/element as l
 import sketch/media
 import sketch/size.{px, vw}
 
@@ -58,7 +58,6 @@ pub fn navbar(transparent: Bool, attributes, children) {
   l.dynamic("nav", attributes, children, id, [
     s.position("sticky"),
     s.top(px(0)),
-    s.display("flex"),
     s.align_items("center"),
     s.justify_content("space-between"),
     s.grid_area("navbar"),
@@ -70,12 +69,15 @@ pub fn navbar(transparent: Bool, attributes, children) {
     }),
     s.height(px(130)),
     s.z_index(1000),
+    s.display("none"),
     s.media(media.max_width(px(700)), [
+      s.display("flex"),
       s.padding_left(px(24)),
       s.padding_right(px(24)),
       s.gap(px(24)),
       s.max_width(vw(100)),
-      s.height(px(115)),
+      s.height_("unset"),
+      s.padding_("24px"),
     ]),
   ])
 }
@@ -91,5 +93,5 @@ pub fn navbar_search(attributes, children) {
 }
 
 pub fn title(a, c) {
-  l.memo("div", a, c, [s.media(media.max_width(px(700)), [s.display("none")])])
+  l.memo("div", a, c, [])
 }

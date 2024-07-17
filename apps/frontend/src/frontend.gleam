@@ -5,6 +5,7 @@ import data/search_result
 import frontend/router
 import frontend/view
 import frontend/view/body/cache
+import frontend/view/body/search_result as sr
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
@@ -44,10 +45,11 @@ pub fn api_endpoint() {
 
 pub fn main() {
   let debugger_ = case is_dev() {
+    True -> Error(Nil)
     False -> Error(Nil)
-    True ->
-      tardis.single("Gloogle")
-      |> result.nil_error()
+    // True ->
+    //   tardis.single("Gloogle")
+    //   |> result.nil_error()
   }
 
   let assert Ok(cache) =
@@ -65,6 +67,7 @@ pub fn main() {
   }
 
   let assert Ok(_) = lustre.register(cache.component(), "cache-signatures")
+  let assert Ok(_) = sr.setup()
 
   let assert Ok(_) =
     view.view
@@ -106,6 +109,26 @@ fn update(model: Model, msg: Msg) {
     msg.SearchResults(input, search_results) ->
       handle_search_results(model, input, search_results)
     msg.Trendings(trendings) -> handle_trendings(model, trendings)
+    msg.OnCheckFilter(msg.Functions, value) -> #(
+      model.Model(..model, keep_functions: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
+    msg.OnCheckFilter(msg.Types, value) -> #(
+      model.Model(..model, keep_types: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
+    msg.OnCheckFilter(msg.Aliases, value) -> #(
+      model.Model(..model, keep_aliases: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
+    msg.OnCheckFilter(msg.Documented, value) -> #(
+      model.Model(..model, keep_documented: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
   }
 }
 

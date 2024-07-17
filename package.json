@@ -1,0 +1,19 @@
+{
+  "name": "gloogle",
+  "packageManager": "yarn@4.2.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -c red.bold,blue.bold yarn:backend:dev yarn:frontend:dev"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "concurrently": "^8.2.2",
+    "prettier": "^3.3.3"
+  },
+  "dependencies": {
+    "@chouqueth/gleam": "^1.3.2"
+  }
+}

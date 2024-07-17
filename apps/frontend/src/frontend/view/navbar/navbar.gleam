@@ -25,11 +25,8 @@ pub fn navbar(model: Model) {
       router.Search(_) | router.Trending ->
         s.navbar_search([], [
           s.navbar_search_title([a.href("/")], [
-            s.search_lucy([a.src("/images/lucy.svg")]),
+            s.search_lucy(40, [a.src("/images/lucy.svg")]),
             s.title([], [h.text("Gloogle")]),
-          ]),
-          s.search_input_wrapper([e.on_submit(msg.SubmitSearch)], [
-            search_input.view(model.loading, model.input, False),
           ]),
         ])
     },

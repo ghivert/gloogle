@@ -23,9 +23,9 @@ hue-6-2: #e6c07b
   overflow-x: auto;
   padding: 12px;
   color: #abb2bf;
-  background: #1e1e1e;
-  border-radius: 6px;
-  border: 1px solid #4e4e4c;
+  background: rgba(254, 254, 252, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(254, 254, 252, 0.1);
   line-height: 1.4;
   font-size: 14px;
 }

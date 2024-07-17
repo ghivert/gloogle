@@ -1,7 +1,6 @@
 import data/msg
 import data/search_result
 import data/signature.{type Parameter, type Type, Parameter}
-import frontend/view/body/styles as s
 import frontend/view/helpers
 import frontend/view/types as t
 import gleam/bool
@@ -38,7 +37,7 @@ fn render_parameters(count: Int) {
   }
 }
 
-fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
+fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
   case type_ {
     signature.Tuple(width, elements) -> {
       let inline = width + indent <= 80
@@ -120,8 +119,9 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
           case version {
             None -> t.type_(name)
             Some(version) ->
-              s.named_type_button(
+              h.a(
                 [
+                  a.class("named-type-button"),
                   a.target("_blank"),
                   a.rel("noreferrer"),
                   a.href(helpers.hexdocs_link(
@@ -214,9 +214,7 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
   ])
 }
 
-pub fn view_signature(
-  item: search_result.SearchResult,
-) -> List(el.Element(msg.Msg)) {
+pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg)) {
   case item.json_signature {
     signature.TypeDefinition(parameters, constructors) ->
       list.concat([

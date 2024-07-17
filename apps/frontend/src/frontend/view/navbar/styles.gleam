@@ -72,12 +72,10 @@ pub fn navbar(transparent: Bool, attributes, children) {
     s.display("none"),
     s.media(media.max_width(px(700)), [
       s.display("flex"),
-      s.padding_left(px(24)),
-      s.padding_right(px(24)),
       s.gap(px(24)),
       s.max_width(vw(100)),
       s.height_("unset"),
-      s.padding_("24px"),
+      s.padding_("18px 24px"),
     ]),
   ])
 }

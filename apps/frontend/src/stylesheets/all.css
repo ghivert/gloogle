@@ -129,6 +129,12 @@ cache-signatures:has(:not(:defined)) {
   border: 1px solid rgba(254, 254, 252, 0.1);
 }
 
+@media (max-width: 700px) {
+  .search-body {
+    padding: 9px 12px;
+  }
+}
+
 .signature {
   white-space: pre-wrap;
   display: block;
@@ -476,6 +482,12 @@ cache-signatures:has(:not(:defined)) {
   max-width: 800px;
   width: 100%;
   overflow: hidden;
+}
+
+@media (max-width: 700px) {
+  .items-wrapper {
+    gap: 18px;
+  }
 }
 
 .named-type-button {

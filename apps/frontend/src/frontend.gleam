@@ -129,6 +129,11 @@ fn update(model: Model, msg: Msg) {
         |> model.update_search_results_filter,
       effect.none(),
     )
+    msg.OnCheckFilter(msg.ShowOldPackages, value) -> #(
+      model.Model(..model, show_old_packages: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
   }
 }
 

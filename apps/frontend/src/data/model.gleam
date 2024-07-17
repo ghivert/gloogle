@@ -7,6 +7,7 @@ import frontend/view/body/cache
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/function
+import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{type Option}
@@ -32,6 +33,7 @@ pub type Model {
     keep_types: Bool,
     keep_aliases: Bool,
     keep_documented: Bool,
+    show_old_packages: Bool,
   )
 }
 
@@ -51,6 +53,7 @@ pub fn init() {
     keep_types: False,
     keep_aliases: False,
     keep_documented: False,
+    show_old_packages: False,
   )
 }
 
@@ -84,7 +87,7 @@ pub fn update_search_results(
   key: String,
   search_results: SearchResults,
 ) {
-  let key = key <> string.inspect([False, False, False, False])
+  let key = key <> string.inspect([False, False, False, False, True])
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> model.view_cache
@@ -107,11 +110,83 @@ pub fn update_search_results(
     index: index,
     view_cache: view_cache,
   )
+  |> update_search_results_filter
+}
+
+fn is_higher(new: List(Int), old: List(Int)) {
+  case list.first(new), list.first(old) {
+    Error(_), Error(_) -> True
+    Ok(_), Error(_) -> True
+    Error(_), Ok(_) -> False
+    Ok(part1), Ok(part2) ->
+      case part1 == part2 {
+        False -> part1 > part2
+        True ->
+          is_higher(
+            list.rest(new) |> result.unwrap([]),
+            list.rest(old) |> result.unwrap([]),
+          )
+      }
+  }
+}
+
+fn extract_package_version(
+  acc: Dict(String, String),
+  search_result: search_result.SearchResult,
+) -> Dict(String, String) {
+  case dict.get(acc, search_result.package_name) {
+    Error(_) ->
+      dict.insert(acc, search_result.package_name, search_result.version)
+    Ok(content) -> {
+      let old =
+        string.split(content, ".")
+        |> list.map(int.parse)
+        |> list.map(result.unwrap(_, 0))
+      let new =
+        string.split(search_result.version, ".")
+        |> list.map(int.parse)
+        |> list.map(result.unwrap(_, 0))
+      case new |> is_higher(old) {
+        True ->
+          dict.insert(acc, search_result.package_name, search_result.version)
+        False -> acc
+      }
+    }
+  }
 }
 
 pub fn update_search_results_filter(model: Model) {
   let default_key =
-    model.submitted_input <> string.inspect([False, False, False, False])
+    model.submitted_input <> string.inspect([False, False, False, False, True])
+  let show_old = case model.show_old_packages {
+    True -> fn(_) { True }
+    False -> {
+      let last_versions = case dict.get(model.search_results, default_key) {
+        Error(_) -> dict.new()
+        Ok(search_results) -> {
+          case search_results {
+            search_result.Start | search_result.InternalServerError ->
+              dict.new()
+            search_result.SearchResults(t, e, m, s, d, mods) -> {
+              dict.new()
+              |> list.fold(t, _, extract_package_version)
+              |> list.fold(e, _, extract_package_version)
+              |> list.fold(m, _, extract_package_version)
+              |> list.fold(s, _, extract_package_version)
+              |> list.fold(d, _, extract_package_version)
+              |> list.fold(mods, _, extract_package_version)
+            }
+          }
+        }
+      }
+      fn(a: search_result.SearchResult) {
+        case dict.get(last_versions, a.package_name) {
+          Error(_) -> False
+          Ok(content) -> content == a.version
+        }
+      }
+    }
+  }
   let or_filters =
     [
       #(model.keep_functions, fn(s: search_result.SearchResult) {
@@ -143,6 +218,7 @@ pub fn update_search_results_filter(model: Model) {
       True -> True
       False -> list.any(and_filters, function.apply1(_, s))
     }
+    && show_old(s)
   }
   let key =
     model.submitted_input
@@ -151,6 +227,7 @@ pub fn update_search_results_filter(model: Model) {
       model.keep_types,
       model.keep_aliases,
       model.keep_documented,
+      model.show_old_packages,
     ])
   case dict.get(model.search_results, default_key) {
     Error(_) -> model
@@ -209,6 +286,7 @@ pub fn reset(model: Model) {
     keep_types: False,
     keep_aliases: False,
     keep_documented: False,
+    show_old_packages: False,
   )
 }
 

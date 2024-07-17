@@ -261,6 +261,29 @@ fn sidebar(model: Model) {
         ]),
         h.div([a.class("sidebar-filter-name")], [el.text("Documented")]),
       ]),
+      h.label([a.class("sidebar-filter-line")], [
+        el.fragment([
+          h.div(
+            [
+              a.class("sidebar-checkbox-1"),
+              a.style([
+                #("background", case model.show_old_packages {
+                  True -> "#ffaff3"
+                  False -> "rgba(254, 254, 252, .1)"
+                }),
+              ]),
+            ],
+            [],
+          ),
+          h.input([
+            a.class("sidebar-checkbox-2"),
+            a.type_("checkbox"),
+            a.checked(model.show_old_packages),
+            e.on_check(msg.OnCheckFilter(msg.ShowOldPackages, _)),
+          ]),
+        ]),
+        h.div([a.class("sidebar-filter-name")], [el.text("Show old versions")]),
+      ]),
     ]),
     h.div([a.class("sidebar-spacer")], []),
     h.div([a.class("sidebar-links")], [
@@ -304,6 +327,7 @@ pub fn body(model: Model) {
           model.keep_types,
           model.keep_aliases,
           model.keep_documented,
+          model.show_old_packages,
         ])
       el.fragment([
         sidebar(model),

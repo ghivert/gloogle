@@ -8,6 +8,7 @@ pub type Filter {
   Types
   Aliases
   Documented
+  ShowOldPackages
 }
 
 pub type Msg {

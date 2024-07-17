@@ -3,6 +3,13 @@ import data/search_result.{type SearchResults}
 import frontend/router
 import lustre_http as http
 
+pub type Filter {
+  Functions
+  Types
+  Aliases
+  Documented
+}
+
 pub type Msg {
   None
   SubmitSearch
@@ -13,4 +20,5 @@ pub type Msg {
   Reset
   ScrollTo(String)
   OnRouteChange(router.Route)
+  OnCheckFilter(Filter, Bool)
 }

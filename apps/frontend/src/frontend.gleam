@@ -106,6 +106,26 @@ fn update(model: Model, msg: Msg) {
     msg.SearchResults(input, search_results) ->
       handle_search_results(model, input, search_results)
     msg.Trendings(trendings) -> handle_trendings(model, trendings)
+    msg.OnCheckFilter(msg.Functions, value) -> #(
+      model.Model(..model, keep_functions: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
+    msg.OnCheckFilter(msg.Types, value) -> #(
+      model.Model(..model, keep_types: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
+    msg.OnCheckFilter(msg.Aliases, value) -> #(
+      model.Model(..model, keep_aliases: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
+    msg.OnCheckFilter(msg.Documented, value) -> #(
+      model.Model(..model, keep_documented: value)
+        |> model.update_search_results_filter,
+      effect.none(),
+    )
   }
 }
 

@@ -1,6 +1,6 @@
 import frontend/colors/palette
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/element as l
 import sketch/size.{px}
 
 pub fn footer(attributes, children) {

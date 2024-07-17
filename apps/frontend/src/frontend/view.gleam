@@ -6,7 +6,7 @@ import frontend/view/footer/footer
 import frontend/view/navbar/navbar
 import lustre/element as el
 import sketch
-import sketch/lustre/extra as l
+import sketch/lustre/element as l
 import sketch/size
 
 fn layout(attributes, children) {

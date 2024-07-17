@@ -6,7 +6,6 @@ import frontend/colors/palette
 import frontend/icons
 import frontend/strings as frontend_strings
 import frontend/view/body/signature
-import frontend/view/body/styles as s
 import frontend/view/documentation
 import frontend/view/types as t
 import gleam/bool
@@ -20,6 +19,8 @@ import lustre/effect as eff
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
+import sketch/lustre as sketch_lustre
+import sketch/options as sketch_options
 
 fn implementations_pill(implementations: implementations.Implementations) {
   case implementations {
@@ -32,13 +33,19 @@ fn implementations_pill(implementations: implementations.Implementations) {
       ]
       |> list.filter(fn(item) { item.1 })
       |> list.map(fn(item) {
-        let #(content, _, background, color) = item
-        s.implementations_pill_container([], [
-          s.implementations_pill(background, color, [], []),
+        let #(content, _, background, _) = item
+        h.div([a.class("implementations-pill-container")], [
+          h.div(
+            [
+              a.class("implementations-pill"),
+              a.style([#("background", background)]),
+            ],
+            [],
+          ),
           h.text(content),
         ])
       })
-      |> s.implementations_pill_wrapper([], _)
+      |> h.div([a.class("implementations-pill-wrapper")], _)
   }
 }
 
@@ -47,10 +54,11 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
     list.map(search_results, fn(item) {
       let package_id = item.package_name <> "@" <> item.version
       let id = package_id <> "-" <> item.module_name <> "-" <> item.name
-      s.search_result([a.id(id)], [
-        s.search_details([], [
-          s.qualified_name(
+      h.div([a.class("search-result"), a.id(id)], [
+        h.div([a.class("search-details")], [
+          h.a(
             [
+              a.class("qualified-name"),
               a.target("_blank"),
               a.rel("noreferrer"),
               a.href(search_result.hexdocs_link(item)),
@@ -64,19 +72,24 @@ fn view_search_results(search_results: List(search_result.SearchResult)) {
               t.fun(item.name),
             ],
           ),
-          s.external_icon_wrapper([], [icons.external_link()]),
+          h.div([a.class("external-icon-wrapper")], [icons.external_link()]),
         ]),
-        s.search_body([], [s.signature([], signature.view_signature(item))]),
+        h.div([a.class("search-body")], [
+          h.code([a.class("signature")], signature.view_signature(item)),
+        ]),
         item.metadata.implementations
           |> option.map(implementations_pill)
           |> option.unwrap(el.none()),
         case item.documentation {
           "" -> el.none()
-          _ -> s.documentation([], [documentation.view(item.documentation)])
+          _ ->
+            h.div([a.class("documentation")], [
+              documentation.view(item.documentation),
+            ])
         },
       ])
     })
-    |> list.intersperse(s.search_result_separator())
+    |> list.intersperse(h.div([a.class("search-result-separator")], []))
   })
 }
 
@@ -84,19 +97,21 @@ fn sidebar(
   search: String,
   index: List(#(#(String, String), List(#(String, String)))),
 ) {
-  s.sidebar_wrapper([], [
-    s.sidebar_wrapper_title([], [el.text("Packages for “" <> search <> "”")]),
+  h.div([a.class("sidebar-wrapper")], [
+    h.div([a.class("sidebar-wrapper-title")], [
+      el.text("Packages for “" <> search <> "”"),
+    ]),
     ..{
       use #(package, modules) <- list.map(index)
-      s.sidebar_package_wrapper([], [
-        s.sidebar_package_name([], [
+      h.div([a.class("sidebar-package-wrapper")], [
+        h.div([a.class("sidebar-package-name")], [
           h.text(package.0),
           t.dark_white("@" <> package.1),
         ]),
         ..list.map(modules, fn(module) {
           let #(module, name) = module
           let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
-          s.sidebar_module_name([e.on_click(msg.ScrollTo(id))], [
+          h.div([a.class("sidebar-module-name"), e.on_click(msg.ScrollTo(id))], [
             t.keyword(module),
             h.text("."),
             t.fun(name),
@@ -110,7 +125,7 @@ fn sidebar(
 fn maybe_separator(l) {
   case list.is_empty(l) {
     True -> el.none()
-    False -> s.search_result_separator()
+    False -> h.div([a.class("search-result-separator")], [])
   }
 }
 
@@ -124,10 +139,12 @@ pub fn cache_search_results(
   docs_searches: List(search_result.SearchResult),
   modules_searches: List(search_result.SearchResult),
 ) {
-  s.search_results_wrapper([], [
+  h.div([a.class("search-results-wrapper")], [
     sidebar(search, index),
-    s.items_wrapper([], [
-      s.matches_titles([], [s.matches_title([], [h.text("Search results")])]),
+    h.div([a.class("items-wrapper")], [
+      h.div([a.class("matches-titles")], [
+        h.div([a.class("matches-title")], [h.text("Search results")]),
+      ]),
       view_search_results(types),
       maybe_separator(types),
       view_search_results(exact),

@@ -1,7 +1,6 @@
 import data/msg
 import data/search_result
 import data/signature.{type Parameter, type Type, Parameter}
-import frontend/view/body/styles as s
 import frontend/view/helpers
 import frontend/view/types as t
 import gleam/bool
@@ -120,8 +119,9 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg.Msg)) {
           case version {
             None -> t.type_(name)
             Some(version) ->
-              s.named_type_button(
+              h.a(
                 [
+                  a.class("named-type-button"),
                   a.target("_blank"),
                   a.rel("noreferrer"),
                   a.href(helpers.hexdocs_link(

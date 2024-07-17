@@ -2,7 +2,7 @@ import frontend/colors/palette
 import frontend/view/body/styles as body_styles
 import gleam/bool
 import sketch as s
-import sketch/lustre/extra as l
+import sketch/lustre/element as l
 import sketch/media
 import sketch/size.{px, vw}
 

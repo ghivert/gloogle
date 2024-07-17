@@ -5,10 +5,10 @@ import frontend/icons
 import frontend/images
 import frontend/router
 import frontend/strings as frontend_strings
-import frontend/view/body/styles as s
 import frontend/view/search_input/search_input
 import gleam/dict
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
@@ -27,13 +27,17 @@ fn view_search_input(model: Model) {
     |> string.length()
     |> fn(input) { input != 0 }
   }
-  s.search_wrapper([e.on_submit(msg.SubmitSearch)], [
-    s.search_title_wrapper([], [
-      s.search_title([], [
-        s.search_lucy(40, [a.src("/images/lucy.svg")]),
-        s.search_title_with_hint([], [
+  h.form([a.class("search-wrapper"), e.on_submit(msg.SubmitSearch)], [
+    h.div([a.class("search-title-wrapper")], [
+      h.div([a.class("search-title")], [
+        h.img([
+          a.class("search-lucy"),
+          a.style([#("width", "40px")]),
+          a.src("/images/lucy.svg"),
+        ]),
+        h.div([a.class("search-title-with-hint")], [
           h.text("Gloogle"),
-          s.pre_alpha_title([], [h.text("Alpha")]),
+          h.div([a.class("pre-alpha-title")], [h.text("Alpha")]),
         ]),
       ]),
       h.text(frontend_strings.gloogle_description),
@@ -44,7 +48,8 @@ fn view_search_input(model: Model) {
       show_filters: True,
       small: False,
     ),
-    s.search_submit([
+    h.input([
+      a.class("search-submit"),
       a.type_("submit"),
       a.value("Submit"),
       a.disabled(model.loading || !has_content),
@@ -57,82 +62,83 @@ fn empty_state(
   title title: String,
   content content: String,
 ) {
-  s.empty_state([], [
-    s.empty_state_lucy([a.src(image)]),
-    s.empty_state_titles([], [
+  h.div([a.class("empty-state")], [
+    h.img([a.class("empty-state-lucy"), a.src(image)]),
+    h.div([a.class("empty-state-titles")], [
       h.div([], [h.text(title)]),
-      s.empty_state_subtitle([], [h.text(content)]),
+      h.div([a.class("empty-state-subtitle")], [h.text(content)]),
     ]),
   ])
 }
 
 pub fn view_trending(model: Model) {
-  case model.trendings {
-    None ->
-      empty_state(
-        image: images.loading,
-        title: "Loading…",
-        content: frontend_strings.loading,
-      )
-    Some([]) ->
-      empty_state(
-        image: images.internal_error,
-        title: "Internal server error",
-        content: frontend_strings.internal_server_error,
-      )
-    Some(trendings) ->
-      s.trendings_wrapper([], [
-        s.trendings_title([], [h.text("Trending")]),
-        s.trendings_grid([], {
-          use item <- list.map(trendings)
-          s.search_result([], [
-            s.search_details([], [
-              s.search_details_title([], [h.text(item.name)]),
-              s.qualified_name([], [
-                item.repository
-                  |> option.map(fn(r) {
-                    h.a([a.href(r), a.target("_blank"), a.rel("noreferrer")], [
-                      h.text("Code"),
-                    ])
-                  })
-                  |> option.unwrap(el.none()),
-                item.documentation
-                  |> option.map(fn(d) {
-                    h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
-                      h.text("Docs"),
-                    ])
-                  })
-                  |> option.unwrap(el.none()),
-                item.hex_url
-                  |> option.map(fn(d) {
-                    h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
-                      h.text("Hex"),
-                    ])
-                  })
-                  |> option.unwrap(el.none()),
-              ]),
-            ]),
-            s.search_body([], [
-              item.description
-                |> option.map(fn(d) { h.div([], [h.text(d)]) })
-                |> option.unwrap(el.none()),
-              s.documentation([], [
-                s.documentation_links([], [
-                  item.licenses
-                    |> list.map(fn(d) { h.div([], [h.text(d)]) })
-                    |> list.prepend(h.text("Licences "))
-                    |> s.licenses([], _),
-                  h.div([], [
-                    h.text("Stars "),
-                    h.text(int.to_string(item.popularity)),
-                  ]),
-                ]),
-              ]),
-            ]),
-          ])
-        }),
-      ])
-  }
+  el.none()
+  // case model.trendings {
+  //   None ->
+  //     empty_state(
+  //       image: images.loading,
+  //       title: "Loading…",
+  //       content: frontend_strings.loading,
+  //     )
+  //   Some([]) ->
+  //     empty_state(
+  //       image: images.internal_error,
+  //       title: "Internal server error",
+  //       content: frontend_strings.internal_server_error,
+  //     )
+  //   Some(trendings) ->
+  //     s.trendings_wrapper([], [
+  //       s.trendings_title([], [h.text("Trending")]),
+  //       s.trendings_grid([], {
+  //         use item <- list.map(trendings)
+  //         s.search_result([], [
+  //           s.search_details([], [
+  //             s.search_details_title([], [h.text(item.name)]),
+  //             s.qualified_name([], [
+  //               item.repository
+  //                 |> option.map(fn(r) {
+  //                   h.a([a.href(r), a.target("_blank"), a.rel("noreferrer")], [
+  //                     h.text("Code"),
+  //                   ])
+  //                 })
+  //                 |> option.unwrap(el.none()),
+  //               item.documentation
+  //                 |> option.map(fn(d) {
+  //                   h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
+  //                     h.text("Docs"),
+  //                   ])
+  //                 })
+  //                 |> option.unwrap(el.none()),
+  //               item.hex_url
+  //                 |> option.map(fn(d) {
+  //                   h.a([a.href(d), a.target("_blank"), a.rel("noreferrer")], [
+  //                     h.text("Hex"),
+  //                   ])
+  //                 })
+  //                 |> option.unwrap(el.none()),
+  //             ]),
+  //           ]),
+  //           s.search_body([], [
+  //             item.description
+  //               |> option.map(fn(d) { h.div([], [h.text(d)]) })
+  //               |> option.unwrap(el.none()),
+  //             s.documentation([], [
+  //               s.documentation_links([], [
+  //                 item.licenses
+  //                   |> list.map(fn(d) { h.div([], [h.text(d)]) })
+  //                   |> list.prepend(h.text("Licences "))
+  //                   |> s.licenses([], _),
+  //                 h.div([], [
+  //                   h.text("Stars "),
+  //                   h.text(int.to_string(item.popularity)),
+  //                 ]),
+  //               ]),
+  //             ]),
+  //           ]),
+  //         ])
+  //       }),
+  //     ])
+  // }
 }
 
 fn on_coerce(value: a) {
@@ -143,12 +149,16 @@ fn on_coerce(value: a) {
 fn coerce_event(value: a) -> b
 
 fn sidebar(model: Model) {
-  s.search_sidebar([], [
-    s.sidebar_title([a.href("/")], [
-      s.search_lucy(32, [a.src("/images/lucy.svg")]),
-      s.sidebar_title_inside([], [h.text("Gloogle")]),
+  h.main([a.class("search-sidebar")], [
+    h.a([a.class("sidebar-title"), a.href("/")], [
+      h.img([
+        a.class("search-lucy"),
+        a.style([#("width", "32px")]),
+        a.src("/images/lucy.svg"),
+      ]),
+      h.form([a.class("sidebar-title-inside")], [h.text("Gloogle")]),
     ]),
-    s.form_wrapper([e.on_submit(msg.SubmitSearch)], [
+    h.form([e.on_submit(msg.SubmitSearch)], [
       search_input.view(
         model.loading,
         model.input,
@@ -156,57 +166,149 @@ fn sidebar(model: Model) {
         small: True,
       ),
     ]),
-    s.sidebar_filter([], [el.text("Filters")]),
-    s.sidebar_filters([], [
-      s.sidebar_filter_line([], [
-        s.sidebar_checkbox([]),
-        s.sidebar_filter_name([], [el.text("Functions")]),
+    h.div([a.class("sidebar-filter")], [el.text("Filters")]),
+    h.div([a.class("sidebar-filters")], [
+      h.label([a.class("sidebar-filter-line")], [
+        el.fragment([
+          h.div(
+            [
+              a.class("sidebar-checkbox-1"),
+              a.style([
+                #("background", case model.keep_functions {
+                  True -> "#ffaff3"
+                  False -> "rgba(254, 254, 252, .1)"
+                }),
+              ]),
+            ],
+            [],
+          ),
+          h.input([
+            a.class("sidebar-checkbox-2"),
+            a.type_("checkbox"),
+            a.checked(model.keep_functions),
+            e.on_check(msg.OnCheckFilter(msg.Functions, _)),
+          ]),
+        ]),
+        h.div([a.class("sidebar-filter-name")], [el.text("Functions")]),
       ]),
-      s.sidebar_filter_line([], [
-        s.sidebar_checkbox([]),
-        s.sidebar_filter_name([], [el.text("Types")]),
+      h.label([a.class("sidebar-filter-line")], [
+        el.fragment([
+          h.div(
+            [
+              a.class("sidebar-checkbox-1"),
+              a.style([
+                #("background", case model.keep_types {
+                  True -> "#ffaff3"
+                  False -> "rgba(254, 254, 252, .1)"
+                }),
+              ]),
+            ],
+            [],
+          ),
+          h.input([
+            a.class("sidebar-checkbox-2"),
+            a.type_("checkbox"),
+            a.checked(model.keep_types),
+            e.on_check(msg.OnCheckFilter(msg.Types, _)),
+          ]),
+        ]),
+        h.div([a.class("sidebar-filter-name")], [el.text("Types")]),
       ]),
-      s.sidebar_filter_line([], [
-        s.sidebar_checkbox([]),
-        s.sidebar_filter_name([], [el.text("Types aliases")]),
+      h.label([a.class("sidebar-filter-line")], [
+        el.fragment([
+          h.div(
+            [
+              a.class("sidebar-checkbox-1"),
+              a.style([
+                #("background", case model.keep_aliases {
+                  True -> "#ffaff3"
+                  False -> "rgba(254, 254, 252, .1)"
+                }),
+              ]),
+            ],
+            [],
+          ),
+          h.input([
+            a.class("sidebar-checkbox-2"),
+            a.type_("checkbox"),
+            a.checked(model.keep_aliases),
+            e.on_check(msg.OnCheckFilter(msg.Aliases, _)),
+          ]),
+        ]),
+        h.div([a.class("sidebar-filter-name")], [el.text("Aliases")]),
       ]),
-      s.filter_separator([], []),
-      s.sidebar_filter_line([], [
-        s.sidebar_checkbox([]),
-        s.sidebar_filter_name([], [el.text("Documented")]),
+      h.div([a.class("filter-separator")], []),
+      h.label([a.class("sidebar-filter-line")], [
+        el.fragment([
+          h.div(
+            [
+              a.class("sidebar-checkbox-1"),
+              a.style([
+                #("background", case model.keep_documented {
+                  True -> "#ffaff3"
+                  False -> "rgba(254, 254, 252, .1)"
+                }),
+              ]),
+            ],
+            [],
+          ),
+          h.input([
+            a.class("sidebar-checkbox-2"),
+            a.type_("checkbox"),
+            a.checked(model.keep_documented),
+            e.on_check(msg.OnCheckFilter(msg.Documented, _)),
+          ]),
+        ]),
+        h.div([a.class("sidebar-filter-name")], [el.text("Documented")]),
       ]),
     ]),
-    s.sidebar_spacer([], []),
-    s.sidebar_links([], [
-      s.sidebar_link_wrapper([], [
-        s.sidebar_icon([], [icons.trends()]),
-        s.sidebar_link([], [el.text("Trends")]),
-      ]),
-      s.sidebar_link_wrapper([], [
-        s.sidebar_icon([], [icons.shortcuts()]),
-        s.sidebar_link([], [el.text("Shortcuts")]),
-      ]),
-      s.sidebar_link_wrapper([], [
-        s.sidebar_icon([], [icons.gift()]),
-        s.sidebar_link([], [el.text("Resources")]),
-      ]),
-      s.sidebar_link_wrapper([], [
-        s.sidebar_icon([], [icons.heart()]),
-        s.sidebar_link([], [el.text("Sponsor")]),
-      ]),
+    h.div([a.class("sidebar-spacer")], []),
+    h.div([a.class("sidebar-links")], [
+      // s.sidebar_link_wrapper([], [
+      //   s.sidebar_icon([], [icons.trends()]),
+      //   s.sidebar_link([], [el.text("Trends")]),
+      // ]),
+      // s.sidebar_link_wrapper([], [
+      //   s.sidebar_icon([], [icons.shortcuts()]),
+      //   s.sidebar_link([], [el.text("Shortcuts")]),
+      // ]),
+      // s.sidebar_link_wrapper([], [
+      //   s.sidebar_icon([], [icons.gift()]),
+      //   s.sidebar_link([], [el.text("Resources")]),
+      // ]),
+      h.a(
+        [
+          a.class("sidebar-link-wrapper"),
+          a.href("https://github.com/sponsors/ghivert"),
+          a.target("_blank"),
+          a.rel("noreferrer noopener"),
+        ],
+        [
+          h.div([a.class("sidebar-icon")], [icons.heart()]),
+          h.div([a.class("sidebar-link")], [el.text("Sponsor")]),
+        ],
+      ),
     ]),
   ])
 }
 
 pub fn body(model: Model) {
   case model.route {
-    router.Home -> s.main([], [view_search_input(model)])
-    router.Trending -> s.main([], [view_trending(model)])
-    router.Search(_) ->
+    router.Home -> h.main([a.class("main")], [view_search_input(model)])
+    router.Trending -> h.main([a.class("main")], [view_trending(model)])
+    router.Search(_) -> {
+      let key =
+        model.submitted_input
+        <> string.inspect([
+          model.keep_functions,
+          model.keep_types,
+          model.keep_aliases,
+          model.keep_documented,
+        ])
       el.fragment([
         sidebar(model),
         case
-          dict.get(model.search_results, model.submitted_input)
+          dict.get(model.search_results, key)
           |> result.unwrap(search_result.Start)
         {
           search_result.Start ->
@@ -228,7 +330,7 @@ pub fn body(model: Model) {
               content: frontend_strings.retry_query,
             )
           search_result.SearchResults(_, _, _, _, _, _) -> {
-            dict.get(model.view_cache, model.submitted_input)
+            dict.get(model.view_cache, key)
             |> result.map(fn(content) {
               el.element(
                 "cache-signatures",
@@ -240,5 +342,6 @@ pub fn body(model: Model) {
           }
         },
       ])
+    }
   }
 }

@@ -187,7 +187,7 @@ pub fn search_title_() {
     s.display("flex"),
     s.align_items("center"),
     s.gap(px(12)),
-    s.color(palette.dark.white),
+    s.color("var(--text-color)"),
   ])
 }
 

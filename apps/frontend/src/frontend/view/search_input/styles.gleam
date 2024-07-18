@@ -45,7 +45,10 @@ pub fn search_input(loading, small, children) {
     s.gap(px(6)),
     s.border_radius(px(8)),
     s.color("var(--input-text-color)"),
-    s.background("var(--input-background)"),
+    s.background(case small {
+      False -> "var(--input-background)"
+      True -> "var(--dark-background)"
+    }),
     s.transition("padding .3s"),
     s.align_items("baseline"),
     s.padding(
@@ -83,8 +86,8 @@ pub fn filter_pills(attributes, children) {
 pub fn filter_pill(active: Bool, attributes, children) {
   let id = "filter_pill-active-" <> bool.to_string(active)
   l.dynamic("button", attributes, children, id, [
-    s.background(palette.dark.aged_plastic_yellow),
-    s.color(palette.dark.charcoal),
+    s.background("var(--secondary)"),
+    // s.color("var(--text-color)"),
     s.padding_("3px 12px"),
     s.border_radius(px(30)),
     s.font_size(px(12)),

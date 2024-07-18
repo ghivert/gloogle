@@ -17,14 +17,15 @@ body {
 
 :root {
   --background: rgb(252, 251, 245);
+  --dark-background: rgb(238, 237, 233);
   --card-background: #f6f6f6;
   --text-color: rgb(21, 21, 21);
+  --text-color-disabled: rgba(254, 254, 252, 0.5);
   --input-text-color: rgba(21, 21, 21, 0.6);
   --code-background: rgba(21, 21, 21, 0.05);
   --sidebar-background: rgba(255, 175, 243, 0.2);
   --border-color: rgba(228, 227, 223);
   --input-background: rgba(240, 223, 233, 1);
-  --text-color: #000;
   --text-grey-color: #555;
   --border-color: #ddd;
   --green: #01ff70;
@@ -34,6 +35,7 @@ body {
   --link: #0074d9;
   --disabled: #ddd;
   --text-disabled: #333;
+  --secondary: #fced9f;
 
   --hljs-red: rgb(184, 0, 0);
   --hljs-purple: rgb(132, 0, 255);
@@ -45,18 +47,20 @@ body {
 @media (prefers-color-scheme: dark) {
   :root {
     --background: rgb(22, 25, 36);
+    --dark-background: rgb(47, 48, 58);
     --card-background: #333;
     --text-color: #aeaeac;
     --input-text-color: rgba(254, 254, 252, 0.6);
+    --text-color-disabled: rgba(254, 254, 252, 0.5);
     --code-background: rgba(254, 254, 252, 0.05);
     --sidebar-background: #ffffff0d;
     --border-color: rgba(254, 254, 252, 0.1);
     --input-background: rgb(57, 59, 68);
-    --text-color: #ccc;
     --text-grey-color: #999;
     --border-color: #333;
     --disabled: #444;
     --text-disabled: #555;
+    --secondary: #fffbe8;
   }
 }
 

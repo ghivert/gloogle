@@ -5,7 +5,7 @@ import sketch/size.{px}
 
 pub fn footer(attributes, children) {
   l.memo("footer", attributes, children, [
-    s.background(palette.dark.charcoal),
+    s.background("var(--sidebar-background)"),
     s.display("flex"),
     s.flex_direction("column"),
     s.padding(px(24)),
@@ -49,7 +49,7 @@ pub fn footer_section(attributes, children) {
 
 pub fn foot_title(attributes, children) {
   l.memo("div", attributes, children, [
-    s.color(palette.dark.dark_white),
+    s.color("var(--input-text-color)"),
     s.font_weight("500"),
     s.padding_("6px 0px"),
   ])
@@ -58,7 +58,7 @@ pub fn foot_title(attributes, children) {
 pub fn foot_lk(attributes, children) {
   l.memo("a", attributes, children, [
     s.font_size(size.rem_(0.9)),
-    s.color(palette.dark.white),
+    s.color(palette.dark.dark_white),
     s.text_decoration("none"),
   ])
 }

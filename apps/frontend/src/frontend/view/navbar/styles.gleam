@@ -41,14 +41,14 @@ pub fn trending(attributes, children) {
     s.flex_direction("column"),
     s.gap(px(3)),
     s.align_items("end"),
-    s.color(palette.dark.dark_white),
+    s.color("var(--text-color)"),
     s.white_space("nowrap"),
   ])
 }
 
 pub fn nav_link(attributes, children) {
   l.memo("a", attributes, children, [
-    s.color(palette.dark.white),
+    s.color("var(--text-color)"),
     s.text_decoration("none"),
   ])
 }
@@ -65,7 +65,7 @@ pub fn navbar(transparent: Bool, attributes, children) {
     s.gap(px(48)),
     s.background(case transparent {
       True -> "transparent"
-      False -> palette.dark.underwater_blue
+      False -> "var(--sidebar-background)"
     }),
     s.height(px(130)),
     s.z_index(1000),

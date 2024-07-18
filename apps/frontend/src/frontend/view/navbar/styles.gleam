@@ -63,13 +63,11 @@ pub fn navbar(transparent: Bool, attributes, children) {
     s.grid_area("navbar"),
     s.padding_left(px(48)),
     s.gap(px(48)),
-    s.background(case transparent {
-      True -> "transparent"
-      False -> "var(--sidebar-background)"
-    }),
+    s.background("var(--sidebar-background)"),
     s.height(px(130)),
     s.z_index(1000),
     s.display("none"),
+    s.border_bottom("1px solid var(--border-color)"),
     s.media(media.max_width(px(700)), [
       s.display("flex"),
       s.gap(px(24)),

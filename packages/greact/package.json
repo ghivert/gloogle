@@ -1,0 +1,6 @@
+{
+  "name": "greact",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.3.1"
+}

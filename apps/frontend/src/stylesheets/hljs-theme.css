@@ -199,8 +199,8 @@ hue-6-2: #e6c07b
 }
 
 .documentation * {
-  margin-bottom: 9px;
-  margin-top: 9px;
+  margin-bottom: 0px;
+  margin-top: 0px;
 }
 
 .documentation *:last-child {
@@ -212,11 +212,13 @@ hue-6-2: #e6c07b
 }
 
 .documentation h1 {
+  margin-top: 9px;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .documentation h2 {
+  margin-top: 9px;
   font-size: 1rem;
   font-weight: 500;
 }
@@ -225,6 +227,7 @@ hue-6-2: #e6c07b
 .documentation h4,
 .documentation h5,
 .documentation h6 {
+  margin-top: 9px;
   font-size: 0.9rem;
   font-weight: 500;
 }

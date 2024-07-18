@@ -22,8 +22,6 @@ fn layout(attributes, children) {
     sketch.grid_template_columns("auto 1fr"),
     sketch.grid_template_rows("auto 1fr auto"),
     sketch.min_height(size.vh(100)),
-    sketch.background("rgb(22, 25, 36)"),
-    sketch.color(palette.dark.white),
     sketch.media(media.max_width(px(700)), [
       sketch.grid_template_areas("\"navbar\" \"main\" \"footer\""),
       sketch.grid_template_columns("1fr"),

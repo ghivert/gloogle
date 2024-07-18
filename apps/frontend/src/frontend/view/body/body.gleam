@@ -37,7 +37,7 @@ fn view_search_input(model: Model) {
         ]),
         h.div([a.class("search-title-with-hint")], [
           h.text("Gloogle"),
-          h.div([a.class("pre-alpha-title")], [h.text("Alpha")]),
+          h.div([a.class("pre-alpha-title")], [h.text("Beta")]),
         ]),
       ]),
       h.text(frontend_strings.gloogle_description),
@@ -176,7 +176,7 @@ fn sidebar(model: Model) {
               a.style([
                 #("background", case model.keep_functions {
                   True -> "#ffaff3"
-                  False -> "rgba(254, 254, 252, .1)"
+                  False -> "var(--input-background)"
                 }),
               ]),
             ],
@@ -199,7 +199,7 @@ fn sidebar(model: Model) {
               a.style([
                 #("background", case model.keep_types {
                   True -> "#ffaff3"
-                  False -> "rgba(254, 254, 252, .1)"
+                  False -> "var(--input-background)"
                 }),
               ]),
             ],
@@ -222,7 +222,7 @@ fn sidebar(model: Model) {
               a.style([
                 #("background", case model.keep_aliases {
                   True -> "#ffaff3"
-                  False -> "rgba(254, 254, 252, .1)"
+                  False -> "var(--input-background)"
                 }),
               ]),
             ],
@@ -246,7 +246,7 @@ fn sidebar(model: Model) {
               a.style([
                 #("background", case model.keep_documented {
                   True -> "#ffaff3"
-                  False -> "rgba(254, 254, 252, .1)"
+                  False -> "var(--input-background)"
                 }),
               ]),
             ],
@@ -269,7 +269,7 @@ fn sidebar(model: Model) {
               a.style([
                 #("background", case model.show_old_packages {
                   True -> "#ffaff3"
-                  False -> "rgba(254, 254, 252, .1)"
+                  False -> "var(--input-background)"
                 }),
               ]),
             ],

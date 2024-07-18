@@ -31,5 +31,5 @@ pub fn dark_white(text: String) {
 }
 
 pub fn white(text: String) {
-  span(text, palette.dark.white)
+  span(text, "var(--text-color)")
 }

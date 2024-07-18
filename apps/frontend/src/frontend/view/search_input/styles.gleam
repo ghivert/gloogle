@@ -29,7 +29,7 @@ pub fn search_input_wrapper(loading: Bool, children) {
     s.property("background-size", "400% 400%"),
     s.transition("padding .3s"),
     s.animation("bg-spin 3s linear infinite"),
-    s.border("1px solid rgba(77, 79, 87, 1)"),
+    s.border("1px solid var(--border-color)"),
     s.animation_play_state(case loading {
       True -> "running"
       False -> "paused"
@@ -44,14 +44,8 @@ pub fn search_input(loading, small, children) {
     s.display("flex"),
     s.gap(px(6)),
     s.border_radius(px(8)),
-    s.color(case small {
-      True -> "#fefefc"
-      False -> palette.dark.charcoal
-    }),
-    s.background(case small {
-      True -> "rgb(57,59,68)"
-      False -> palette.dark.white
-    }),
+    s.color("var(--input-text-color)"),
+    s.background("var(--input-background)"),
     s.transition("padding .3s"),
     s.align_items("baseline"),
     s.padding(

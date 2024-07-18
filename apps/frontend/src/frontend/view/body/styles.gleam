@@ -389,23 +389,6 @@ pub fn main(attributes, children) {
   ])
 }
 
-pub fn search_sidebar(attributes, children) {
-  let id = "search_sidebar"
-  el.memo_dynamic("main", attributes, children, id, [
-    s.grid_area("sidebar"),
-    s.display("flex"),
-    s.flex_direction("column"),
-    s.padding(px(16)),
-    s.border_right("1px solid #ffffff1a"),
-    s.background("#ffffff0d"),
-    s.width(px(320)),
-    s.gap(px(16)),
-    s.height(vh(100)),
-    s.position("sticky"),
-    s.top(px(0)),
-  ])
-}
-
 pub fn sidebar_title(attrs, children) {
   let id = "sidebar_title"
   el.memo_dynamic("a", attrs, children, id, [

@@ -81,7 +81,7 @@ cache-signatures:has(:not(:defined)) {
   appearance: none;
   border: none;
   background: transparent;
-  color: white;
+  color: var(--input-text-color);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -123,10 +123,10 @@ cache-signatures:has(:not(:defined)) {
 }
 
 .search-body {
-  background: rgba(254, 254, 252, 0.05);
+  background: var(--code-background);
   border-radius: 12px;
   padding: 12px 24px;
-  border: 1px solid rgba(254, 254, 252, 0.1);
+  border: 1px solid var(--border-color);
 }
 
 @media (max-width: 700px) {
@@ -157,7 +157,7 @@ cache-signatures:has(:not(:defined)) {
 
 .search-result-separator {
   height: 1px;
-  background: rgba(254, 254, 252, 0.1);
+  background: var(--border-color);
   margin: 6px 0;
 }
 
@@ -246,7 +246,7 @@ cache-signatures:has(:not(:defined)) {
 
 .matches-titles {
   line-height: 1.3;
-  color: #aeaeac;
+  color: var(--text-color);
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -260,7 +260,6 @@ cache-signatures:has(:not(:defined)) {
 }
 
 .matches-title {
-  color: #aeaeac;
   font-size: 18px;
 }
 
@@ -303,7 +302,7 @@ cache-signatures:has(:not(:defined)) {
   height: 100vh;
   overflow: auto;
   padding: 20px;
-  border-right: 1px solid rgba(254, 254, 252, 0.1);
+  border-right: 1px solid var(--border-color);
   margin-bottom: -24px;
   mask: linear-gradient(
     180deg,
@@ -321,7 +320,7 @@ cache-signatures:has(:not(:defined)) {
 
 .sidebar-wrapper-title {
   padding: 4px 4px;
-  color: #ffffff99;
+  color: var(--text-color);
 }
 
 .sidebar-package-name {
@@ -373,8 +372,8 @@ cache-signatures:has(:not(:defined)) {
   display: flex;
   flex-direction: column;
   padding: 16px;
-  border-right: 1px solid #ffffff1a;
-  background: #ffffff0d;
+  border-right: 1px solid var(--border-color);
+  background: var(--sidebar-background);
   width: 270px;
   gap: 16px;
   height: 100vh;
@@ -405,7 +404,7 @@ cache-signatures:has(:not(:defined)) {
 .sidebar-filter {
   padding-top: 12px;
   padding-left: 12px;
-  color: rgba(254, 254, 252, 0.6);
+  color: var(--input-text-color);
 }
 
 .sidebar-filters {
@@ -418,7 +417,7 @@ cache-signatures:has(:not(:defined)) {
 .sidebar-checkbox-1 {
   width: 16px;
   height: 16px;
-  border: 1px solid rgba(254, 254, 252, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
 }
 
@@ -435,7 +434,7 @@ cache-signatures:has(:not(:defined)) {
 
 .filter-separator {
   height: 1px;
-  background: rgba(254, 254, 252, 0.1);
+  background: var(--border-color);
 }
 
 .sidebar-filter-line {
@@ -446,7 +445,7 @@ cache-signatures:has(:not(:defined)) {
 }
 
 .sidebar-filter-name {
-  color: white;
+  color: var(-text-color);
 }
 
 .sidebar-links {
@@ -471,7 +470,7 @@ cache-signatures:has(:not(:defined)) {
 
 .sidebar-link {
   font-size: 14px;
-  color: rgba(254, 254, 252, 0.6);
+  color: var(--input-text-color);
 }
 
 .items-wrapper {
@@ -544,7 +543,7 @@ cache-signatures:has(:not(:defined)) {
   bottom: 0px;
   padding: 12px;
   background-color: rgb(22, 25, 36);
-  border: 1px solid rgba(254, 254, 252, 0.1);
+  border: 1px solid var(--border-color);
   margin-top: 24px;
 }
 

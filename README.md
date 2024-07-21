@@ -31,6 +31,33 @@ Some features are already implemented, and some others are still on the roadmap!
 <!-- - Implements a full-mirror of hex, in case hex is down (because we can, so why not) -->
 <!-- - Add a way to visualise a package directly -->
 
+## Running Locally
+
+### Requirements
+
+To run the app locally you must have the following dependencies:
+
+- [mise](https://mise.jdx.dev)
+- [yarn](https://yarnpkg.com)
+- [Docker](https://www.docker.comv)
+- [dbmate](https://github.com/amacneil/dbmate)
+
+Other dependencies (i.e. Gleam, Erlang, etc...) can be installed by running `mise install` in the root of the project.
+
+### Setup Instructions
+
+- Set the following environment variables:
+  - `HEX_API_KEY`
+  - `GITHUB_TOKEN`
+  - `PORT=3000`
+- Setup the database by running the following commands:
+  - `cd ./apps/backend`
+  - `deno task db:init`
+  - `dbmate migrate`
+- In the root of the project run:
+  - `yarn install`
+  - `yarn dev`
+
 ## Contributing
 
 If Gloogle please you, you can also contribute! Pull Requests are welcome!

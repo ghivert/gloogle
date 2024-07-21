@@ -1,0 +1,19 @@
+# For a full reference of all the available options, you can have a look at
+# https://gleam.run/writing-gleam/gleam-toml/.
+
+name = "raycast"
+target = "javascript"
+version = "1.0.0"
+
+[javascript]
+typescript_declarations = true
+
+[dependencies]
+gleam_javascript = "~> 0.8"
+gleam_json = ">= 1.0.1 and < 2.0.0"
+gleam_stdlib = "~> 0.34 or ~> 1.0"
+plinth = ">= 0.2.0 and < 1.0.0"
+redraw = { path = "../../../redraw" }
+
+[dev-dependencies]
+gleeunit = "~> 1.0"

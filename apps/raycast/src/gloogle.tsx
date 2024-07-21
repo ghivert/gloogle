@@ -1,5 +1,6 @@
-import { Detail } from '@raycast/api'
+// import { Detail } from '@raycast/api'
+import * as gleam from '../build/dev/javascript/raycast/raycast.mjs'
 
 export default function Command() {
-  return <Detail markdown="Hellow world!" />
+  return gleam.main()
 }

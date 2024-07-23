@@ -1,7 +1,3 @@
-export function is_dev() {
-  return import.meta.env.DEV
-}
-
 function findChild(shadowRoot, id) {
   for (const node of shadowRoot.querySelectorAll('search-result')) {
     const elem = node.shadowRoot.getElementById(id)
@@ -10,17 +6,19 @@ function findChild(shadowRoot, id) {
 }
 
 export function scrollTo(id) {
-  const cache = document.getElementsByTagName('cache-signatures')
-  if (!cache?.[0]) return
-  const elem = findChild(cache[0].shadowRoot, id)
-  if (!elem) return
-  const elemRect = elem.getBoundingClientRect()
-  const navbarRect = document
-    .getElementsByClassName('navbar')?.[0]
-    ?.getBoundingClientRect()
-  const bodyRect = document.body.getBoundingClientRect()
-  const offset = elemRect.top - bodyRect.top - (navbarRect?.height ?? 0) - 12
-  window.scrollTo({ top: offset, behavior: 'smooth' })
+  return function (_) {
+    const cache = document.getElementsByTagName('lazy-node')
+    if (!cache?.[0]) return
+    const elem = findChild(cache[0].shadowRoot, id)
+    if (!elem) return
+    const elemRect = elem.getBoundingClientRect()
+    const navbarRect = document
+      .getElementsByClassName('navbar')?.[0]
+      ?.getBoundingClientRect()
+    const bodyRect = document.body.getBoundingClientRect()
+    const offset = elemRect.top - bodyRect.top - (navbarRect?.height ?? 0) - 12
+    window.scrollTo({ top: offset, behavior: 'smooth' })
+  }
 }
 
 export function captureMessage(content) {
@@ -42,6 +40,6 @@ export function coerce(a) {
   return a
 }
 
-export function coerce_event(a) {
+export function coerceEvent(a) {
   return a.detail
 }

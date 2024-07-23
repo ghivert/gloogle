@@ -2,7 +2,7 @@ search-result:has(:not(:defined)) {
   visibility: hidden;
 }
 
-cache-signatures:has(:not(:defined)) {
+lazy-node:has(:not(:defined)) {
   visibility: hidden;
 }
 

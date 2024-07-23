@@ -27,12 +27,7 @@ pub fn view() {
 pub fn search_bar(model: Model) {
   h.div([a.class("footer-search")], [
     h.form([e.on_submit(msg.SubmitSearch)], [
-      search_input.view(
-        model.loading,
-        model.input,
-        show_filters: False,
-        small: True,
-      ),
+      search_input.view(model.loading, model.input, small: True),
     ]),
   ])
 }

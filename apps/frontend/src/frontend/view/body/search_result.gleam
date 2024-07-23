@@ -8,7 +8,6 @@ import frontend/view/types as t
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/option
 import gleam/result

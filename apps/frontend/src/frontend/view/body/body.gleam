@@ -7,23 +7,17 @@ import frontend/router
 import frontend/strings as frontend_strings
 import frontend/view/search_input/search_input
 import gleam/dict
-import gleam/int
-import gleam/io
-import gleam/list
-import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
+import lustre/lazy
 
 fn view_search_input(model: Model) {
   let has_content = {
     model.input
-    |> string.split(" ")
-    |> list.filter(fn(word) { !list.contains(search_input.valid_filters, word) })
-    |> string.join(" ")
     |> string.length()
     |> fn(input) { input != 0 }
   }
@@ -42,12 +36,7 @@ fn view_search_input(model: Model) {
       ]),
       h.text(frontend_strings.gloogle_description),
     ]),
-    search_input.view(
-      model.loading,
-      model.input,
-      show_filters: True,
-      small: False,
-    ),
+    search_input.view(model.loading, model.input, small: False),
     h.input([
       a.class("search-submit"),
       a.type_("submit"),
@@ -141,13 +130,6 @@ pub fn view_trending(model: Model) {
   // }
 }
 
-fn on_coerce(value: a) {
-  Ok(coerce_event(value))
-}
-
-@external(javascript, "../../../config.ffi.mjs", "coerce_event")
-fn coerce_event(value: a) -> b
-
 fn sidebar(model: Model) {
   h.main([a.class("search-sidebar")], [
     h.a([a.class("sidebar-title"), a.href("/")], [
@@ -159,12 +141,7 @@ fn sidebar(model: Model) {
       h.form([a.class("sidebar-title-inside")], [h.text("Gloogle")]),
     ]),
     h.form([e.on_submit(msg.SubmitSearch)], [
-      search_input.view(
-        model.loading,
-        model.input,
-        show_filters: False,
-        small: True,
-      ),
+      search_input.view(model.loading, model.input, small: True),
     ]),
     h.div([a.class("sidebar-filter")], [el.text("Filters")]),
     h.div([a.class("sidebar-filters")], [
@@ -355,13 +332,7 @@ pub fn body(model: Model) {
             )
           search_result.SearchResults(_, _, _, _, _, _) -> {
             dict.get(model.view_cache, key)
-            |> result.map(fn(content) {
-              el.element(
-                "cache-signatures",
-                [a.property("content", content), e.on("child", on_coerce)],
-                [],
-              )
-            })
+            |> result.map(lazy.lazy(_))
             |> result.unwrap(el.none())
           }
         },

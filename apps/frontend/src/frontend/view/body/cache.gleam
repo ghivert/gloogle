@@ -9,6 +9,7 @@ import frontend/view/body/signature
 import frontend/view/documentation
 import frontend/view/types as t
 import gleam/bool
+import gleam/coerce.{coerce}
 import gleam/dict
 import gleam/io
 import gleam/list
@@ -98,26 +99,4 @@ pub fn cache_search_results(
       view_search_results(modules_searches),
     ]),
   ])
-}
-
-pub type MsgComponent(msg) {
-  UpdateContent(el.Element(msg))
-  Received(msg)
-}
-
-@external(javascript, "../../../config.ffi.mjs", "coerce")
-fn coerce(value: a) -> b
-
-pub fn component() {
-  lustre.component(
-    fn(_flags) { #(el.none(), eff.none()) },
-    fn(model: el.Element(msg), msg: MsgComponent(msg)) {
-      case msg {
-        UpdateContent(c) -> #(c, eff.none())
-        Received(msg) -> #(model, e.emit("child", coerce(msg)))
-      }
-    },
-    fn(model) { el.map(model, Received) },
-    dict.from_list([#("content", fn(dyn) { Ok(UpdateContent(coerce(dyn))) })]),
-  )
 }

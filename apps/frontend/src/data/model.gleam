@@ -4,11 +4,9 @@ import data/package.{type Package}
 import data/search_result.{type SearchResult, type SearchResults}
 import frontend/router
 import frontend/view/body/cache
-import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/function
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
@@ -58,7 +56,6 @@ pub fn init() {
 }
 
 pub fn update_route(model: Model, route: router.Route) {
-  router.update_page_title(route)
   Model(..model, route: route)
 }
 

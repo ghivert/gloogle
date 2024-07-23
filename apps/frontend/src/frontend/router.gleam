@@ -2,6 +2,7 @@ import gleam/list
 import gleam/option
 import gleam/result
 import gleam/uri.{type Uri}
+import lustre/effect
 
 @external(javascript, "../config.ffi.mjs", "updateTitle")
 fn update_title(title: String) -> Nil
@@ -34,6 +35,7 @@ fn handle_search_path(uri: Uri) {
 }
 
 pub fn update_page_title(route: Route) {
+  use _ <- effect.from()
   case route {
     Home -> update_title("Gloogle")
     Search(q) -> update_title("Gloogle — Search " <> q)

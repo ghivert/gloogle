@@ -17,7 +17,6 @@ pub type Msg {
   SearchResults(input: String, result: Result(SearchResults, http.HttpError))
   Trendings(result: Result(List(package.Package), http.HttpError))
   UpdateInput(String)
-  UpdateFilters(String)
   Reset
   ScrollTo(String)
   OnRouteChange(router.Route)

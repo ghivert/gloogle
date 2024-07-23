@@ -1,4 +1,3 @@
-import frontend/colors/palette
 import gleam/bool
 import sketch as s
 import sketch/lustre/element as l

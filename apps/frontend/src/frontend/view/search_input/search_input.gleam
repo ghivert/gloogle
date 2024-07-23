@@ -1,14 +1,12 @@
 import data/msg
+import frontend/ffi
 import frontend/view/search_input/styles as s
 import lustre/attribute as a
 import lustre/element as el
 import lustre/event as e
 
-@external(javascript, "../../../config.ffi.mjs", "isMac")
-fn is_mac() -> Bool
-
 pub fn view(loading loading: Bool, input input: String, small small: Bool) {
-  let modifier = case is_mac() {
+  let modifier = case ffi.is_mac() {
     True -> "Cmd"
     False -> "Ctrl"
   }

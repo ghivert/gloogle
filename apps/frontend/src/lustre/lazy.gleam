@@ -6,7 +6,7 @@ import lustre/effect
 import lustre/element.{type Element}
 import lustre/event
 
-@external(javascript, "../config.ffi.mjs", "coerceEvent")
+@external(javascript, "../gloogle.ffi.mjs", "coerceEvent")
 fn coerce_event(a: a) -> b
 
 const tag_name = "lazy-node"

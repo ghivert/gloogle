@@ -4,6 +4,7 @@ import data/package
 import data/search_result
 import frontend/config
 import frontend/errors
+import frontend/ffi
 import frontend/router
 import frontend/view
 import frontend/view/body/search_result as sr
@@ -26,15 +27,29 @@ import sketch/lustre as sketch
 import sketch/options as sketch_options
 import toast/error as toast_error
 
-@external(javascript, "./config.ffi.mjs", "scrollTo")
-fn scroll_to_element(id: String) -> fn(dispatch) -> Nil
+fn focus(on id: String) {
+  use _ <- effect.from()
+  ffi.focus(on: id)
+}
 
-@external(javascript, "./config.ffi.mjs", "subscribeFocus")
-fn do_subscribe_focus() -> Nil
+fn unfocus() {
+  use _ <- effect.from()
+  ffi.unfocus()
+}
 
 fn subscribe_focus() {
-  use _ <- effect.from()
-  do_subscribe_focus()
+  use dispatch <- effect.from()
+  use key <- ffi.subscribe_focus()
+  case key {
+    "Escape" -> dispatch(msg.OnEscape)
+    _ -> dispatch(msg.OnSearchFocus)
+  }
+}
+
+fn subscribe_is_mobile() {
+  use dispatch <- effect.from()
+  use is_mobile <- ffi.suscribe_is_mobile()
+  dispatch(msg.UpdateIsMobile(is_mobile))
 }
 
 pub fn main() {
@@ -63,6 +78,7 @@ fn init(_) {
   |> update.add_effect(modem.init(on_url_change))
   |> update.add_effect(router.update_page_title({ initial.0 }.route))
   |> update.add_effect(subscribe_focus())
+  |> update.add_effect(subscribe_is_mobile())
   |> update.add_effect(
     http.expect_json(dynamic.list(package.decoder), msg.Trendings)
     |> http.get(config.api_endpoint() <> "/trendings", _),
@@ -83,6 +99,12 @@ fn update(model: Model, msg: Msg) {
     msg.ScrollTo(id) -> scroll_to(model, id)
     msg.OnRouteChange(route) -> handle_route_change(model, route)
     msg.Trendings(trendings) -> handle_trendings(model, trendings)
+    msg.OnSearchFocus -> update.effect(model, focus(on: "search-input"))
+    msg.OnEscape -> update.effect(model, unfocus())
+    msg.UpdateIsMobile(is_mobile) ->
+      model
+      |> model.update_is_mobile(is_mobile)
+      |> update.none
     msg.SearchResults(input, search_results) ->
       handle_search_results(model, input, search_results)
     msg.OnCheckFilter(filter, value) ->
@@ -141,7 +163,7 @@ fn submit_search(model: Model) {
 }
 
 fn scroll_to(model: Model, id: String) {
-  scroll_to_element(id)
+  ffi.scroll_to(element: id)
   |> effect.from
   |> update.effect(model, _)
 }

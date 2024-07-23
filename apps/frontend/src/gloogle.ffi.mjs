@@ -44,19 +44,45 @@ export function coerceEvent(a) {
   return a.detail
 }
 
-export function subscribeFocus() {
+export function subscribeFocus(callback) {
   document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') return callback(event.key)
     if ((!event.metaKey && !event.ctrlKey) || event.key !== 'k') return
-    const element = document.getElementById('search-input')
-    if (element) {
-      element.focus()
-      element.select()
-    }
+    callback(event.key)
   })
+}
+
+export function focus(id) {
+  const element = document.getElementById(id)
+  if (element) {
+    element.focus()
+    element.select()
+  }
+}
+
+export function unfocus() {
+  const element = document.activeElement
+  if (element) {
+    element.blur()
+  }
 }
 
 export function isMac() {
   return (
     navigator.platform.indexOf('Mac') === 0 || navigator.platform === 'iPhone'
   )
+}
+
+export function isMobile() {
+  return window.matchMedia('(max-width: 700px)').matches
+}
+
+export function subscribeIsMobile(callback) {
+  window.matchMedia('(max-width: 700px)').addEventListener('change', event => {
+    if (event.matches) {
+      callback(true)
+    } else {
+      callback(false)
+    }
+  })
 }

@@ -25,6 +25,7 @@ pub type Model {
     loading: Bool,
     view_cache: Dict(String, Element(Msg)),
     route: router.Route,
+    is_mobile: Bool,
     trendings: Option(List(Package)),
     submitted_input: String,
     keep_functions: Bool,
@@ -37,6 +38,9 @@ pub type Model {
   )
 }
 
+@external(javascript, "../gloogle.ffi.mjs", "isMobile")
+fn is_mobile() -> Bool
+
 pub fn init() {
   let search_results = search_result.Start
   let index = compute_index(search_results)
@@ -47,6 +51,7 @@ pub fn init() {
     loading: False,
     view_cache: dict.new(),
     route: router.Home,
+    is_mobile: is_mobile(),
     trendings: option.None,
     submitted_input: "",
     keep_functions: False,
@@ -65,6 +70,10 @@ pub fn update_route(model: Model, route: router.Route) {
 
 pub fn update_submitted_input(model: Model) {
   Model(..model, submitted_input: model.input)
+}
+
+pub fn update_is_mobile(model: Model, is_mobile: Bool) {
+  Model(..model, is_mobile: is_mobile)
 }
 
 pub fn update_trendings(model: Model, trendings: List(Package)) {
@@ -295,6 +304,7 @@ pub fn reset(model: Model) {
     loading: False,
     view_cache: model.view_cache,
     route: router.Home,
+    is_mobile: is_mobile(),
     trendings: model.trendings,
     submitted_input: "",
     keep_functions: False,

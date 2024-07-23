@@ -81,5 +81,6 @@ pub fn shortcut_hint(attrs, children) {
     s.padding_("3px 6px"),
     s.border_radius(px(6)),
     s.opacity(0.4),
+    s.media(media.max_width(px(700)), [s.display("none")]),
   ])
 }

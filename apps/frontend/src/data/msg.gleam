@@ -9,6 +9,7 @@ pub type Filter {
   Aliases
   Documented
   ShowOldPackages
+  VectorSearch
 }
 
 pub type Msg {

@@ -10,7 +10,6 @@ import frontend/view/body/search_result as sr
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
-import gleam/io
 import gleam/option.{None, Some}
 import gleam/result
 import gleam/uri.{type Uri}
@@ -89,6 +88,7 @@ fn handle_oncheck_filter(model, filter, value) {
     msg.Aliases, value -> model.Model(..model, keep_aliases: value)
     msg.Documented, value -> model.Model(..model, keep_documented: value)
     msg.ShowOldPackages, value -> model.Model(..model, show_old_packages: value)
+    msg.VectorSearch, value -> model.Model(..model, show_vector_search: value)
   }
   |> model.update_search_results_filter
   |> update.none

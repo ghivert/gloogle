@@ -7,6 +7,7 @@ import frontend/view/body/cache
 import gleam/dict.{type Dict}
 import gleam/function
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
@@ -32,6 +33,7 @@ pub type Model {
     keep_aliases: Bool,
     keep_documented: Bool,
     show_old_packages: Bool,
+    show_vector_search: Bool,
   )
 }
 
@@ -52,6 +54,7 @@ pub fn init() {
     keep_aliases: False,
     keep_documented: False,
     show_old_packages: False,
+    show_vector_search: False,
   )
 }
 
@@ -79,12 +82,28 @@ pub fn update_input(model: Model, content: String) {
   Model(..model, input: content)
 }
 
+pub fn search_key(key key: String, model model: Model) {
+  key
+  <> string.inspect([
+    model.keep_functions,
+    model.keep_types,
+    model.keep_aliases,
+    model.keep_documented,
+    model.show_old_packages,
+    model.show_vector_search,
+  ])
+}
+
+fn default_search_key(key key: String) {
+  key <> string.inspect([False, False, False, False, True, True])
+}
+
 pub fn update_search_results(
   model: Model,
   key: String,
   search_results: SearchResults,
 ) {
-  let key = key <> string.inspect([False, False, False, False, True])
+  let key = default_search_key(key: key)
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> model.view_cache
@@ -153,8 +172,7 @@ fn extract_package_version(
 }
 
 pub fn update_search_results_filter(model: Model) {
-  let default_key =
-    model.submitted_input <> string.inspect([False, False, False, False, True])
+  let default_key = default_search_key(model.submitted_input)
   let show_old = case model.show_old_packages {
     True -> fn(_) { True }
     False -> {
@@ -217,15 +235,7 @@ pub fn update_search_results_filter(model: Model) {
     }
     && show_old(s)
   }
-  let key =
-    model.submitted_input
-    <> string.inspect([
-      model.keep_functions,
-      model.keep_types,
-      model.keep_aliases,
-      model.keep_documented,
-      model.show_old_packages,
-    ])
+  let key = search_key(model.submitted_input, model)
   case dict.get(model.search_results, default_key) {
     Error(_) -> model
     Ok(search_results) -> {
@@ -237,7 +247,10 @@ pub fn update_search_results_filter(model: Model) {
             t |> list.filter(filter),
             e |> list.filter(filter),
             m |> list.filter(filter),
-            s |> list.filter(filter),
+            case model.show_vector_search {
+              False -> []
+              True -> s |> list.filter(filter)
+            },
             d |> list.filter(filter),
             mods |> list.filter(filter),
           )
@@ -284,6 +297,7 @@ pub fn reset(model: Model) {
     keep_aliases: False,
     keep_documented: False,
     show_old_packages: False,
+    show_vector_search: False,
   )
 }
 

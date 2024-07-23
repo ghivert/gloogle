@@ -155,6 +155,8 @@ fn sidebar(model: Model) {
         msg.ShowOldPackages,
         "Show old versions",
       ),
+      h.div([a.class("filter-separator")], []),
+      checkbox(model.show_vector_search, msg.VectorSearch, "Vector Search"),
     ]),
     h.div([a.class("sidebar-spacer")], []),
     h.div([a.class("sidebar-links")], [
@@ -211,15 +213,7 @@ pub fn body(model: Model) {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
     router.Trending -> h.main([a.class("main")], [view_trending(model)])
     router.Search(_) -> {
-      let key =
-        model.submitted_input
-        <> string.inspect([
-          model.keep_functions,
-          model.keep_types,
-          model.keep_aliases,
-          model.keep_documented,
-          model.show_old_packages,
-        ])
+      let key = model.search_key(model.submitted_input, model)
       el.fragment([
         sidebar(model),
         case

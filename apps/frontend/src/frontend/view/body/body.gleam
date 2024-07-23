@@ -145,122 +145,16 @@ fn sidebar(model: Model) {
     ]),
     h.div([a.class("sidebar-filter")], [el.text("Filters")]),
     h.div([a.class("sidebar-filters")], [
-      h.label([a.class("sidebar-filter-line")], [
-        el.fragment([
-          h.div(
-            [
-              a.class("sidebar-checkbox-1"),
-              a.style([
-                #("background", case model.keep_functions {
-                  True -> "#ffaff3"
-                  False -> "var(--input-background)"
-                }),
-              ]),
-            ],
-            [],
-          ),
-          h.input([
-            a.class("sidebar-checkbox-2"),
-            a.type_("checkbox"),
-            a.checked(model.keep_functions),
-            e.on_check(msg.OnCheckFilter(msg.Functions, _)),
-          ]),
-        ]),
-        h.div([a.class("sidebar-filter-name")], [el.text("Functions")]),
-      ]),
-      h.label([a.class("sidebar-filter-line")], [
-        el.fragment([
-          h.div(
-            [
-              a.class("sidebar-checkbox-1"),
-              a.style([
-                #("background", case model.keep_types {
-                  True -> "#ffaff3"
-                  False -> "var(--input-background)"
-                }),
-              ]),
-            ],
-            [],
-          ),
-          h.input([
-            a.class("sidebar-checkbox-2"),
-            a.type_("checkbox"),
-            a.checked(model.keep_types),
-            e.on_check(msg.OnCheckFilter(msg.Types, _)),
-          ]),
-        ]),
-        h.div([a.class("sidebar-filter-name")], [el.text("Types")]),
-      ]),
-      h.label([a.class("sidebar-filter-line")], [
-        el.fragment([
-          h.div(
-            [
-              a.class("sidebar-checkbox-1"),
-              a.style([
-                #("background", case model.keep_aliases {
-                  True -> "#ffaff3"
-                  False -> "var(--input-background)"
-                }),
-              ]),
-            ],
-            [],
-          ),
-          h.input([
-            a.class("sidebar-checkbox-2"),
-            a.type_("checkbox"),
-            a.checked(model.keep_aliases),
-            e.on_check(msg.OnCheckFilter(msg.Aliases, _)),
-          ]),
-        ]),
-        h.div([a.class("sidebar-filter-name")], [el.text("Aliases")]),
-      ]),
+      checkbox(model.keep_functions, msg.Functions, "Functions"),
+      checkbox(model.keep_types, msg.Types, "Types"),
+      checkbox(model.keep_aliases, msg.Aliases, "Aliases"),
       h.div([a.class("filter-separator")], []),
-      h.label([a.class("sidebar-filter-line")], [
-        el.fragment([
-          h.div(
-            [
-              a.class("sidebar-checkbox-1"),
-              a.style([
-                #("background", case model.keep_documented {
-                  True -> "#ffaff3"
-                  False -> "var(--input-background)"
-                }),
-              ]),
-            ],
-            [],
-          ),
-          h.input([
-            a.class("sidebar-checkbox-2"),
-            a.type_("checkbox"),
-            a.checked(model.keep_documented),
-            e.on_check(msg.OnCheckFilter(msg.Documented, _)),
-          ]),
-        ]),
-        h.div([a.class("sidebar-filter-name")], [el.text("Documented")]),
-      ]),
-      h.label([a.class("sidebar-filter-line")], [
-        el.fragment([
-          h.div(
-            [
-              a.class("sidebar-checkbox-1"),
-              a.style([
-                #("background", case model.show_old_packages {
-                  True -> "#ffaff3"
-                  False -> "var(--input-background)"
-                }),
-              ]),
-            ],
-            [],
-          ),
-          h.input([
-            a.class("sidebar-checkbox-2"),
-            a.type_("checkbox"),
-            a.checked(model.show_old_packages),
-            e.on_check(msg.OnCheckFilter(msg.ShowOldPackages, _)),
-          ]),
-        ]),
-        h.div([a.class("sidebar-filter-name")], [el.text("Show old versions")]),
-      ]),
+      checkbox(model.keep_documented, msg.Documented, "Documented"),
+      checkbox(
+        model.show_old_packages,
+        msg.ShowOldPackages,
+        "Show old versions",
+      ),
     ]),
     h.div([a.class("sidebar-spacer")], []),
     h.div([a.class("sidebar-links")], [
@@ -276,19 +170,39 @@ fn sidebar(model: Model) {
       //   s.sidebar_icon([], [icons.gift()]),
       //   s.sidebar_link([], [el.text("Resources")]),
       // ]),
-      h.a(
-        [
-          a.class("sidebar-link-wrapper"),
-          a.href("https://github.com/sponsors/ghivert"),
-          a.target("_blank"),
-          a.rel("noreferrer noopener"),
-        ],
-        [
-          h.div([a.class("sidebar-icon")], [icons.heart()]),
-          h.div([a.class("sidebar-link")], [el.text("Sponsor")]),
-        ],
+      sidebar_link(
+        href: "https://github.com/sponsors/ghivert",
+        title: "Sponsor",
+        icon: icons.heart(),
       ),
     ]),
+  ])
+}
+
+fn checkbox(active: Bool, msg: msg.Filter, name: String) {
+  let bg = case active {
+    True -> "#ffaff3"
+    False -> "var(--input-background)"
+  }
+  h.label([a.class("sidebar-filter-line")], [
+    el.fragment([
+      h.div([a.class("sidebar-checkbox-1"), a.style([#("background", bg)])], []),
+      h.input([
+        a.class("sidebar-checkbox-2"),
+        a.type_("checkbox"),
+        a.checked(active),
+        e.on_check(msg.OnCheckFilter(msg, _)),
+      ]),
+    ]),
+    h.div([a.class("sidebar-filter-name")], [el.text(name)]),
+  ])
+}
+
+fn sidebar_link(href href: String, title title: String, icon icon) {
+  let class = a.class("sidebar-link-wrapper")
+  h.a([class, a.href(href), a.target("_blank"), a.rel("noreferrer noopener")], [
+    h.div([a.class("sidebar-icon")], [icon]),
+    h.div([a.class("sidebar-link")], [el.text(title)]),
   ])
 }
 

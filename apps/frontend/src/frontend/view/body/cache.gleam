@@ -1,35 +1,17 @@
-import data/implementations
-import data/kind
 import data/msg
 import data/search_result
-import frontend/colors/palette
-import frontend/icons
-import frontend/strings as frontend_strings
-import frontend/view/body/signature
-import frontend/view/documentation
+import frontend/view/body/search_result as sr
 import frontend/view/types as t
-import gleam/bool
-import gleam/coerce.{coerce}
-import gleam/dict
-import gleam/io
 import gleam/list
-import gleam/option
-import lustre
 import lustre/attribute as a
-import lustre/effect as eff
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
-import sketch/lustre as sketch_lustre
-import sketch/options as sketch_options
 
 fn view_search_results(search_results: List(search_result.SearchResult)) {
-  el.fragment({
-    list.map(search_results, fn(item) {
-      el.element("search-result", [a.property("item", item)], [])
-    })
-    |> list.intersperse(h.div([a.class("search-result-separator")], []))
-  })
+  list.map(search_results, sr.view)
+  |> list.intersperse(h.div([a.class("search-result-separator")], []))
+  |> el.fragment
 }
 
 fn sidebar(

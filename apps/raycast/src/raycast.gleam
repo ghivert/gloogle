@@ -1,21 +1,21 @@
 import gleam/option
-import react
+import redraw
 
 pub type DetailProps {
   DetailProps(
     markdown: String,
     is_loading: Bool,
-    actions: option.Option(react.Component),
-    metadata: option.Option(react.Component),
+    actions: option.Option(redraw.Component),
+    metadata: option.Option(redraw.Component),
     navigation_title: option.Option(String),
   )
 }
 
 @external(javascript, "@raycast/api", "Detail")
-fn ffi_detail(props: a) -> react.Component
+fn ffi_detail(props: a) -> redraw.Component
 
-fn detail() -> fn(DetailProps) -> react.Component {
-  react.to_component_("Detail", ffi_detail)
+fn detail() -> fn(DetailProps) -> redraw.Component {
+  redraw.to_component_("Detail", ffi_detail)
 }
 
 pub fn main() {

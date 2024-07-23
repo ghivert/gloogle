@@ -156,6 +156,11 @@ fn sidebar(model: Model) {
         "Show old versions",
       ),
       h.div([a.class("filter-separator")], []),
+      checkbox(
+        model.show_documentation_search,
+        msg.DocumentationSearch,
+        "Documentation Search",
+      ),
       checkbox(model.show_vector_search, msg.VectorSearch, "Vector Search"),
     ]),
     h.div([a.class("sidebar-spacer")], []),

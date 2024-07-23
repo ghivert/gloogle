@@ -7,7 +7,6 @@ import frontend/view/body/cache
 import gleam/dict.{type Dict}
 import gleam/function
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
@@ -33,6 +32,7 @@ pub type Model {
     keep_aliases: Bool,
     keep_documented: Bool,
     show_old_packages: Bool,
+    show_documentation_search: Bool,
     show_vector_search: Bool,
   )
 }
@@ -54,6 +54,7 @@ pub fn init() {
     keep_aliases: False,
     keep_documented: False,
     show_old_packages: False,
+    show_documentation_search: False,
     show_vector_search: False,
   )
 }
@@ -90,12 +91,13 @@ pub fn search_key(key key: String, model model: Model) {
     model.keep_aliases,
     model.keep_documented,
     model.show_old_packages,
+    model.show_documentation_search,
     model.show_vector_search,
   ])
 }
 
 fn default_search_key(key key: String) {
-  key <> string.inspect([False, False, False, False, True, True])
+  key <> string.inspect([False, False, False, False, True, True, True])
 }
 
 pub fn update_search_results(
@@ -251,7 +253,10 @@ pub fn update_search_results_filter(model: Model) {
               False -> []
               True -> s |> list.filter(filter)
             },
-            d |> list.filter(filter),
+            case model.show_documentation_search {
+              False -> []
+              True -> d |> list.filter(filter)
+            },
             mods |> list.filter(filter),
           )
       }
@@ -297,6 +302,7 @@ pub fn reset(model: Model) {
     keep_aliases: False,
     keep_documented: False,
     show_old_packages: False,
+    show_documentation_search: False,
     show_vector_search: False,
   )
 }

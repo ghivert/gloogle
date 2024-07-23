@@ -25,9 +25,9 @@ pub type SearchResults {
   InternalServerError
   SearchResults(
     exact_type_matches: List(SearchResult),
-    exact_matches: List(SearchResult),
-    matches: List(SearchResult),
-    signature_searches: List(SearchResult),
+    exact_name_matches: List(SearchResult),
+    name_signature_matches: List(SearchResult),
+    vector_signature_searches: List(SearchResult),
     docs_searches: List(SearchResult),
     module_searches: List(SearchResult),
   )

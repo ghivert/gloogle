@@ -89,6 +89,8 @@ fn handle_oncheck_filter(model, filter, value) {
     msg.Documented, value -> model.Model(..model, keep_documented: value)
     msg.ShowOldPackages, value -> model.Model(..model, show_old_packages: value)
     msg.VectorSearch, value -> model.Model(..model, show_vector_search: value)
+    msg.DocumentationSearch, value ->
+      model.Model(..model, show_documentation_search: value)
   }
   |> model.update_search_results_filter
   |> update.none

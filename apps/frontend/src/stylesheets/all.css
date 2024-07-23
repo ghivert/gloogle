@@ -39,7 +39,7 @@ lazy-node:has(:not(:defined)) {
   padding-right: 48px;
   padding-bottom: 24px;
   gap: 36px;
-  grid-template-columns: min-content 1fr;
+  grid-template-columns: 300px 1fr;
   justify-items: center;
 }
 
@@ -305,6 +305,7 @@ lazy-node:has(:not(:defined)) {
   padding: 20px;
   border-right: 1px solid var(--border-color);
   margin-bottom: -24px;
+  width: 100%;
   mask: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0) 0%,
@@ -358,7 +359,7 @@ lazy-node:has(:not(:defined)) {
   flex-direction: column;
   gap: 9px;
   font-size: 14px;
-  max-width: 250px;
+  max-width: calc(300px - 40px);
 }
 
 .main {

@@ -49,7 +49,7 @@ pub fn search_input(loading, small, children) {
       True -> "var(--dark-background)"
     }),
     s.transition("padding .3s"),
-    s.align_items("baseline"),
+    s.align_items("center"),
     s.padding(
       px(case loading, small {
         True, False -> 16
@@ -73,30 +73,13 @@ pub fn search_input_content(attributes) {
   ])
 }
 
-pub fn filter_pills(attributes, children) {
-  l.element("div", attributes, children, [
-    s.display("flex"),
-    s.gap(px(12)),
-    s.justify_content("end"),
-    s.media(media.max_width(px(700)), [s.display("none")]),
-  ])
-}
-
-pub fn filter_pill(active: Bool, attributes, children) {
-  let id = "filter_pill-active-" <> bool.to_string(active)
-  l.dynamic("button", attributes, children, id, [
-    s.background("var(--secondary)"),
-    // s.color("var(--text-color)"),
-    s.padding_("3px 12px"),
-    s.border_radius(px(30)),
-    s.font_size(px(12)),
-    s.transition("opacity .3s"),
-    s.appearance("none"),
-    s.border("none"),
-    s.cursor("pointer"),
-    s.opacity(case active {
-      True -> 1.0
-      False -> 0.5
-    }),
+pub fn shortcut_hint(attrs, children) {
+  l.element("div", attrs, children, [
+    s.white_space("nowrap"),
+    s.font_size(px(11)),
+    s.border("1px solid var(--text-color)"),
+    s.padding_("3px 6px"),
+    s.border_radius(px(6)),
+    s.opacity(0.4),
   ])
 }

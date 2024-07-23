@@ -43,3 +43,20 @@ export function coerce(a) {
 export function coerceEvent(a) {
   return a.detail
 }
+
+export function subscribeFocus() {
+  document.addEventListener('keydown', event => {
+    if ((!event.metaKey && !event.ctrlKey) || event.key !== 'k') return
+    const element = document.getElementById('search-input')
+    if (element) {
+      element.focus()
+      element.select()
+    }
+  })
+}
+
+export function isMac() {
+  return (
+    navigator.platform.indexOf('Mac') === 0 || navigator.platform === 'iPhone'
+  )
+}

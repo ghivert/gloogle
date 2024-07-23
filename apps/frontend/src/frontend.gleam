@@ -29,6 +29,14 @@ import toast/error as toast_error
 @external(javascript, "./config.ffi.mjs", "scrollTo")
 fn scroll_to_element(id: String) -> fn(dispatch) -> Nil
 
+@external(javascript, "./config.ffi.mjs", "subscribeFocus")
+fn do_subscribe_focus() -> Nil
+
+fn subscribe_focus() {
+  use _ <- effect.from()
+  do_subscribe_focus()
+}
+
 pub fn main() {
   let assert Ok(cache) = sketch.setup(sketch_options.node())
   let assert Ok(_) = lazy.setup()
@@ -54,6 +62,7 @@ fn init(_) {
   submit_search(initial.0)
   |> update.add_effect(modem.init(on_url_change))
   |> update.add_effect(router.update_page_title({ initial.0 }.route))
+  |> update.add_effect(subscribe_focus())
   |> update.add_effect(
     http.expect_json(dynamic.list(package.decoder), msg.Trendings)
     |> http.get(config.api_endpoint() <> "/trendings", _),

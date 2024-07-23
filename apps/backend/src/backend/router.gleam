@@ -8,7 +8,6 @@ import cors_builder as cors
 import gleam/erlang/process
 import gleam/http
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option
@@ -43,7 +42,6 @@ fn search(query: String, ctx: Context) {
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
     |> list.filter(fn(i) { !list.contains(exact_type_searches, i) })
-    |> io.debug
 
   let exact_module_and_name_matches =
     queries.module_and_name_search(ctx.db, query)

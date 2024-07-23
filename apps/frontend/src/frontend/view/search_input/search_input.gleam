@@ -1,19 +1,29 @@
 import data/msg
 import frontend/view/search_input/styles as s
 import lustre/attribute as a
+import lustre/element as el
 import lustre/event as e
 
+@external(javascript, "../../../config.ffi.mjs", "isMac")
+fn is_mac() -> Bool
+
 pub fn view(loading loading: Bool, input input: String, small small: Bool) {
+  let modifier = case is_mac() {
+    True -> "Cmd"
+    False -> "Ctrl"
+  }
   s.search_with_filters([], [
     s.search_input_wrapper(loading, [
       s.search_input(loading, small, [
         s.search_input_content([
+          a.id("search-input"),
           a.placeholder("Search for a function, or a type"),
           e.on_input(msg.UpdateInput),
           a.value(input),
           a.attribute("autocorrect", "off"),
           a.attribute("autocapitalize", "none"),
         ]),
+        s.shortcut_hint([], [el.text(modifier <> " + K")]),
       ]),
     ]),
   ])

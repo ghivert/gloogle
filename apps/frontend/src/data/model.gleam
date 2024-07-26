@@ -10,6 +10,7 @@ import gleam/int
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
+import gleam/regex
 import gleam/result
 import gleam/string
 import lustre/element.{type Element}
@@ -161,24 +162,33 @@ fn extract_package_version(
   acc: Dict(String, String),
   search_result: search_result.SearchResult,
 ) -> Dict(String, String) {
-  case dict.get(acc, search_result.package_name) {
-    Error(_) ->
-      dict.insert(acc, search_result.package_name, search_result.version)
-    Ok(content) -> {
-      let old =
-        string.split(content, ".")
-        |> list.map(int.parse)
-        |> list.map(result.unwrap(_, 0))
-      let new =
-        string.split(search_result.version, ".")
-        |> list.map(int.parse)
-        |> list.map(result.unwrap(_, 0))
-      case new |> is_higher(old) {
-        True ->
+  let assert Ok(re) = regex.from_string("^[0-9]*.[0-9]*.[0-9]*$")
+  case regex.check(re, search_result.version) {
+    False -> acc
+    True ->
+      case dict.get(acc, search_result.package_name) {
+        Error(_) ->
           dict.insert(acc, search_result.package_name, search_result.version)
-        False -> acc
+        Ok(content) -> {
+          let old =
+            string.split(content, ".")
+            |> list.map(int.parse)
+            |> list.map(result.unwrap(_, 0))
+          let new =
+            string.split(search_result.version, ".")
+            |> list.map(int.parse)
+            |> list.map(result.unwrap(_, 0))
+          case new |> is_higher(old) {
+            True ->
+              dict.insert(
+                acc,
+                search_result.package_name,
+                search_result.version,
+              )
+            False -> acc
+          }
+        }
       }
-    }
   }
 }
 

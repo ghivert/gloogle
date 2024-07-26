@@ -6,8 +6,10 @@ import backend/postgres/queries
 import backend/web
 import cors_builder as cors
 import gleam/erlang/process
+import gleam/function
 import gleam/http
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option
@@ -93,6 +95,7 @@ fn search(query: String, ctx: Context) {
     queries.module_search(ctx.db, query)
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
+    |> function.tap(fn(s) { io.debug(list.length(s)) })
     |> list.filter(fn(i) {
       !list.contains(
         list.concat([

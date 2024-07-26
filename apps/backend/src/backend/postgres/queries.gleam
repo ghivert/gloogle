@@ -8,6 +8,7 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -422,7 +423,7 @@ pub fn upsert_package_type_fun_signature(
 
 pub fn name_search(db: pgo.Connection, query: String) {
   let query = pgo.text(query)
-  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -441,7 +442,7 @@ pub fn name_search(db: pgo.Connection, query: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE s.name = $1
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -451,7 +452,7 @@ pub fn name_search(db: pgo.Connection, query: String) {
 pub fn module_and_name_search(db: pgo.Connection, query: String) {
   let query = pgo.text(query)
   "WITH splitted_name AS (SELECT string_to_array($1, '.') AS full_name)
-   SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+   SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -473,7 +474,7 @@ pub fn module_and_name_search(db: pgo.Connection, query: String) {
      ON true
    WHERE s.name = s_n.full_name[2]
    AND m.name LIKE '%' || s_n.full_name[1] || '%'
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -494,7 +495,7 @@ fn transform_query(q: String) {
 pub fn content_search(db: pgo.Connection, query: String) {
   let pattern = pgo.text(transform_query(query))
   let query = pgo.text(query)
-  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -519,7 +520,7 @@ pub fn content_search(db: pgo.Connection, query: String) {
       OR replace(s.signature_, ' ', '') ILIKE '%' || $1 || '%'
       OR replace(s.signature_, ' ', '') LIKE '%' || replace($2, ' ', '%') || '%'
     )
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
    LIMIT 100"
   |> pgo.execute(db, [query, pattern], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -556,7 +557,7 @@ pub fn type_search_to_json(item) {
 
 pub fn signature_search(db: pgo.Connection, q: String) {
   let query = pgo.text(q)
-  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -575,7 +576,7 @@ pub fn signature_search(db: pgo.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ websearch_to_tsquery($1)
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -584,7 +585,7 @@ pub fn signature_search(db: pgo.Connection, q: String) {
 
 pub fn documentation_search(db: pgo.Connection, q: String) {
   let query = pgo.text(q)
-  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -603,7 +604,7 @@ pub fn documentation_search(db: pgo.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.documentation) @@ websearch_to_tsquery($1)
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
@@ -612,7 +613,7 @@ pub fn documentation_search(db: pgo.Connection, q: String) {
 
 pub fn module_search(db: pgo.Connection, q: String) {
   let query = pgo.text(q)
-  "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -631,8 +632,16 @@ pub fn module_search(db: pgo.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE m.name LIKE '%' || $1 || '%'
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC
-   LIMIT 100"
+     AND r.version = (
+       SELECT MAX(version)
+       FROM package_release r
+       JOIN package_module m
+         ON m.package_release_id = r.id
+       WHERE m.name LIKE '%' || 'cake' || '%'
+         AND version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+         AND r.id = m.package_release_id
+     )
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
   |> pgo.execute(db, [query], decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -643,7 +652,8 @@ pub fn exact_type_search(db: pgo.Connection, q: List(Int)) {
   let ids =
     list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
     |> string.join(", ")
-  { "SELECT DISTINCT ON (package_rank, type_name, signature_kind, module_name)
+  {
+    "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation,
      s.kind signature_kind,
@@ -661,8 +671,11 @@ pub fn exact_type_search(db: pgo.Connection, q: List(Int)) {
      ON m.package_release_id = r.id
    JOIN package p
      ON p.id = r.package_id
-   WHERE s.id IN (" <> ids <> ")
-   ORDER BY package_rank DESC, type_name, signature_kind, module_name, ordering DESC" }
+   WHERE s.id IN ("
+    <> ids
+    <> ")
+   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
+  }
   |> pgo.execute(db, list.map(q, pgo.int), decode_type_search)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })

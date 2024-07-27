@@ -1,15 +1,10 @@
 import data/msg
-import frontend/ffi
 import frontend/view/search_input/styles as s
 import lustre/attribute as a
 import lustre/element as el
 import lustre/event as e
 
 pub fn view(loading loading: Bool, input input: String, small small: Bool) {
-  let modifier = case ffi.is_mac() {
-    True -> "Cmd"
-    False -> "Ctrl"
-  }
   s.search_with_filters([], [
     s.search_input_wrapper(loading, [
       s.search_input(loading, small, [
@@ -21,7 +16,7 @@ pub fn view(loading loading: Bool, input input: String, small small: Bool) {
           a.attribute("autocorrect", "off"),
           a.attribute("autocapitalize", "none"),
         ]),
-        s.shortcut_hint([], [el.text(modifier <> " + K")]),
+        s.shortcut_hint([], [el.text("s")]),
       ]),
     ]),
   ])

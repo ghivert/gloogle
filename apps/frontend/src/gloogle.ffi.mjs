@@ -46,14 +46,20 @@ export function coerceEvent(a) {
 
 export function subscribeFocus(callback) {
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') return callback(event.key)
-    if ((!event.metaKey && !event.ctrlKey) || event.key !== 'k') return
-    callback(event.key)
+    if (event.key === 'Escape') return callback(event)
+    if (event.key !== 's') return
+    callback(event)
   })
 }
 
-export function focus(id) {
+export function isActive(id) {
   const element = document.getElementById(id)
+  return element === document.activeElement
+}
+
+export function focus(id, event) {
+  const element = document.getElementById(id)
+  event.preventDefault()
   if (element) {
     element.focus()
     element.select()
@@ -65,12 +71,6 @@ export function unfocus() {
   if (element) {
     element.blur()
   }
-}
-
-export function isMac() {
-  return (
-    navigator.platform.indexOf('Mac') === 0 || navigator.platform === 'iPhone'
-  )
 }
 
 export function isMobile() {

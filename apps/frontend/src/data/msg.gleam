@@ -2,6 +2,7 @@ import data/package
 import data/search_result.{type SearchResults}
 import frontend/router
 import lustre_http as http
+import plinth/browser/event.{type Event}
 
 pub type Filter {
   Functions
@@ -15,7 +16,7 @@ pub type Filter {
 
 pub type Msg {
   None
-  OnSearchFocus
+  OnSearchFocus(event: Event)
   SubmitSearch
   UpdateIsMobile(is_mobile: Bool)
   SearchResults(input: String, result: Result(SearchResults, http.HttpError))

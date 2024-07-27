@@ -23,13 +23,16 @@ import lustre/lazy
 import lustre/update
 import lustre_http as http
 import modem
+import plinth/browser/event.{type Event}
 import sketch/lustre as sketch
 import sketch/options as sketch_options
 import toast/error as toast_error
 
-fn focus(on id: String) {
+fn focus(on id: String, event event: Event) {
   use _ <- effect.from()
-  ffi.focus(on: id)
+  use <- bool.guard(when: ffi.is_active(id), return: Nil)
+  event.prevent_default(event)
+  ffi.focus(on: id, event: event)
 }
 
 fn unfocus() {
@@ -39,10 +42,10 @@ fn unfocus() {
 
 fn subscribe_focus() {
   use dispatch <- effect.from()
-  use key <- ffi.subscribe_focus()
-  case key {
+  use event <- ffi.subscribe_focus()
+  case event.key(event) {
     "Escape" -> dispatch(msg.OnEscape)
-    _ -> dispatch(msg.OnSearchFocus)
+    _ -> dispatch(msg.OnSearchFocus(event))
   }
 }
 
@@ -99,7 +102,8 @@ fn update(model: Model, msg: Msg) {
     msg.ScrollTo(id) -> scroll_to(model, id)
     msg.OnRouteChange(route) -> handle_route_change(model, route)
     msg.Trendings(trendings) -> handle_trendings(model, trendings)
-    msg.OnSearchFocus -> update.effect(model, focus(on: "search-input"))
+    msg.OnSearchFocus(event) ->
+      update.effect(model, focus(on: "search-input", event: event))
     msg.OnEscape -> update.effect(model, unfocus())
     msg.UpdateIsMobile(is_mobile) ->
       model
@@ -153,12 +157,14 @@ fn submit_search(model: Model) {
         Some("q=" <> new_model.submitted_input)
         |> modem.push("search", _, None)
       })
+      |> update.add_effect(unfocus())
     }
     Error(_) ->
       msg.SearchResults(input: model.input, result: _)
       |> http.expect_json(search_result.decode_search_results, _)
       |> http.get(config.api_endpoint() <> "/search?q=" <> model.input, _)
       |> update.effect(model.toggle_loading(new_model), _)
+      |> update.add_effect(unfocus())
   }
 }
 

@@ -633,12 +633,13 @@ pub fn module_search(db: pgo.Connection, q: String) {
      ON p.id = r.package_id
    WHERE m.name LIKE '%' || $1 || '%'
      AND r.version = (
-       SELECT MAX(version)
+       SELECT MAX(r.version)
        FROM package_release r
-       JOIN package_module m
-         ON m.package_release_id = r.id
-       WHERE m.name LIKE '%' || 'cake' || '%'
+       JOIN package_module mod
+         ON mod.package_release_id = r.id
+       WHERE mod.name = m.name
          AND version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+         AND r.package_id = p.id
          AND r.id = m.package_release_id
      )
    ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"

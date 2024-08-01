@@ -1,22 +1,18 @@
 import backend/gleam/parse
 import backend/gleam/type_search.{type TypeSearch}
+import backend/gleam/type_search/msg
 import gleam/bool
 import gleam/dynamic
-import gleam/erlang/process.{type Subject}
+import gleam/erlang/process
 import gleam/function
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option
 import gleam/otp/actor
 import gleam/pgo
 import gleam/result
 
 pub type State {
   State(db: pgo.Connection, search: TypeSearch)
-}
-
-pub type Msg {
-  Find(Subject(Option(List(Int))), String)
-  Add(String, Int)
 }
 
 pub fn init(db: pgo.Connection) {
@@ -40,18 +36,18 @@ pub fn init(db: pgo.Connection) {
   actor.start_spec(actor.Spec(init, init_timeout: 120_000, loop: loop))
 }
 
-fn loop(msg: Msg, state: State) -> actor.Next(Msg, State) {
+fn loop(msg: msg.Msg, state: State) -> actor.Next(msg.Msg, State) {
   case msg {
-    Find(subject, signature) -> {
+    msg.Find(subject, signature) -> {
       signature
       |> parse.parse_function
       |> result.nil_error
-      |> result.then(type_search.find(state.search, _))
+      |> result.then(type_search.find(state.search, _, state.db))
       |> option.from_result
       |> function.tap(fn(res) { process.send(subject, res) })
       actor.continue(state)
     }
-    Add(signature, id) -> {
+    msg.Add(signature, id) -> {
       signature
       |> parse.parse_function
       |> result.map(fn(kind) { type_search.add(state.search, kind, id) })

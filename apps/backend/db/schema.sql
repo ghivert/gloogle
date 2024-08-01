@@ -10,6 +10,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: fuzzystrmatch; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION fuzzystrmatch; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION fuzzystrmatch IS 'determine similarities and distance between strings';
+
+
+--
 -- Name: moddatetime; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -567,4 +581,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240518232212'),
     ('20240521174525'),
     ('20240521204341'),
-    ('20240801164720');
+    ('20240801164720'),
+    ('20240801211520');

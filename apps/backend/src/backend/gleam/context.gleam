@@ -1,4 +1,4 @@
-import backend/gleam/type_search/state as type_search
+import backend/gleam/type_search/msg as type_search
 import gleam/dict.{type Dict}
 import gleam/erlang/process.{type Subject}
 import gleam/option.{type Option}

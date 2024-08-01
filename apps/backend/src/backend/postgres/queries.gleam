@@ -8,7 +8,6 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -433,6 +432,16 @@ pub fn upsert_package_type_fun_signature(
     ],
     dynamic.element(0, dynamic.int),
   )
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+pub fn find_similar_type_names(db: pgo.Connection, name: String) {
+  "SELECT DISTINCT ON (name) name
+   FROM package_type_fun_signature
+   WHERE kind = 'type_definition'
+     AND levenshtein_less_equal(name, $1, 2) <= 2;"
+  |> pgo.execute(db, [pgo.text(name)], dynamic.element(0, dynamic.string))
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }

@@ -1,12 +1,11 @@
 import api/hex
 import backend/config.{type Context}
 import backend/error
-import backend/gleam/type_search/state as type_search
+import backend/gleam/type_search/msg as type_search
 import backend/postgres/queries
 import backend/web
 import cors_builder as cors
 import gleam/erlang/process
-import gleam/function
 import gleam/http
 import gleam/int
 import gleam/io
@@ -27,7 +26,7 @@ fn empty_json() {
 
 fn search(query: String, ctx: Context) {
   wisp.log_notice("Searching for " <> query)
-  let _ = queries.upsert_search_analytics(ctx.db, query) |> io.debug
+  let _ = queries.upsert_search_analytics(ctx.db, query)
 
   let exact_type_searches =
     option.then(ctx.type_search_subject, fn(subject) {

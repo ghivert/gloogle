@@ -5,7 +5,7 @@ import backend/config.{type Context}
 import backend/data/hex_read.{type HexRead}
 import backend/error.{type Error}
 import backend/gleam/context
-import backend/gleam/type_search/state as type_search
+import backend/gleam/type_search/msg as type_search
 import backend/postgres/queries
 import birl.{type Time}
 import birl/duration

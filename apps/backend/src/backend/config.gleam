@@ -1,4 +1,4 @@
-import backend/gleam/type_search/state as type_search
+import backend/gleam/type_search/msg as type_search
 import gleam/erlang/os
 import gleam/erlang/process.{type Subject}
 import gleam/int

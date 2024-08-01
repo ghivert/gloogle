@@ -8,7 +8,7 @@ import backend/gleam/generate/types.{
   constant_to_json, function_to_json, type_alias_to_json,
   type_definition_to_json,
 }
-import backend/gleam/type_search/state as type_search
+import backend/gleam/type_search/msg as type_search
 import backend/postgres/queries
 import gleam/bool
 import gleam/dict

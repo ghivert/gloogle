@@ -138,26 +138,26 @@ fn get_next_tree(
           get_next_tree(key, kind, env)
         }
       }
-    parse.Function(kinds, return) -> {
-      let kinds = postpend(kinds, return)
+    parse.Function(params, return) -> {
+      let params = postpend(params, return)
       case dict.get(keys.keys, "fn") {
         Error(_) -> []
         Ok(keys) -> {
-          use envs, kind <- list.fold(kinds, [#(keys, env)])
+          use envs, param <- list.fold(params, [#(keys, env)])
           use env <- list.flat_map(envs)
           let #(key, env) = env
-          get_next_tree(key, kind, env)
+          get_next_tree(key, param, env)
         }
       }
     }
-    parse.Tuple(kinds) -> {
+    parse.Tuple(params) -> {
       case dict.get(keys.keys, "#()") {
         Error(_) -> []
         Ok(keys) -> {
-          use envs, kind <- list.fold(kinds, [#(keys, env)])
+          use envs, param <- list.fold(params, [#(keys, env)])
           use env <- list.flat_map(envs)
           let #(key, env) = env
-          get_next_tree(key, kind, env)
+          get_next_tree(key, param, env)
         }
       }
     }
@@ -196,12 +196,12 @@ fn find_next_tree(
           })
         }
       }
-    parse.Function(kinds, return) -> {
-      let kinds = postpend(kinds, return)
+    parse.Function(params, return) -> {
+      let params = postpend(params, return)
       case dict.get(keys.keys, "fn") {
         Error(_) -> []
         Ok(keys) -> {
-          list.fold(kinds, [#(keys, env)], fn(acc, param) {
+          list.fold(params, [#(keys, env)], fn(acc, param) {
             list.flat_map(acc, fn(a) { get_next_tree(a.0, param, a.1) })
           })
           |> list.flat_map(fn(val) {
@@ -211,11 +211,11 @@ fn find_next_tree(
         }
       }
     }
-    parse.Tuple(kinds) -> {
+    parse.Tuple(params) -> {
       case dict.get(keys.keys, "#()") {
         Error(_) -> []
         Ok(keys) -> {
-          list.fold(kinds, [#(keys, env)], fn(acc, param) {
+          list.fold(params, [#(keys, env)], fn(acc, param) {
             list.flat_map(acc, fn(a) { get_next_tree(a.0, param, a.1) })
           })
           |> list.flat_map(fn(val) {

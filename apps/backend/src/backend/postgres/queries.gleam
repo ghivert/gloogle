@@ -439,8 +439,8 @@ pub fn upsert_package_type_fun_signature(
 pub fn find_similar_type_names(db: pgo.Connection, name: String) {
   "SELECT DISTINCT ON (name) name
    FROM package_type_fun_signature
-   WHERE kind = 'type_definition'
-     AND levenshtein_less_equal(name, $1, 2) <= 2;"
+   WHERE (kind = 'type_definition' OR kind = 'type_alias')
+     AND levenshtein_less_equal(name, $1, 2) <= 2"
   |> pgo.execute(db, [pgo.text(name)], dynamic.element(0, dynamic.string))
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })

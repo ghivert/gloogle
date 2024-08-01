@@ -439,6 +439,13 @@ ALTER TABLE ONLY public.search_analytics
 
 
 --
+-- Name: package_name_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_name_index ON public.package_type_fun_signature USING btree (name, kind);
+
+
+--
 -- Name: package_type_fun_signature_documentation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -582,4 +589,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240521174525'),
     ('20240521204341'),
     ('20240801164720'),
-    ('20240801211520');
+    ('20240801211520'),
+    ('20240801220817');

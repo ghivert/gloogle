@@ -8,6 +8,7 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -448,7 +449,7 @@ pub fn find_similar_type_names(db: pgo.Connection, name: String) {
      ('Result'),
      ('BitArray')
    ) AS t (name)
-   WHERE levenshtein_less_equal(name, 'Int', 2) <= 2
+   WHERE levenshtein_less_equal(name, $1, 2) <= 2
    UNION
    SELECT DISTINCT ON (name) name
    FROM package_type_fun_signature
@@ -457,6 +458,7 @@ pub fn find_similar_type_names(db: pgo.Connection, name: String) {
   |> pgo.execute(db, [pgo.text(name)], dynamic.element(0, dynamic.string))
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
+  |> io.debug
 }
 
 pub fn name_search(db: pgo.Connection, query: String) {

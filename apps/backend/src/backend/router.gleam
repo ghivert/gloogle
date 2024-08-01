@@ -95,7 +95,6 @@ fn search(query: String, ctx: Context) {
     queries.module_search(ctx.db, query)
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
-    |> function.tap(fn(s) { io.debug(list.length(s)) })
     |> list.filter(fn(i) {
       !list.contains(
         list.concat([

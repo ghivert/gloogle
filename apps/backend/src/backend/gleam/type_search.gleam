@@ -1,5 +1,6 @@
 import backend/gleam/parse.{type Kind, Function}
 import gleam/dict.{type Dict}
+import gleam/int
 import gleam/list
 import gleam/option.{type Option}
 import gleam/result
@@ -26,45 +27,50 @@ fn postpend(list: List(a), value: a) {
 
 fn update_keys(
   keys: Keys,
-  kind: Kind,
+  kinds: List(Kind),
   updater: fn(TypeSearch) -> TypeSearch,
 ) -> Keys {
-  let new_keys = case kind {
-    parse.Index(value, _index) ->
-      dict.update(keys.keys, value, fn(k) {
-        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
-        let next = option.Some(updater(k.next |> option.unwrap(empty())))
-        Keys(..k, next: next)
-      })
-    parse.Custom(value, []) ->
-      dict.update(keys.keys, value, fn(k) {
-        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
-        let next = option.Some(updater(k.next |> option.unwrap(empty())))
-        Keys(..k, next: next)
-      })
-    parse.Custom(value, kinds) ->
-      dict.update(keys.keys, value, fn(k) {
-        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
-        use acc, val <- list.fold(kinds, k)
-        update_keys(acc, val, updater)
-      })
-    parse.Function(kinds, return) -> {
-      let kinds = postpend(kinds, return)
-      dict.update(keys.keys, "fn", fn(k) {
-        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
-        use acc, val <- list.fold(kinds, k)
-        update_keys(acc, val, updater)
-      })
+  case kinds {
+    [] -> {
+      let next =
+        keys.next
+        |> option.unwrap(empty())
+        |> updater
+        |> option.Some
+      Keys(..keys, next: next)
     }
-    parse.Tuple(kinds) -> {
-      dict.update(keys.keys, "#()", fn(k) {
-        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
-        use acc, val <- list.fold(kinds, k)
-        update_keys(acc, val, updater)
-      })
+    [k, ..rest] -> {
+      let next = option.None
+      let new_keys = case k {
+        parse.Index(_value, index) -> {
+          let value = int.to_string(index)
+          dict.update(keys.keys, value, fn(k) {
+            let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
+            update_keys(k, rest, updater)
+          })
+        }
+        parse.Custom(value, kinds) ->
+          dict.update(keys.keys, value, fn(k) {
+            let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
+            update_keys(k, list.append(kinds, rest), updater)
+          })
+        parse.Function(kinds, return) -> {
+          let kinds = postpend(kinds, return)
+          dict.update(keys.keys, "fn", fn(k) {
+            let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
+            update_keys(k, list.append(kinds, rest), updater)
+          })
+        }
+        parse.Tuple(kinds) -> {
+          dict.update(keys.keys, "#()", fn(k) {
+            let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
+            update_keys(k, list.append(kinds, rest), updater)
+          })
+        }
+      }
+      Keys(..keys, keys: new_keys)
     }
   }
-  Keys(..keys, keys: new_keys)
 }
 
 fn do_add(searches: TypeSearch, kinds: List(Kind), id: Int) -> TypeSearch {
@@ -73,7 +79,7 @@ fn do_add(searches: TypeSearch, kinds: List(Kind), id: Int) -> TypeSearch {
     [kind, ..rest] -> {
       TypeSearch(
         ..searches,
-        keys: update_keys(searches.keys, kind, do_add(_, rest, id)),
+        keys: update_keys(searches.keys, [kind], do_add(_, rest, id)),
       )
     }
   }
@@ -81,15 +87,17 @@ fn do_add(searches: TypeSearch, kinds: List(Kind), id: Int) -> TypeSearch {
 
 pub fn add(searches: TypeSearch, kind: Kind, id: Int) {
   case kind {
-    Function(kinds, return_value) ->
-      do_add(searches, postpend(kinds, return_value), id)
+    Function(kinds, return_value) -> {
+      let kinds = postpend(kinds, return_value)
+      do_add(searches, kinds, id)
+    }
     _ -> searches
   }
 }
 
 fn find_next_tree(keys: Keys, kind: Kind) -> Result(Keys, Nil) {
   case kind {
-    parse.Index(value, index) -> dict.get(keys.keys, value)
+    parse.Index(_value, index) -> dict.get(keys.keys, int.to_string(index))
     parse.Custom(value, params) ->
       case dict.get(keys.keys, value) {
         Error(_) -> Error(Nil)

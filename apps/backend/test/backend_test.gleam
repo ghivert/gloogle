@@ -1,4 +1,4 @@
-import backend/gleam/parse.{type Kind, Function}
+import backend/gleam/parse
 import backend/gleam/type_search
 import gleam/function
 import gleam/int
@@ -6,14 +6,13 @@ import gleam/io
 import gleam/result
 import gleeunit
 import gleeunit/should
-import pprint
 
 pub fn main() {
   gleeunit.main()
 }
 
 const signature = "fn decode14(
-  fn(a, b, c, d, e, f, g, h, i, j, k, l, m, n) -> o,
+  fn(a, b, c, d, e, f, g, h, i, j, k, l, m, _) -> o,
   #(a, b),
   fn(gleam/dynamic.Dynamic) -> Result(a, List(gleam/dynamic.DecodeError)),
   fn(gleam/dynamic.Dynamic) -> Result(b, List(gleam/dynamic.DecodeError)),

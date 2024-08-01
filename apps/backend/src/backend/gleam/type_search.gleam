@@ -42,6 +42,7 @@ fn update_keys(
     [k, ..rest] -> {
       let next = option.None
       let new_keys = case k {
+        parse.DiscardName -> panic as "No Discard name in add"
         parse.Index(_value, index) -> {
           let value = int.to_string(index)
           dict.update(keys.keys, value, fn(k) {
@@ -95,43 +96,38 @@ pub fn add(searches: TypeSearch, kind: Kind, id: Int) {
   }
 }
 
-fn find_next_tree(keys: Keys, kind: Kind) -> Result(Keys, Nil) {
+fn find_next_tree(keys: Keys, kind: Kind) -> List(Keys) {
   case kind {
-    parse.Index(_value, index) -> dict.get(keys.keys, int.to_string(index))
+    parse.DiscardName -> dict.values(keys.keys)
+    parse.Index(_value, index) ->
+      dict.get(keys.keys, int.to_string(index))
+      |> result.map(list.wrap)
+      |> result.unwrap([])
     parse.Custom(value, params) ->
       case dict.get(keys.keys, value) {
-        Error(_) -> Error(Nil)
-        Ok(keys) ->
-          list.fold(params, Ok(keys), fn(acc, val) {
-            case acc {
-              Error(_) -> Error(Nil)
-              Ok(acc) -> find_next_tree(acc, val)
-            }
-          })
+        Error(_) -> []
+        Ok(keys) -> {
+          use acc, val <- list.fold(params, [keys])
+          list.flat_map(acc, find_next_tree(_, val))
+        }
       }
     parse.Function(kinds, return) -> {
       let kinds = postpend(kinds, return)
       case dict.get(keys.keys, "fn") {
-        Error(_) -> Error(Nil)
-        Ok(keys) ->
-          list.fold(kinds, Ok(keys), fn(acc, val) {
-            case acc {
-              Error(_) -> Error(Nil)
-              Ok(acc) -> find_next_tree(acc, val)
-            }
-          })
+        Error(_) -> []
+        Ok(keys) -> {
+          use acc, val <- list.fold(kinds, [keys])
+          list.flat_map(acc, find_next_tree(_, val))
+        }
       }
     }
     parse.Tuple(kinds) -> {
       case dict.get(keys.keys, "#()") {
-        Error(_) -> Error(Nil)
-        Ok(keys) ->
-          list.fold(kinds, Ok(keys), fn(acc, val) {
-            case acc {
-              Error(_) -> Error(Nil)
-              Ok(acc) -> find_next_tree(acc, val)
-            }
-          })
+        Error(_) -> []
+        Ok(keys) -> {
+          use acc, val <- list.fold(kinds, [keys])
+          list.flat_map(acc, find_next_tree(_, val))
+        }
       }
     }
   }
@@ -139,11 +135,13 @@ fn find_next_tree(keys: Keys, kind: Kind) -> Result(Keys, Nil) {
 
 fn do_find(searches: TypeSearch, kinds: List(Kind)) {
   case kinds {
-    [] -> Ok(searches.rows)
+    [] -> searches.rows
     [kind, ..rest] ->
       find_next_tree(searches.keys, kind)
-      |> result.then(fn(k) { option.to_result(k.next, Nil) })
-      |> result.then(do_find(_, rest))
+      |> list.flat_map(fn(k) {
+        k.next |> option.map(list.wrap) |> option.unwrap([])
+      })
+      |> list.flat_map(do_find(_, rest))
   }
 }
 
@@ -153,6 +151,7 @@ pub fn find(searches: TypeSearch, kind: Kind) {
       kinds
       |> postpend(return_value)
       |> do_find(searches, _)
+      |> Ok
     _ -> Error(Nil)
   }
 }

@@ -172,32 +172,16 @@ fn find_next_tree(
 ) -> List(Int) {
   case kind {
     parse.DiscardName -> {
-      dict.values(keys.keys)
-      |> list.flat_map(fn(key) {
-        option.map(key.next, do_find(_, kinds, env))
-        |> option.unwrap([])
-      })
+      let values = get_next_tree(keys, kind, env)
+      use #(keys, env) <- list.flat_map(values)
+      option.map(keys.next, do_find(_, kinds, env))
+      |> option.unwrap([])
     }
-    parse.Index(_value, index) -> {
-      case dict.get(env, index) {
-        Ok(content) -> {
-          dict.get(keys.keys, content)
-          |> result.then(fn(k) {
-            option.map(k.next, do_find(_, kinds, env))
-            |> option.to_result(Nil)
-          })
-          |> result.unwrap([])
-        }
-        Error(_) -> {
-          let existing_values = dict.values(env)
-          dict.keys(keys.keys)
-          |> list.filter(fn(a) { int.parse(a) |> result.is_ok })
-          |> list.filter(fn(a) { !list.contains(existing_values, a) })
-          |> list.flat_map(fn(a) {
-            find_next_tree(keys, kind, kinds, dict.insert(env, index, a))
-          })
-        }
-      }
+    parse.Index(_value, _index) -> {
+      let values = get_next_tree(keys, kind, env)
+      use #(keys, env) <- list.flat_map(values)
+      option.map(keys.next, do_find(_, kinds, env))
+      |> option.unwrap([])
     }
     parse.Custom(value, params) ->
       case dict.get(keys.keys, value) {

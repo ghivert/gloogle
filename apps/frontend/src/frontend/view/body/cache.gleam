@@ -50,6 +50,27 @@ fn maybe_separator(l) {
   }
 }
 
+fn empty_types() {
+  h.div([a.class("search-result-empty-callout")], [
+    h.text("Unfortunately, your query did not find any matching function."),
+    h.text("Keep in mind you can use _ when you don't"),
+    h.text(" know the type you're searching for."),
+    h.br([]),
+    h.text("You can still take a look below, in case the vector search"),
+    h.text(" returned an approximate result. Otherwise, refine your request!"),
+  ])
+}
+
+fn types_separator() {
+  h.div([a.class("search-result-empty-callout")], [
+    h.text("Starting here, Gloogle tries to respond to your query by trying "),
+    h.text("different strategies, like looking in documentation or with "),
+    h.text("a vector search!"),
+    h.br([]),
+    h.text("Results can be approximate, but maybe you'll find what you need!"),
+  ])
+}
+
 pub fn cache_search_results(
   search: String,
   index: List(#(#(String, String), List(#(String, String)))),
@@ -68,8 +89,16 @@ pub fn cache_search_results(
           h.text("Search results for “" <> search <> "”"),
         ]),
       ]),
-      view_search_results(types),
-      maybe_separator(types),
+      case types {
+        [] -> empty_types()
+        types ->
+          el.fragment([
+            view_search_results(types),
+            h.div([a.class("search-result-separator")], []),
+            types_separator(),
+          ])
+      },
+      h.div([a.class("search-result-separator")], []),
       view_search_results(exact),
       maybe_separator(exact),
       view_search_results(others),

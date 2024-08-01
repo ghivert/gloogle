@@ -285,6 +285,18 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: search_analytics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.search_analytics (
+    query text NOT NULL,
+    occurences integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
 -- Name: analytics analytics_foreign_id_table_name_day_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -405,6 +417,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: search_analytics search_analytics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_analytics
+    ADD CONSTRAINT search_analytics_pkey PRIMARY KEY (query);
+
+
+--
 -- Name: package_type_fun_signature_documentation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -475,6 +495,13 @@ CREATE TRIGGER package_type_fun_signature_moddatetime BEFORE UPDATE ON public.pa
 
 
 --
+-- Name: search_analytics search_analytics_moddatetime; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_analytics_moddatetime BEFORE UPDATE ON public.search_analytics FOR EACH ROW EXECUTE FUNCTION public.moddatetime('updated_at');
+
+
+--
 -- Name: package_module package_module_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -539,4 +566,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240517083006'),
     ('20240518232212'),
     ('20240521174525'),
-    ('20240521204341');
+    ('20240521204341'),
+    ('20240801164720');

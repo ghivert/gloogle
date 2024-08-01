@@ -1,15 +1,20 @@
 import backend/gleam/parse.{type Kind, Function}
 import gleam/dict.{type Dict}
 import gleam/list
-import gleam/option
+import gleam/option.{type Option}
 import gleam/result
 
 pub type TypeSearch {
-  TypeSearch(entries: Dict(Kind, TypeSearch), rows: List(Int))
+  TypeSearch(keys: Keys, rows: List(Int))
+}
+
+pub type Keys {
+  Keys(keys: Dict(String, Keys), next: Option(TypeSearch))
 }
 
 pub fn empty() {
-  TypeSearch(dict.new(), [])
+  let keys = Keys(dict.new(), option.None)
+  TypeSearch(keys: keys, rows: [])
 }
 
 fn postpend(list: List(a), value: a) {
@@ -19,52 +24,118 @@ fn postpend(list: List(a), value: a) {
   |> list.reverse
 }
 
-fn add_index(list: List(a)) {
-  use elem <- list.map(list)
-  #(elem, option.None)
+fn update_keys(
+  keys: Keys,
+  kind: Kind,
+  updater: fn(TypeSearch) -> TypeSearch,
+) -> Keys {
+  let new_keys = case kind {
+    parse.Index(value, _index) ->
+      dict.update(keys.keys, value, fn(k) {
+        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
+        let next = option.Some(updater(k.next |> option.unwrap(empty())))
+        Keys(..k, next: next)
+      })
+    parse.Custom(value, []) ->
+      dict.update(keys.keys, value, fn(k) {
+        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
+        let next = option.Some(updater(k.next |> option.unwrap(empty())))
+        Keys(..k, next: next)
+      })
+    parse.Custom(value, kinds) ->
+      dict.update(keys.keys, value, fn(k) {
+        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
+        use acc, val <- list.fold(kinds, k)
+        update_keys(acc, val, updater)
+      })
+    parse.Function(kinds, return) -> {
+      let kinds = postpend(kinds, return)
+      dict.update(keys.keys, "fn", fn(k) {
+        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
+        use acc, val <- list.fold(kinds, k)
+        update_keys(acc, val, updater)
+      })
+    }
+    parse.Tuple(kinds) -> {
+      dict.update(keys.keys, "#()", fn(k) {
+        let k = option.unwrap(k, Keys(keys: dict.new(), next: option.None))
+        use acc, val <- list.fold(kinds, k)
+        update_keys(acc, val, updater)
+      })
+    }
+  }
+  Keys(..keys, keys: new_keys)
 }
 
-fn do_add(searches: TypeSearch, kinds: List(#(Kind, option.Option(Int)))) {
+fn do_add(searches: TypeSearch, kinds: List(Kind), id: Int) -> TypeSearch {
   case kinds {
-    [] -> searches
-    [#(kind, option.Some(id))] ->
-      dict.get(searches.entries, kind)
-      |> result.unwrap(empty())
-      |> fn(s: TypeSearch) {
-        let rows = case list.contains(s.rows, id) {
-          True -> s.rows
-          False -> [id, ..s.rows]
-        }
-        TypeSearch(..s, rows: rows)
-      }
-      |> dict.insert(searches.entries, kind, _)
-      |> fn(a) { TypeSearch(..searches, entries: a) }
-    [#(kind, _), ..rest] ->
-      dict.get(searches.entries, kind)
-      |> result.unwrap(empty())
-      |> do_add(rest)
-      |> dict.insert(searches.entries, kind, _)
-      |> fn(s) { TypeSearch(..searches, entries: s) }
+    [] -> TypeSearch(..searches, rows: [id, ..searches.rows])
+    [kind, ..rest] -> {
+      TypeSearch(
+        ..searches,
+        keys: update_keys(searches.keys, kind, do_add(_, rest, id)),
+      )
+    }
   }
 }
 
 pub fn add(searches: TypeSearch, kind: Kind, id: Int) {
   case kind {
     Function(kinds, return_value) ->
-      kinds
-      |> add_index
-      |> postpend(#(return_value, option.Some(id)))
-      |> do_add(searches, _)
+      do_add(searches, postpend(kinds, return_value), id)
     _ -> searches
+  }
+}
+
+fn find_next_tree(keys: Keys, kind: Kind) -> Result(Keys, Nil) {
+  case kind {
+    parse.Index(value, index) -> dict.get(keys.keys, value)
+    parse.Custom(value, params) ->
+      case dict.get(keys.keys, value) {
+        Error(_) -> Error(Nil)
+        Ok(keys) ->
+          list.fold(params, Ok(keys), fn(acc, val) {
+            case acc {
+              Error(_) -> Error(Nil)
+              Ok(acc) -> find_next_tree(acc, val)
+            }
+          })
+      }
+    parse.Function(kinds, return) -> {
+      let kinds = postpend(kinds, return)
+      case dict.get(keys.keys, "fn") {
+        Error(_) -> Error(Nil)
+        Ok(keys) ->
+          list.fold(kinds, Ok(keys), fn(acc, val) {
+            case acc {
+              Error(_) -> Error(Nil)
+              Ok(acc) -> find_next_tree(acc, val)
+            }
+          })
+      }
+    }
+    parse.Tuple(kinds) -> {
+      case dict.get(keys.keys, "#()") {
+        Error(_) -> Error(Nil)
+        Ok(keys) ->
+          list.fold(kinds, Ok(keys), fn(acc, val) {
+            case acc {
+              Error(_) -> Error(Nil)
+              Ok(acc) -> find_next_tree(acc, val)
+            }
+          })
+      }
+    }
   }
 }
 
 fn do_find(searches: TypeSearch, kinds: List(Kind)) {
   case kinds {
-    [] -> Error(Nil)
-    [kind] -> dict.get(searches.entries, kind) |> result.map(fn(s) { s.rows })
+    [] -> Ok(searches.rows)
     [kind, ..rest] ->
-      dict.get(searches.entries, kind) |> result.then(do_find(_, rest))
+      find_next_tree(searches.keys, kind)
+      |> result.then(fn(k) { option.to_result(k.next, Nil) })
+      |> result.then(do_find(_, rest))
   }
 }
 
@@ -74,7 +145,6 @@ pub fn find(searches: TypeSearch, kind: Kind) {
       kinds
       |> postpend(return_value)
       |> do_find(searches, _)
-      |> option.from_result
-    _ -> option.None
+    _ -> Error(Nil)
   }
 }

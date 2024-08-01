@@ -437,7 +437,20 @@ pub fn upsert_package_type_fun_signature(
 }
 
 pub fn find_similar_type_names(db: pgo.Connection, name: String) {
-  "SELECT DISTINCT ON (name) name
+  "SELECT *
+   FROM (VALUES
+     ('Int'),
+     ('Float'),
+     ('String'),
+     ('Bool'),
+     ('List'),
+     ('Nil'),
+     ('Result'),
+     ('BitArray')
+   ) AS t (name)
+   WHERE levenshtein_less_equal(name, 'Int', 2) <= 2
+   UNION
+   SELECT DISTINCT ON (name) name
    FROM package_type_fun_signature
    WHERE (kind = 'type_definition' OR kind = 'type_alias')
      AND levenshtein_less_equal(name, $1, 2) <= 2"

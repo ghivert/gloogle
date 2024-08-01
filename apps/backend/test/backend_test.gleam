@@ -11,43 +11,9 @@ pub fn main() {
   gleeunit.main()
 }
 
-const signature = "fn decode14(
-  fn(a, b, c, d, e, f, g, h, i, j, k, l, m, n) -> o,
-  #(a, b),
-  fn(gleam/dynamic.Dynamic) -> Result(a, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(b, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(c, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(d, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(e, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(f, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(g, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(h, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(i, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(j, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(k, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(l, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(m, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(n, List(gleam/dynamic.DecodeError))
-) -> fn(gleam/dynamic.Dynamic) -> Result(o, List(gleam/dynamic.DecodeError))"
+const signature = "fn use_callback(a, b) -> c"
 
-const search_test = "fn decode14(
-  fn(a, b, c, d, e, f, g, h, i, j, k, l, m, _) -> n,
-  #(a, b),
-  fn(gleam/dynamic.Dynamic) -> Result(a, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(b, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(c, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(d, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(e, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(f, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(g, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(h, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(i, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(j, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(k, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(l, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(m, List(gleam/dynamic.DecodeError)),
-  fn(gleam/dynamic.Dynamic) -> Result(_, List(gleam/dynamic.DecodeError))
-) -> fn(gleam/dynamic.Dynamic) -> Result(n, List(gleam/dynamic.DecodeError))"
+const search_test = "fn (a, _) -> b"
 
 // gleeunit test functions end in `_test`
 pub fn type_search_test() {

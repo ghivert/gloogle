@@ -10,6 +10,7 @@ import glexer
 import glexer/token
 
 pub type Kind {
+  DiscardName
   Index(String, Int)
   Custom(String, List(Kind))
   Function(List(Kind), Kind)
@@ -43,6 +44,7 @@ fn parse_name() {
   use token <- chomp.take_map()
   case token {
     token.Name(content) -> Some(Index(content, 0))
+    token.DiscardName(_) -> Some(DiscardName)
     _ -> None
   }
 }
@@ -128,6 +130,7 @@ fn replace_indexed(
 ) -> #(Kind, #(Dict(String, Int), Int)) {
   let #(indexes, current) = indexes
   case kind {
+    DiscardName -> #(DiscardName, #(indexes, current))
     Index(name, _) -> {
       case dict.get(indexes, name) {
         Ok(value) -> #(Index("", value), #(indexes, current))

@@ -56,6 +56,22 @@ pub fn upsert_most_recent_hex_timestamp(db: pgo.Connection, latest: Time) {
   })
 }
 
+pub fn upsert_search_analytics(db: pgo.Connection, query: String) {
+  "INSERT INTO search_analytics (query)
+   VALUES ($1)
+   ON CONFLICT (query) DO UPDATE
+     SET occurences = search_analytics.occurences + 1
+   RETURNING *"
+  |> pgo.execute(db, [pgo.text(query)], dynamic.dynamic)
+  |> result.map_error(error.DatabaseError)
+  |> result.try(fn(response) {
+    let err = "Upsert search analytics failed"
+    response.rows
+    |> list.first()
+    |> result.replace_error(error.UnknownError(err))
+  })
+}
+
 pub fn upsert_hex_user(db: pgo.Connection, owner: hexpm.PackageOwner) {
   let username = pgo.text(owner.username)
   let email = pgo.nullable(pgo.text, owner.email)

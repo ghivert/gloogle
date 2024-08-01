@@ -554,3 +554,14 @@ lazy-node:has(:not(:defined)) {
     display: none;
   }
 }
+
+.search-result-empty-callout {
+  border: 1px solid var(--border-color);
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--sidebar-background);
+  color: var(--input-text-color);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  font-weight: 400;
+}

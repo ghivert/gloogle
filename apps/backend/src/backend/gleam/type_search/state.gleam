@@ -45,8 +45,9 @@ fn loop(msg: Msg, state: State) -> actor.Next(Msg, State) {
     Find(subject, signature) -> {
       signature
       |> parse.parse_function
-      |> result.map(type_search.find(state.search, _))
-      |> result.unwrap(option.None)
+      |> result.nil_error
+      |> result.then(type_search.find(state.search, _))
+      |> option.from_result
       |> function.tap(fn(res) { process.send(subject, res) })
       actor.continue(state)
     }

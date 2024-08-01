@@ -27,6 +27,7 @@ fn empty_json() {
 
 fn search(query: String, ctx: Context) {
   wisp.log_notice("Searching for " <> query)
+  let _ = queries.upsert_search_analytics(ctx.db, query) |> io.debug
 
   let exact_type_searches =
     option.then(ctx.type_search_subject, fn(subject) {
@@ -95,7 +96,6 @@ fn search(query: String, ctx: Context) {
     queries.module_search(ctx.db, query)
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
-    |> function.tap(fn(s) { io.debug(list.length(s)) })
     |> list.filter(fn(i) {
       !list.contains(
         list.concat([

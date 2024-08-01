@@ -8,7 +8,6 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -512,7 +511,7 @@ pub fn module_and_name_search(db: pgo.Connection, query: String) {
    JOIN splitted_name s_n
      ON true
    WHERE s.name = s_n.full_name[2]
-   AND m.name LIKE '%' || s_n.full_name[1] || '%'
+   AND m.name LIKE '%' || lower(s_n.full_name[1]) || '%'
    ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
    LIMIT 100"
   |> pgo.execute(db, [query], decode_type_search)
@@ -670,7 +669,7 @@ pub fn module_search(db: pgo.Connection, q: String) {
      ON m.package_release_id = r.id
    JOIN package p
      ON p.id = r.package_id
-   WHERE m.name LIKE '%' || $1 || '%'
+   WHERE m.name LIKE '%' || lower($1) || '%'
      AND r.version = (
        SELECT MAX(r.version)
        FROM package_release r

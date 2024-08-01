@@ -1,10 +1,12 @@
 import backend/gleam/parse.{type Kind, Function}
 import gleam/dict.{type Dict}
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
 import gleam/result
+import pprint
 
 pub type TypeSearch {
   TypeSearch(keys: Keys, rows: List(Int))
@@ -97,6 +99,16 @@ pub fn add(searches: TypeSearch, kind: Kind, id: Int) {
   }
 }
 
+/// Extract all keys. Because we can have Int, Option(a) or Result(a, b), we
+/// have to extract all intermediate next nodes, because _ can be anything.
+fn extract_all_keys(keys: List(Keys)) -> List(Keys) {
+  use key <- list.flat_map(keys)
+  case key.next {
+    option.Some(_) -> [key, ..extract_all_keys(dict.values(key.keys))]
+    option.None -> extract_all_keys(dict.values(key.keys))
+  }
+}
+
 /// Get the underlying ending Keys for a Kind, associated with its local
 /// environment for free variables.
 fn get_next_tree(
@@ -106,7 +118,7 @@ fn get_next_tree(
 ) -> List(#(Keys, Dict(Int, String))) {
   case kind {
     parse.DiscardName -> {
-      dict.values(keys.keys)
+      extract_all_keys(dict.values(keys.keys))
       |> list.map(pair.new(_, env))
     }
     parse.Index(_value, index) -> {
@@ -240,6 +252,7 @@ pub fn find(searches: TypeSearch, kind: Kind) {
     Function(kinds, return_value) ->
       kinds
       |> postpend(return_value)
+      |> pprint.debug
       |> do_find(searches, _, dict.new())
       |> Ok
     _ -> Error(Nil)

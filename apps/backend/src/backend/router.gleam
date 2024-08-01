@@ -8,7 +8,6 @@ import cors_builder as cors
 import gleam/erlang/process
 import gleam/http
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option

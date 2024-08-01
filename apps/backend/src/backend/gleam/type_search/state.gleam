@@ -42,7 +42,7 @@ fn loop(msg: msg.Msg, state: State) -> actor.Next(msg.Msg, State) {
       signature
       |> parse.parse_function
       |> result.nil_error
-      |> result.then(type_search.find(state.search, _, state.db))
+      |> result.then(permutation_search(state, _))
       |> option.from_result
       |> function.tap(fn(res) { process.send(subject, res) })
       actor.continue(state)
@@ -57,6 +57,33 @@ fn loop(msg: msg.Msg, state: State) -> actor.Next(msg.Msg, State) {
     }
   }
   actor.continue(state)
+}
+
+fn is_permutable(list: List(a), len: Int) {
+  case list {
+    _ if len > 4 -> False
+    [_, ..rest] -> is_permutable(rest, len + 1)
+    [] -> True
+  }
+}
+
+fn permutation_search(state: State, kind: parse.Kind) {
+  case kind {
+    parse.Function(params, return) -> {
+      let permutable = is_permutable(params, 0)
+      use <- bool.lazy_guard(when: !permutable, return: fn() {
+        type_search.find(state.search, kind, state.db)
+      })
+      Ok({
+        let permutations = list.permutations(params)
+        use permutation <- list.flat_map(permutations)
+        parse.Function(permutation, return)
+        |> type_search.find(state.search, _, state.db)
+        |> result.unwrap([])
+      })
+    }
+    _ -> Error(Nil)
+  }
 }
 
 fn compute_rows(

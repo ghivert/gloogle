@@ -458,7 +458,6 @@ pub fn find_similar_type_names(db: pgo.Connection, name: String) {
   |> pgo.execute(db, [pgo.text(name)], dynamic.element(0, dynamic.string))
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
-  |> io.debug
 }
 
 pub fn name_search(db: pgo.Connection, query: String) {

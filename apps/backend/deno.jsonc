@@ -1,7 +1,0 @@
-{
-  "tasks": {
-    "db:init": "deno run --allow-run --allow-write --allow-read scripts/database/init.ts",
-    "db:drop": "deno run --allow-run --allow-write --allow-read scripts/database/drop.ts",
-    "db:reset": "deno run --allow-run --allow-write --allow-read scripts/database/reset.ts"
-  }
-}

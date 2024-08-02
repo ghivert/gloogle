@@ -31,7 +31,7 @@ fn view_search_input(model: Model) {
         ]),
         h.div([a.class("search-title-with-hint")], [
           h.text("Gloogle"),
-          h.div([a.class("pre-alpha-title")], [h.text("Beta")]),
+          h.div([a.class("pre-alpha-title")], [h.text("RC")]),
         ]),
       ]),
       h.text(frontend_strings.gloogle_description),

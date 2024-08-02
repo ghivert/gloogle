@@ -61,13 +61,12 @@ pub fn is_dev() {
 }
 
 pub fn bucket_uri() {
-  let assert Ok(content) = os.get_env("BUCKET_URI")
-  content
+  os.get_env("BUCKET_URI")
 }
 
 pub fn scaleway_keys() {
-  let assert Ok(access_key) = os.get_env("SCALEWAY_ACCESS_KEY")
-  let assert Ok(secret_key) = os.get_env("SCALEWAY_SECRET_KEY")
+  use access_key <- result.try(os.get_env("SCALEWAY_ACCESS_KEY"))
+  use secret_key <- result.map(os.get_env("SCALEWAY_SECRET_KEY"))
   #(access_key, secret_key)
 }
 

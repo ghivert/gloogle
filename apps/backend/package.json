@@ -2,7 +2,11 @@
   "name": "backend",
   "packageManager": "yarn@4.2.2",
   "scripts": {
-    "backend:dev": "gleam run"
+    "backend:dev": "gleam run",
+    "backend:db:create": "docker run --name gloogle-postgres -it -e POSTGRES_PASSWORD=gloogle -e POSTGRES_USER=gloogle -d -p 5432:5432 postgres",
+    "backend:db:init": "yarn backend:db:create && sleep 5 && PGPASSWORD=gloogle psql -h localhost -U gloogle < db/seeds.sql",
+    "backend:db:drop": "docker stop gloogle-postgres && docker rm gloogle-postgres",
+    "backend:db:reset": "yarn backend:db:drop && yarn backend:db:init"
   },
   "dependencies": {
     "@chouqueth/gleam": "^1.3.2"

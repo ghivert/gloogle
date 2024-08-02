@@ -8,9 +8,9 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 
 fn request(url: String, method: http.Method, body: Option(BitArray)) {
-  let bucket_uri = config.bucket_uri()
   let date = birl.to_erlang_universal_datetime(birl.now())
-  let #(access_key, secret_key) = config.scaleway_keys()
+  use bucket_uri <- result.try(config.bucket_uri())
+  use #(access_key, secret_key) <- result.try(config.scaleway_keys())
   request.new()
   |> request.set_method(method)
   |> request.set_path(url)

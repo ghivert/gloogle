@@ -16,9 +16,9 @@ jobs:
       - name: Setup BEAM
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "26.0.2"
-          gleam-version: "1.2.1"
-          rebar3-version: "3"
+          otp-version: '26.0.2'
+          gleam-version: '1.2.1'
+          rebar3-version: '3'
           # elixir-version: "1.15.4"
       - name: Download gleam dependencies
         run: gleam deps download
@@ -33,22 +33,39 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: gloogle
+          POSTGRES_USER: gloogle
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
       - name: Setup BEAM
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "26.0.2"
-          gleam-version: "1.2.1"
-          rebar3-version: "3"
-          # elixir-version: "1.15.4"
+          otp-version: '26.0.2'
+          gleam-version: '1.2.1'
+          rebar3-version: '3'
       - name: Download gleam dependencies
         run: gleam deps download
         working-directory: apps/backend
+      - name: Populate DB
+        run: psql -U gloogle -h postgres < db/seeds.sql
+        working-directory: apps/backend
+        env:
+          PGPASSWORD: gloogle
       - name: Run gleam test
         run: gleam test
         working-directory: apps/backend
+        env:
+          POSTGRES_HOST: postgres
       - name: Check gleam format
         run: gleam format --check src test
         working-directory: apps/backend

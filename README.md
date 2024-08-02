@@ -31,6 +31,34 @@ Some features are already implemented, and some others are still on the roadmap!
 <!-- - Implements a full-mirror of hex, in case hex is down (because we can, so why not) -->
 <!-- - Add a way to visualise a package directly -->
 
+## Getting Started
+
+```sh
+# Initialise the DB.
+yarn backend:db:init
+# Reset the DB when you need.
+yarn backend:db:reset
+```
+
+```toml
+# apps/backend/.mise.local.toml
+# Used in env variables mainly.
+
+[env]
+# Default server options.
+PORT = 3000
+LOG_LEVEL = "DEBUG"
+
+# Local database.
+DATABASE_URL = "postgres://gloogle:gloogle@localhost:5432/gloogle?sslmode=disable"
+
+# Used to access hex API.
+HEX_API_KEY = "xxxxx"
+
+# Used to crawl starsgazers.
+GITHUB_TOKEN = "xxxxx"
+```
+
 ## Contributing
 
 If Gloogle please you, you can also contribute! Pull Requests are welcome!

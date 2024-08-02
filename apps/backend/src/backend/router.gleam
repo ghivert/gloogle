@@ -29,7 +29,7 @@ fn search(query: String, ctx: Context) {
 
   let exact_type_searches =
     option.then(ctx.type_search_subject, fn(subject) {
-      process.try_call(subject, type_search.Find(_, query), within: 15_000)
+      process.try_call(subject, type_search.Find(_, query), within: 25_000)
       |> option.from_result
       |> option.flatten
     })

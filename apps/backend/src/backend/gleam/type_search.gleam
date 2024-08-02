@@ -103,10 +103,7 @@ pub fn add(searches: TypeSearch, kind: Kind, id: Int) {
 /// have to extract all intermediate next nodes, because _ can be anything.
 fn extract_all_keys(keys: List(Keys)) -> List(Keys) {
   use key <- list.flat_map(keys)
-  case key.next {
-    option.Some(_) -> [key, ..extract_all_keys(dict.values(key.keys))]
-    option.None -> extract_all_keys(dict.values(key.keys))
-  }
+  [key, ..extract_all_keys(dict.values(key.keys))]
 }
 
 /// Get the underlying ending Keys for a Kind, associated with its local

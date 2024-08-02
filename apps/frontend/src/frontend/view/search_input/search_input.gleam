@@ -15,6 +15,7 @@ pub fn view(loading loading: Bool, input input: String, small small: Bool) {
           a.value(input),
           a.attribute("autocorrect", "off"),
           a.attribute("autocapitalize", "none"),
+          a.attribute("autofocus", "autofocus"),
         ]),
         s.shortcut_hint([], [el.text("s")]),
       ]),

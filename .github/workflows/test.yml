@@ -57,15 +57,18 @@ jobs:
         run: gleam deps download
         working-directory: apps/backend
       - name: Populate DB
-        run: psql -U gloogle -h postgres < db/seeds.sql
+        run: psql < db/seeds.sql
         working-directory: apps/backend
         env:
           PGPASSWORD: gloogle
+          PGHOST: localhost
+          PGUSER: gloogle
+          PGPORT: 5432
       - name: Run gleam test
         run: gleam test
         working-directory: apps/backend
         env:
-          POSTGRES_HOST: postgres
+          POSTGRES_HOST: localhost
       - name: Check gleam format
         run: gleam format --check src test
         working-directory: apps/backend

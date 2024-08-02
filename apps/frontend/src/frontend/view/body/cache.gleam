@@ -52,9 +52,9 @@ fn maybe_separator(l) {
 
 fn empty_types() {
   h.div([a.class("search-result-empty-callout")], [
-    h.text("Unfortunately, your query did not find any matching function."),
-    h.text("Keep in mind you can use _ when you don't"),
-    h.text(" know the type you're searching for."),
+    h.text("Unfortunately, your query did not find any matching function. "),
+    h.text("Keep in mind you can use _ when you don't "),
+    h.text("know the type you're searching for."),
     h.br([]),
     h.text("You can still take a look below, in case the vector search"),
     h.text(" returned an approximate result. Otherwise, refine your request!"),

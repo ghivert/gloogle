@@ -3,8 +3,10 @@ import data/msg
 import frontend/view/footer/links.{links}
 import frontend/view/footer/styles as s
 import frontend/view/search_input/search_input
+import gleam/bool
 import gleam/list
 import lustre/attribute as a
+import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
 
@@ -25,6 +27,7 @@ pub fn view() {
 }
 
 pub fn search_bar(model: Model) {
+  use <- bool.guard(when: !model.is_mobile, return: el.none())
   h.div([a.class("footer-search")], [
     h.form([e.on_submit(msg.SubmitSearch)], [
       search_input.view(model.loading, model.input, small: True),

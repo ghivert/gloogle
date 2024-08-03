@@ -31,7 +31,7 @@ fn layout(attributes, children) {
 
 fn navbar(model: Model) {
   case model.route {
-    router.Home | router.Search(_) -> navbar.navbar(model)
+    router.Search(_) -> navbar.navbar(model)
     _ -> el.none()
   }
 }

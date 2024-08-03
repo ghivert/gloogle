@@ -1,6 +1,6 @@
 # Runtimes used by the stack.
 [tools]
-gleam = "1.3.2"
+gleam = "1.4.0"
 erlang = "27"
 node = "22"
 deno = "latest"

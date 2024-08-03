@@ -6,6 +6,7 @@ import frontend/images
 import frontend/router
 import frontend/strings as frontend_strings
 import frontend/view/search_input/search_input
+import gleam/bool
 import gleam/dict
 import gleam/result
 import gleam/string
@@ -131,6 +132,7 @@ pub fn view_trending(model: Model) {
 }
 
 fn sidebar(model: Model) {
+  use <- bool.guard(when: model.is_mobile, return: el.none())
   h.main([a.class("search-sidebar")], [
     h.a([a.class("sidebar-title"), a.href("/")], [
       h.img([

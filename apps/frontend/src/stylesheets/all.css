@@ -383,12 +383,6 @@ lazy-node:has(:not(:defined)) {
   top: 0px;
 }
 
-@media (max-width: 700px) {
-  .search-sidebar {
-    display: none;
-  }
-}
-
 .sidebar-title {
   display: flex;
   align-items: center;
@@ -547,12 +541,6 @@ lazy-node:has(:not(:defined)) {
   background-color: var(--background);
   border-top: 1px solid var(--border-color);
   margin-top: 24px;
-}
-
-@media (min-width: 700px) {
-  .footer-search {
-    display: none;
-  }
 }
 
 .search-result-empty-callout {

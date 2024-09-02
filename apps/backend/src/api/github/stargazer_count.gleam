@@ -15,7 +15,7 @@ pub fn decoder(dyn) {
 }
 
 pub fn variables(name: String, owner: String) {
-  Some(
-    json.object([#("name", json.string(name)), #("owner", json.string(owner))]),
-  )
+  let name = json.string(name)
+  let owner = json.string(owner)
+  Some(json.object([#("name", name), #("owner", owner)]))
 }

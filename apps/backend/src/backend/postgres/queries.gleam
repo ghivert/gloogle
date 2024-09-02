@@ -71,6 +71,36 @@ pub fn upsert_search_analytics(db: pgo.Connection, query: String) {
   })
 }
 
+pub fn select_last_day_search_analytics(db: pgo.Connection) {
+  "SELECT query, occurences
+   FROM search_analytics
+   WHERE updated_at <= now()
+     AND updated_at >= now() - INTERVAL '1 hour'"
+  |> pgo.execute(db, [], dynamic.tuple2(dynamic.string, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn upsert_search_analytics_timeseries(
+  db: pgo.Connection,
+  analytic: #(String, Int),
+) {
+  let #(date, _) = birl.to_erlang_universal_datetime(birl.now())
+  let now = birl.from_erlang_universal_datetime(#(date, #(0, 0, 0)))
+  let timestamp = helpers.convert_time(now)
+  let #(query, occurences) = analytic
+  "INSERT INTO analytics_timeseries (query, occurences, date)
+   VALUES ($1, $2, $3)
+   ON CONFLICT (query, date) DO UPDATE
+     SET occurences = $2"
+  |> pgo.execute(
+    db,
+    [pgo.text(query), pgo.int(occurences), timestamp],
+    dynamic.dynamic,
+  )
+  |> result.map_error(error.DatabaseError)
+}
+
 pub fn upsert_hex_user(db: pgo.Connection, owner: hexpm.PackageOwner) {
   let username = pgo.text(owner.username)
   let email = pgo.nullable(pgo.text, owner.email)

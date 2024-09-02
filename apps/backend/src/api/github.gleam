@@ -25,7 +25,7 @@ fn query(
   use response <- result.try(
     request.new()
     |> request.set_header("authorization", "Bearer " <> token)
-    |> request.set_header("user-agent", "gloogle / 0.0.0")
+    |> request.set_header("user-agent", "gloogle / 1.0.0")
     |> request.set_method(http.Post)
     |> request.set_scheme(http.Https)
     |> request.set_host("api.github.com")

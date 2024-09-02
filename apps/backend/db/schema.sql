@@ -97,6 +97,17 @@ ALTER TABLE public.analytics ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: analytics_timeseries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.analytics_timeseries (
+    query text NOT NULL,
+    occurences integer NOT NULL,
+    date timestamp with time zone NOT NULL
+);
+
+
+--
 -- Name: hex_read; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -304,7 +315,7 @@ CREATE TABLE public.schema_migrations (
 
 CREATE TABLE public.search_analytics (
     query text NOT NULL,
-    occurences integer DEFAULT 0 NOT NULL,
+    occurences integer DEFAULT 1 NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -324,6 +335,14 @@ ALTER TABLE ONLY public.analytics
 
 ALTER TABLE ONLY public.analytics
     ADD CONSTRAINT analytics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: analytics_timeseries analytics_timeseries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.analytics_timeseries
+    ADD CONSTRAINT analytics_timeseries_pkey PRIMARY KEY (query, date);
 
 
 --
@@ -590,4 +609,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240521204341'),
     ('20240801164720'),
     ('20240801211520'),
-    ('20240801220817');
+    ('20240801220817'),
+    ('20240902224247'),
+    ('20240902225236');

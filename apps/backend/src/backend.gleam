@@ -12,6 +12,7 @@ import setup
 import tasks/hex
 import tasks/popularity
 import tasks/ranking
+import tasks/timeseries
 import wisp
 import wisp/logger
 
@@ -27,11 +28,6 @@ pub fn main() {
   setup.radiate()
 
   let assert Ok(subject) = type_search.init(ctx.db)
-  // let assert Ok(_) =
-  //   supervisor.start(fn(children) {
-  //     use _ <- function.tap(children)
-  //     supervisor.add(children, { supervisor.worker(fn(_) { Ok(subject) }) })
-  //   })
 
   let ctx = ctx |> config.add_type_search_subject(subject)
 
@@ -42,22 +38,29 @@ pub fn main() {
     |> mist.port(cnf.port)
     |> mist.start_http()
 
-  let assert Ok(_) =
-    supervisor.start(fn(periodic_children) {
-      use _ <- function.tap(periodic_children)
-      let assert Ok(_) =
-        supervisor.start(fn(children) {
-          add_periodic_worker(periodic_children, waiting: 6 * 1000, do: fn() {
-            hex.sync_new_gleam_releases(ctx, children)
-          })
-          add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
-            ranking.compute_ranking(ctx)
-          })
-          add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
-            popularity.compute_popularity(ctx)
-          })
-        })
-    })
+  let assert Ok(_) = {
+    use periodic_children <- supervisor.start()
+    use periodic_children <- function.tap(periodic_children)
+    let assert Ok(_) = {
+      use children <- supervisor.start()
+      // Every 10 seconds
+      add_periodic_worker(periodic_children, waiting: 10 * 1000, do: fn() {
+        hex.sync_new_gleam_releases(ctx, children)
+      })
+      // Every day
+      add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
+        ranking.compute_ranking(ctx)
+      })
+      // Every day
+      add_periodic_worker(periodic_children, waiting: 86_400_000, do: fn() {
+        popularity.compute_popularity(ctx)
+      })
+      // Every hour
+      add_periodic_worker(periodic_children, waiting: 3600 * 1000, do: fn() {
+        timeseries.store_timeseries(ctx)
+      })
+    }
+  }
 
   process.sleep_forever()
 }

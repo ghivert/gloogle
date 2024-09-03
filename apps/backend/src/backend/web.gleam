@@ -1,5 +1,5 @@
 import backend/config
-import cors_builder as cors
+import cors_builder as cors_
 import gleam/http
 import wisp.{type Request, type Response}
 
@@ -15,20 +15,20 @@ pub fn foundations(req: Request, handler: Handler) -> Response {
 
 pub fn cors() {
   let origin = case config.is_dev() {
-    True -> cors.allow_origin(_, "http://localhost:5173")
+    True -> cors_.allow_origin(_, "http://localhost:5173")
     False -> fn(cors) {
       cors
-      |> cors.allow_origin("https://gloogle.run")
-      |> cors.allow_origin("https://www.gloogle.run")
+      |> cors_.allow_origin("https://gloogle.run")
+      |> cors_.allow_origin("https://www.gloogle.run")
     }
   }
-  cors.new()
+  cors_.new()
   |> origin()
-  |> cors.allow_method(http.Get)
-  |> cors.allow_method(http.Post)
-  |> cors.allow_method(http.Put)
-  |> cors.allow_method(http.Patch)
-  |> cors.allow_header("baggage")
-  |> cors.allow_header("sentry-trace")
-  |> cors.max_age(86_400)
+  |> cors_.allow_method(http.Get)
+  |> cors_.allow_method(http.Post)
+  |> cors_.allow_method(http.Put)
+  |> cors_.allow_method(http.Patch)
+  |> cors_.allow_header("baggage")
+  |> cors_.allow_header("sentry-trace")
+  |> cors_.max_age(86_400)
 }

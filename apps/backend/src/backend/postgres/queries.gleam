@@ -101,6 +101,17 @@ pub fn upsert_search_analytics_timeseries(
   |> result.map_error(error.DatabaseError)
 }
 
+pub fn get_timeseries_count(db: pgo.Connection) {
+  "SELECT count(*), date
+   FROM analytics_timeseries
+   WHERE date >= now() - INTERVAL '30 day'
+   GROUP BY date
+   ORDER BY date desc"
+  |> pgo.execute(db, [], dynamic.tuple2(dynamic.int, helpers.decode_time))
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
 pub fn upsert_hex_user(db: pgo.Connection, owner: hexpm.PackageOwner) {
   let username = pgo.text(owner.username)
   let email = pgo.nullable(pgo.text, owner.email)

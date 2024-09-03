@@ -2,7 +2,6 @@ import backend/config
 import backend/gleam/type_search/state as type_search
 import backend/postgres/postgres
 import backend/router
-import dot_env
 import gleam/erlang/process
 import gleam/function
 import gleam/otp/supervisor
@@ -15,10 +14,10 @@ import tasks/ranking
 import tasks/timeseries
 import wisp
 import wisp/logger
+import wisp/wisp_mist
 
 pub fn main() {
   wisp.configure_logger()
-  dot_env.load()
 
   let secret_key_base = config.get_secret_key_base()
   let cnf = config.read_config()
@@ -33,7 +32,7 @@ pub fn main() {
 
   let assert Ok(_) =
     router.handle_request(_, ctx)
-    |> wisp.mist_handler(secret_key_base)
+    |> wisp_mist.handler(secret_key_base)
     |> mist.new()
     |> mist.port(cnf.port)
     |> mist.start_http()

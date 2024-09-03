@@ -1,3 +1,4 @@
+import birl
 import data/package
 import data/search_result.{type SearchResults}
 import frontend/router
@@ -25,6 +26,7 @@ pub type Msg {
   Reset
   ScrollTo(String)
   OnEscape
+  Analytics(Result(List(#(Int, birl.Time)), http.HttpError))
   OnRouteChange(router.Route)
   OnCheckFilter(Filter, Bool)
 }

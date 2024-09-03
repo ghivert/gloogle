@@ -447,7 +447,7 @@ lazy-node:has(:not(:defined)) {
 .sidebar-links {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
   padding: 12px;
 }
 

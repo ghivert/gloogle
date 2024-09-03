@@ -4,6 +4,7 @@ import backend/error
 import backend/gleam/type_search/msg as type_search
 import backend/postgres/queries
 import backend/web
+import birl
 import cors_builder as cors
 import gleam/erlang/process
 import gleam/http
@@ -141,6 +142,21 @@ pub fn handle_get(req: Request, ctx: Context) {
         |> wisp.json_response(200)
       })
       |> result.unwrap(wisp.internal_server_error())
+    ["analytics"] -> {
+      queries.get_timeseries_count(ctx.db)
+      |> result.map(fn(content) {
+        json.array(content, fn(row) {
+          json.object([
+            #("count", json.int(row.0)),
+            #("date", json.string(birl.to_iso8601(row.1))),
+          ])
+        })
+        |> json.to_string_builder
+        |> wisp.json_response(200)
+      })
+      |> result.map_error(error.debug_log)
+      |> result.unwrap(wisp.internal_server_error())
+    }
     ["search"] -> {
       wisp.get_query(req)
       |> list.find(fn(item) { item.0 == "q" })

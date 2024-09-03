@@ -167,10 +167,7 @@ fn sidebar(model: Model) {
     ]),
     h.div([a.class("sidebar-spacer")], []),
     h.div([a.class("sidebar-links")], [
-      // s.sidebar_link_wrapper([], [
-      //   s.sidebar_icon([], [icons.trends()]),
-      //   s.sidebar_link([], [el.text("Trends")]),
-      // ]),
+      sidebar_link(href: "/analytics", icon: icons.trends(), title: "Analytics"),
       // s.sidebar_link_wrapper([], [
       //   s.sidebar_icon([], [icons.shortcuts()]),
       //   s.sidebar_link([], [el.text("Shortcuts")]),
@@ -179,7 +176,7 @@ fn sidebar(model: Model) {
       //   s.sidebar_icon([], [icons.gift()]),
       //   s.sidebar_link([], [el.text("Resources")]),
       // ]),
-      sidebar_link(
+      sidebar_external_link(
         href: "https://github.com/sponsors/ghivert",
         title: "Sponsor",
         icon: icons.heart(),
@@ -207,9 +204,17 @@ fn checkbox(active: Bool, msg: msg.Filter, name: String) {
   ])
 }
 
-fn sidebar_link(href href: String, title title: String, icon icon) {
+fn sidebar_external_link(href href: String, title title: String, icon icon) {
   let class = a.class("sidebar-link-wrapper")
   h.a([class, a.href(href), a.target("_blank"), a.rel("noreferrer noopener")], [
+    h.div([a.class("sidebar-icon")], [icon]),
+    h.div([a.class("sidebar-link")], [el.text(title)]),
+  ])
+}
+
+fn sidebar_link(href href: String, title title: String, icon icon) {
+  let class = a.class("sidebar-link-wrapper")
+  h.a([class, a.href(href)], [
     h.div([a.class("sidebar-icon")], [icon]),
     h.div([a.class("sidebar-link")], [el.text(title)]),
   ])
@@ -219,6 +224,8 @@ pub fn body(model: Model) {
   case model.route {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
     router.Trending -> h.main([a.class("main")], [view_trending(model)])
+    router.Analytics ->
+      el.fragment([sidebar(model), h.main([a.class("main")], [])])
     router.Search(_) -> {
       let key = model.search_key(model.submitted_input, model)
       el.fragment([

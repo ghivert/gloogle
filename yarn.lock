@@ -304,6 +304,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chouqueth/gleam@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "@chouqueth/gleam@npm:1.4.1"
+  dependencies:
+    cachedir: "npm:^2.4.0"
+    tar: "npm:^7.1.0"
+  bin:
+    gleam: bin/cli.mjs
+  checksum: 10c0/d7238a489c699ff1fdab1701603e3066132826eb005926b1e3f2ed4fae0a894c34016cf8b32ac88495c2359a6ec4d447697a09fe3680ddd6b441611b4f42efb4
+  languageName: node
+  linkType: hard
+
 "@esbuild/aix-ppc64@npm:0.20.2":
   version: 0.20.2
   resolution: "@esbuild/aix-ppc64@npm:0.20.2"
@@ -2453,7 +2465,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "frontend@workspace:apps/frontend"
   dependencies:
-    "@chouqueth/gleam": "npm:^1.3.2"
+    "@chouqueth/gleam": "npm:^1.4.1"
     "@gleam-lang/highlight.js-gleam": "npm:^1.5.0"
     "@sentry/browser": "npm:^8.0.0"
     "@sentry/vite-plugin": "npm:^2.16.1"

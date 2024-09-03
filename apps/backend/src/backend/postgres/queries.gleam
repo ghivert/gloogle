@@ -73,11 +73,16 @@ pub fn upsert_search_analytics(db: pgo.Connection, query: String) {
 }
 
 pub fn select_last_day_search_analytics(db: pgo.Connection) {
+  let #(date, _) = birl.to_erlang_universal_datetime(birl.now())
+  let now = birl.from_erlang_universal_datetime(#(date, #(0, 0, 0)))
   "SELECT query, occurences
    FROM search_analytics
-   WHERE updated_at <= now()
-     AND updated_at >= now() - INTERVAL '1 hour'"
-  |> pgo.execute(db, [], dynamic.tuple2(dynamic.string, dynamic.int))
+   WHERE updated_at >= $1"
+  |> pgo.execute(
+    db,
+    [helpers.convert_time(now)],
+    dynamic.tuple2(dynamic.string, dynamic.int),
+  )
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
 }

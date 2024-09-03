@@ -3,6 +3,7 @@ import backend/data/hex_user.{type HexUser}
 import backend/error
 import backend/gleam/context
 import birl.{type Time}
+import birl/duration
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -102,11 +103,19 @@ pub fn upsert_search_analytics_timeseries(
 }
 
 pub fn get_timeseries_count(db: pgo.Connection) {
-  "SELECT count(*), date
-   FROM analytics_timeseries
-   WHERE date >= now() - INTERVAL '30 day'
-   GROUP BY date
-   ORDER BY date desc"
+  "SELECT
+    SUM(at.occurences - COALESCE(
+      (SELECT att.occurences
+        FROM analytics_timeseries att
+        WHERE att.date < at.date
+          AND att.query = at.query),
+      0)
+    ) searches,
+    at.date date
+  FROM analytics_timeseries at
+  WHERE at.date >= now() - INTERVAL '30 day'
+  GROUP BY at.date
+  ORDER BY date DESC"
   |> pgo.execute(db, [], dynamic.tuple2(dynamic.int, helpers.decode_time))
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })

@@ -82,11 +82,11 @@ fn sync_packages(
   use all_packages <- result.try(api.get_api_packages_page(page, api_key))
   let state = State(..state, newest: first_timestamp(all_packages, state))
   let new_packages = take_fresh_packages(all_packages, state.limit)
-  use state <- result.try(list.try_fold(
-    new_packages,
-    state,
-    do_sync_package(Some(children), force: False),
-  ))
+  use state <- result.try({
+    list.try_fold(new_packages, state, {
+      do_sync_package(Some(children), force: False)
+    })
+  })
   case list.length(all_packages) == list.length(new_packages) {
     _ if all_packages == [] -> Ok(state.newest)
     False -> Ok(state.newest)

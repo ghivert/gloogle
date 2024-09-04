@@ -9,15 +9,15 @@ import gleam/result
 import gleam/uri
 
 pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
-  use response <- result.try(
+  use response <- result.try({
     request.new()
     |> request.set_host("hex.pm")
     |> request.set_path("/api/packages/" <> package_name <> "/owners")
     |> request.prepend_header("authorization", hex_api_key)
-    |> request.prepend_header("user-agent", "gloogle / 0.0.0")
+    |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.FetchError),
-  )
+    |> result.map_error(error.FetchError)
+  })
 
   response.body
   |> json.decode(using: dynamic.list(decode_hex_owner))
@@ -25,15 +25,15 @@ pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
 }
 
 pub fn get_package(package_name: String, secret hex_api_key: String) {
-  use response <- result.try(
+  use response <- result.try({
     request.new()
     |> request.set_host("hex.pm")
     |> request.set_path("/api/packages/" <> package_name)
     |> request.prepend_header("authorization", hex_api_key)
-    |> request.prepend_header("user-agent", "gloogle / 0.0.0")
+    |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.FetchError),
-  )
+    |> result.map_error(error.FetchError)
+  })
 
   response.body
   |> json.decode(using: hexpm.decode_package)
@@ -52,15 +52,15 @@ fn decode_hex_owner(data) {
 pub fn lookup_release(release: hexpm.PackageRelease, secret hex_api_key: String) {
   let assert Ok(url) = uri.parse(release.url)
 
-  use response <- result.try(
+  use response <- result.try({
     request.new()
     |> request.set_host("hex.pm")
     |> request.set_path(url.path)
     |> request.prepend_header("authorization", hex_api_key)
-    |> request.prepend_header("user-agent", "gloogle / 0.0.0")
+    |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.FetchError),
-  )
+    |> result.map_error(error.FetchError)
+  })
 
   response.body
   |> json.decode(using: hexpm.decode_release)
@@ -68,19 +68,17 @@ pub fn lookup_release(release: hexpm.PackageRelease, secret hex_api_key: String)
 }
 
 pub fn get_api_packages_page(page: Int, hex_api_key: String) {
-  use response <- result.try(
+  let page = int.to_string(page)
+  use response <- result.try({
     request.new()
     |> request.set_host("hex.pm")
     |> request.set_path("/api/packages")
-    |> request.set_query([
-      #("sort", "updated_at"),
-      #("page", int.to_string(page)),
-    ])
+    |> request.set_query([#("sort", "updated_at"), #("page", page)])
     |> request.prepend_header("authorization", hex_api_key)
-    |> request.prepend_header("user-agent", "gloogle / 0.0.0")
+    |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.FetchError),
-  )
+    |> result.map_error(error.FetchError)
+  })
 
   response.body
   |> json.decode(using: dynamic.list(of: hexpm.decode_package))

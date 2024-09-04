@@ -164,7 +164,7 @@ pub fn log_simplifile(error: simplifile.FileError) {
     simplifile.Etxtbsy -> wisp.log_warning("Etxtbsy")
     simplifile.Exdev -> wisp.log_warning("Exdev")
     simplifile.NotUtf8 -> wisp.log_warning("NotUtf8")
-    simplifile.Unknown -> wisp.log_warning("Unknown")
+    simplifile.Unknown(_) -> wisp.log_warning("Unknown")
   }
 }
 

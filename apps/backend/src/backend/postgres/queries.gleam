@@ -8,6 +8,7 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -71,6 +72,60 @@ pub fn upsert_search_analytics(db: pgo.Connection, query: String) {
   })
 }
 
+pub fn select_last_day_search_analytics(db: pgo.Connection) {
+  let #(date, _) = birl.to_erlang_universal_datetime(birl.now())
+  let now = birl.from_erlang_universal_datetime(#(date, #(0, 0, 0)))
+  "SELECT query, occurences
+   FROM search_analytics
+   WHERE updated_at >= $1"
+  |> pgo.execute(
+    db,
+    [helpers.convert_time(now)],
+    dynamic.tuple2(dynamic.string, dynamic.int),
+  )
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn upsert_search_analytics_timeseries(
+  db: pgo.Connection,
+  analytic: #(String, Int),
+) {
+  let #(date, _) = birl.to_erlang_universal_datetime(birl.now())
+  let now = birl.from_erlang_universal_datetime(#(date, #(0, 0, 0)))
+  let timestamp = helpers.convert_time(now)
+  let #(query, occurences) = analytic
+  "INSERT INTO analytics_timeseries (query, occurences, date)
+   VALUES ($1, $2, $3)
+   ON CONFLICT (query, date) DO UPDATE
+     SET occurences = $2"
+  |> pgo.execute(
+    db,
+    [pgo.text(query), pgo.int(occurences), timestamp],
+    dynamic.dynamic,
+  )
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_timeseries_count(db: pgo.Connection) {
+  "SELECT
+    SUM(at.occurences - COALESCE(
+      (SELECT att.occurences
+        FROM analytics_timeseries att
+        WHERE att.date < at.date
+          AND att.query = at.query),
+      0)
+    ) searches,
+    at.date date
+  FROM analytics_timeseries at
+  WHERE at.date >= now() - INTERVAL '30 day'
+  GROUP BY at.date
+  ORDER BY date DESC"
+  |> pgo.execute(db, [], dynamic.tuple2(dynamic.int, helpers.decode_time))
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
 pub fn upsert_hex_user(db: pgo.Connection, owner: hexpm.PackageOwner) {
   let username = pgo.text(owner.username)
   let email = pgo.nullable(pgo.text, owner.email)
@@ -98,6 +153,27 @@ fn get_current_package_owners(db: pgo.Connection, package_id: Int) {
    FROM package_owner
    WHERE package_owner.package_id = $1"
   |> pgo.execute(db, [pid], dynamic.element(0, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_total_searches(db: pgo.Connection) {
+  "SELECT SUM(occurences) FROM search_analytics"
+  |> pgo.execute(db, [], dynamic.element(0, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_total_signatures(db: pgo.Connection) {
+  "SELECT COUNT(*) FROM package_type_fun_signature"
+  |> pgo.execute(db, [], dynamic.element(0, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_total_packages(db: pgo.Connection) {
+  "SELECT COUNT(*) FROM package"
+  |> pgo.execute(db, [], dynamic.element(0, dynamic.int))
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
 }

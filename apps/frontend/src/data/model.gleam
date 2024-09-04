@@ -1,3 +1,4 @@
+import birl
 import data/kind
 import data/msg.{type Msg}
 import data/package.{type Package}
@@ -36,6 +37,10 @@ pub type Model {
     show_old_packages: Bool,
     show_documentation_search: Bool,
     show_vector_search: Bool,
+    total_searches: Int,
+    total_signatures: Int,
+    total_packages: Int,
+    timeseries: List(#(Int, birl.Time)),
   )
 }
 
@@ -62,6 +67,10 @@ pub fn init() {
     show_old_packages: False,
     show_documentation_search: False,
     show_vector_search: False,
+    total_searches: 0,
+    total_signatures: 0,
+    total_packages: 0,
+    timeseries: [],
   )
 }
 
@@ -91,6 +100,21 @@ pub fn toggle_loading(model: Model) {
 
 pub fn update_input(model: Model, content: String) {
   Model(..model, input: content)
+}
+
+pub fn update_analytics(
+  model: Model,
+  analytics: #(Int, Int, Int, List(#(Int, birl.Time))),
+) {
+  let #(total_searches, total_signatures, total_packages, timeseries) =
+    analytics
+  Model(
+    ..model,
+    timeseries:,
+    total_searches:,
+    total_signatures:,
+    total_packages:,
+  )
 }
 
 pub fn search_key(key key: String, model model: Model) {
@@ -324,6 +348,10 @@ pub fn reset(model: Model) {
     show_old_packages: False,
     show_documentation_search: False,
     show_vector_search: False,
+    timeseries: [],
+    total_searches: 0,
+    total_signatures: 0,
+    total_packages: 0,
   )
 }
 

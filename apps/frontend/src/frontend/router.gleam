@@ -9,12 +9,14 @@ pub type Route {
   Home
   Search(query: String)
   Trending
+  Analytics
 }
 
 pub fn parse_uri(uri: Uri) -> Route {
   case uri.path_segments(uri.path) {
     ["search"] -> handle_search_path(uri)
     ["trending"] -> Trending
+    ["analytics"] -> Analytics
     _ -> Home
   }
 }
@@ -38,5 +40,6 @@ pub fn update_page_title(route: Route) {
     Home -> ffi.update_title("Gloogle")
     Search(q) -> ffi.update_title("Gloogle — Search " <> q)
     Trending -> ffi.update_title("Gloogle — Trending")
+    Analytics -> ffi.update_title("Gloogle — Analytics")
   }
 }

@@ -22,7 +22,7 @@ pub fn navbar(model: Model) {
   s.navbar(transparent, [a.class("navbar")], [
     case model.route {
       router.Home -> h.div([], [])
-      router.Search(_) | router.Trending ->
+      router.Search(_) | router.Trending | router.Analytics ->
         s.navbar_search([], [
           s.navbar_search_title([a.href("/")], [
             s.search_lucy(40, [a.src("/images/lucy.svg")]),

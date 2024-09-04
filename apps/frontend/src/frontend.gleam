@@ -1,3 +1,4 @@
+import birl
 import data/model.{type Model}
 import data/msg.{type Msg}
 import data/package
@@ -12,11 +13,13 @@ import gleam/bool
 import gleam/dict
 import gleam/dynamic
 import gleam/option.{None, Some}
+import gleam/pair
 import gleam/result
 import gleam/uri.{type Uri}
-import grille_pain
-import grille_pain/lustre/toast
-import grille_pain/options
+
+// import grille_pain
+// import grille_pain/lustre/toast
+// import grille_pain/options
 import lustre
 import lustre/effect
 import lustre/lazy
@@ -59,10 +62,10 @@ pub fn main() {
   let assert Ok(cache) = sketch.setup(sketch_options.node())
   let assert Ok(_) = lazy.setup()
   let assert Ok(_) = sr.setup()
-  let assert Ok(_) =
-    options.default()
-    |> options.timeout(5000)
-    |> grille_pain.setup()
+  // let assert Ok(_) =
+  //   options.default()
+  //   |> options.timeout(5000)
+  //   |> grille_pain.setup()
 
   let assert Ok(_) =
     view.view
@@ -85,6 +88,32 @@ fn init(_) {
   |> update.add_effect(
     http.expect_json(dynamic.list(package.decoder), msg.Trendings)
     |> http.get(config.api_endpoint() <> "/trendings", _),
+  )
+  |> update.add_effect(
+    msg.Analytics
+    |> http.expect_json(
+      dynamic.decode4(
+        fn(a, b, c, d) { #(a, b, c, d) },
+        dynamic.field("total", dynamic.int),
+        dynamic.field("signatures", dynamic.int),
+        dynamic.field("packages", dynamic.int),
+        dynamic.field("timeseries", {
+          dynamic.list(dynamic.decode2(
+            pair.new,
+            dynamic.field("count", dynamic.int),
+            dynamic.field("date", fn(dyn) {
+              dynamic.string(dyn)
+              |> result.then(fn(t) {
+                birl.parse(t)
+                |> result.replace_error([])
+              })
+            }),
+          ))
+        }),
+      ),
+      _,
+    )
+    |> http.get(config.api_endpoint() <> "/analytics", _),
   )
 }
 
@@ -113,6 +142,15 @@ fn update(model: Model, msg: Msg) {
       handle_search_results(model, input, search_results)
     msg.OnCheckFilter(filter, value) ->
       handle_oncheck_filter(model, filter, value)
+    msg.Analytics(analytics) -> {
+      case analytics {
+        Error(_) -> #(model, effect.none())
+        Ok(analytics) ->
+          model
+          |> model.update_analytics(analytics)
+          |> update.none()
+      }
+    }
   }
 }
 
@@ -193,6 +231,7 @@ fn handle_route_change(model: Model, route: router.Route) {
   case route {
     router.Home -> model.update_input(model, "")
     router.Trending -> model.update_input(model, "")
+    router.Analytics -> model.update_input(model, "")
     router.Search(q) ->
       model.update_input(model, q)
       |> model.update_submitted_input
@@ -207,7 +246,8 @@ fn display_toast(
   |> result.map_error(fn(error) {
     toast_error.describe_http_error(error)
     |> option.map(errors.capture_message)
-    |> option.map(toast.error)
+    // |> option.map(toast.error)
+    |> option.map(fn(_) { effect.none() })
   })
   |> result.unwrap_error(option.None)
   |> option.unwrap(effect.none())

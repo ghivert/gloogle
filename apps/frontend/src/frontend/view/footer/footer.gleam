@@ -20,8 +20,21 @@ pub fn view() {
         |> list.prepend(s.foot_title([], [h.text(title)]))
       })
     }),
-    s.footer_built([], [
-      h.text("Gloogle is proudly built with 💜 in gleam for gleamlins"),
+    s.footer_subtitles([], [
+      s.footer_built([], [
+        h.text("Gloogle is proudly built with 💜 in Gleam for gleamlins"),
+      ]),
+      s.footer_built([], [
+        h.text("Gloogle is designed with 🔥 by "),
+        h.a(
+          [
+            a.href("https://gaspard.design/"),
+            a.target("_blank"),
+            a.rel("noreferrer"),
+          ],
+          [h.text("gaspard.design")],
+        ),
+      ]),
     ]),
   ])
 }

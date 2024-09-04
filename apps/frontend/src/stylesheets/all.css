@@ -401,6 +401,7 @@ lazy-node:has(:not(:defined)) {
   padding-top: 12px;
   padding-left: 12px;
   color: var(--input-text-color);
+  transition: opacity 0.3s;
 }
 
 .sidebar-filters {
@@ -408,6 +409,7 @@ lazy-node:has(:not(:defined)) {
   flex-direction: column;
   gap: 18px;
   padding: 0 12px;
+  transition: opacity 0.3s;
 }
 
 .sidebar-checkbox-1 {
@@ -426,11 +428,13 @@ lazy-node:has(:not(:defined)) {
 
 .sidebar-spacer {
   flex: 1;
+  transition: opacity 0.3s;
 }
 
 .filter-separator {
   height: 1px;
   background: var(--border-color);
+  transition: opacity 0.3s;
 }
 
 .sidebar-filter-line {

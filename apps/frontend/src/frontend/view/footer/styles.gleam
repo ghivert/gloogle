@@ -18,12 +18,19 @@ pub fn footer(attributes, children) {
 
 pub fn footer_built(attributes, children) {
   l.memo("div", attributes, children, [
-    s.display("flex"),
-    s.flex_direction("column"),
     s.align_items("center"),
     s.justify_content("center"),
     s.font_size(size.rem_(0.8)),
     s.line_height("1.3"),
+    s.text_align("center"),
+  ])
+}
+
+pub fn footer_subtitles(attributes, children) {
+  l.memo("div", attributes, children, [
+    s.display("flex"),
+    s.flex_direction("column"),
+    s.gap(px(4)),
   ])
 }
 

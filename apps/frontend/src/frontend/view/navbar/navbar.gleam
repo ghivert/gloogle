@@ -1,11 +1,8 @@
 import data/model.{type Model}
-import data/msg
 import frontend/router
 import frontend/view/navbar/styles as s
-import frontend/view/search_input/search_input
 import lustre/attribute as a
 import lustre/element/html as h
-import lustre/event as e
 
 fn navbar_links() {
   s.nav_links([], [
@@ -13,7 +10,7 @@ fn navbar_links() {
       h.text("Packages"),
       s.coming_soon([], [h.text(" (coming soon…)")]),
     ]),
-    // s.nav_link([a.href("/trending")], [h.text("Trending")]),
+    s.nav_link([a.href("/analytics")], [h.text("Analytics")]),
   ])
 }
 
@@ -21,7 +18,7 @@ pub fn navbar(model: Model) {
   let transparent = model.route == router.Home
   s.navbar(transparent, [a.class("navbar")], [
     case model.route {
-      router.Home -> h.div([], [])
+      router.Home -> navbar_links()
       router.Search(_) | router.Trending | router.Analytics ->
         s.navbar_search([], [
           s.navbar_search_title([a.href("/")], [
@@ -30,6 +27,5 @@ pub fn navbar(model: Model) {
           ]),
         ])
     },
-    navbar_links(),
   ])
 }

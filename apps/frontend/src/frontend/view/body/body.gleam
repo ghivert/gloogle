@@ -138,6 +138,10 @@ pub fn view_trending(model: Model) {
 
 fn sidebar(model: Model) {
   use <- bool.guard(when: model.is_mobile, return: el.none())
+  let disabled = case model.route {
+    router.Search(..) -> a.style([#("opacity", "1")])
+    _ -> a.style([#("opacity", "0.3"), #("pointer-events", "none")])
+  }
   h.main([a.class("search-sidebar")], [
     h.a([a.class("sidebar-title"), a.href("/")], [
       h.img([
@@ -150,8 +154,8 @@ fn sidebar(model: Model) {
     h.form([e.on_submit(msg.SubmitSearch)], [
       search_input.view(model.loading, model.input, small: True),
     ]),
-    h.div([a.class("sidebar-filter")], [el.text("Filters")]),
-    h.div([a.class("sidebar-filters")], [
+    h.div([a.class("sidebar-filter"), disabled], [el.text("Filters")]),
+    h.div([a.class("sidebar-filters"), disabled], [
       checkbox(model.keep_functions, msg.Functions, "Functions"),
       checkbox(model.keep_types, msg.Types, "Types"),
       checkbox(model.keep_aliases, msg.Aliases, "Aliases"),
@@ -162,7 +166,7 @@ fn sidebar(model: Model) {
         msg.ShowOldPackages,
         "Show old versions",
       ),
-      h.div([a.class("filter-separator")], []),
+      h.div([a.class("filter-separator"), disabled], []),
       checkbox(
         model.show_documentation_search,
         msg.DocumentationSearch,
@@ -170,7 +174,7 @@ fn sidebar(model: Model) {
       ),
       checkbox(model.show_vector_search, msg.VectorSearch, "Vector Search"),
     ]),
-    h.div([a.class("sidebar-spacer")], []),
+    h.div([a.class("sidebar-spacer"), disabled], []),
     h.div([a.class("sidebar-links")], [
       sidebar_link(href: "/analytics", icon: icons.trends(), title: "Analytics"),
       // s.sidebar_link_wrapper([], [
@@ -267,7 +271,7 @@ pub fn body(model: Model) {
     router.Analytics ->
       el.fragment([
         sidebar(model),
-        h.main([a.class("main"), a.style([#("padding", "24px")])], [
+        h.main([a.class("main"), a.style([#("padding", "24px 36px")])], [
           h.div([a.class("matches-titles")], [
             h.div([a.class("matches-title")], [h.text("Global analytics")]),
           ]),

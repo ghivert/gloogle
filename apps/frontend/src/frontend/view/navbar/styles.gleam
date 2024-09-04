@@ -27,7 +27,7 @@ pub fn nav_links(attributes, children) {
     s.align_items("baseline"),
     s.gap(px(48)),
     s.padding(px(48)),
-    s.media(media.max_width(px(700)), [s.display("none")]),
+    s.media(media.max_width(px(700)), [s.padding(px(12)), s.gap(px(24))]),
   ])
 }
 
@@ -43,6 +43,7 @@ pub fn trending(attributes, children) {
     s.align_items("end"),
     s.color("var(--text-color)"),
     s.white_space("nowrap"),
+    s.opacity(0.3),
   ])
 }
 
@@ -58,16 +59,27 @@ pub fn navbar(transparent: Bool, attributes, children) {
   l.dynamic("nav", attributes, children, id, [
     s.position("sticky"),
     s.top(px(0)),
-    s.align_items("center"),
-    s.justify_content("space-between"),
+    s.justify_content("end"),
     s.grid_area("navbar"),
     s.padding_left(px(48)),
     s.gap(px(48)),
-    s.background("var(--sidebar-background)"),
     s.height(px(130)),
     s.z_index(1000),
-    s.display("none"),
-    s.border_bottom("1px solid var(--border-color)"),
+    s.background(case transparent {
+      True -> "transparent"
+      False -> "var(--sidebar-background)"
+    }),
+    s.display(case transparent {
+      True -> "flex"
+      False -> "none"
+    }),
+    s.border_bottom(
+      "1px solid "
+      <> case transparent {
+        True -> "transparent"
+        False -> "var(--border-color)"
+      },
+    ),
     s.media(media.max_width(px(700)), [
       s.display("flex"),
       s.gap(px(24)),

@@ -29,16 +29,9 @@ fn layout(attributes, children) {
   ])
 }
 
-fn navbar(model: Model) {
-  case model.route {
-    router.Search(_) -> navbar.navbar(model)
-    _ -> el.none()
-  }
-}
-
 pub fn view(model: Model) {
   layout([], [
-    navbar(model),
+    navbar.navbar(model),
     body.body(model),
     case model.route {
       router.Home -> footer.view()

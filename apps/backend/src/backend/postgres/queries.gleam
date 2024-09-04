@@ -8,7 +8,6 @@ import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -72,6 +71,36 @@ pub fn upsert_search_analytics(db: pgo.Connection, query: String) {
   })
 }
 
+pub fn select_more_popular_packages(db: pgo.Connection) {
+  let decoder =
+    dynamic.tuple4(
+      dynamic.string,
+      dynamic.string,
+      dynamic.int,
+      dynamic.optional(dynamic.int),
+    )
+  use ranked <- result.try({
+    "SELECT name, repository, rank, (popularity -> 'github')::int
+    FROM package
+    ORDER BY rank DESC
+    LIMIT 22"
+    |> pgo.execute(db, [], decoder)
+    |> result.map(fn(r) { r.rows })
+    |> result.map_error(error.DatabaseError)
+  })
+  use popular <- result.try({
+    "SELECT name, repository, rank, (popularity -> 'github')::int
+    FROM package
+    WHERE popularity -> 'github' IS NOT NULL
+    ORDER BY popularity -> 'github' DESC
+    LIMIT 23"
+    |> pgo.execute(db, [], decoder)
+    |> result.map(fn(r) { r.rows })
+    |> result.map_error(error.DatabaseError)
+  })
+  Ok(#(ranked, popular))
+}
+
 pub fn select_last_day_search_analytics(db: pgo.Connection) {
   let #(date, _) = birl.to_erlang_universal_datetime(birl.now())
   let now = birl.from_erlang_universal_datetime(#(date, #(0, 0, 0)))
@@ -113,7 +142,9 @@ pub fn get_timeseries_count(db: pgo.Connection) {
       (SELECT att.occurences
         FROM analytics_timeseries att
         WHERE att.date < at.date
-          AND att.query = at.query),
+          AND att.query = at.query
+        ORDER BY date DESC
+        LIMIT 1),
       0)
     ) searches,
     at.date date

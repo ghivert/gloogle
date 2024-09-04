@@ -41,6 +41,8 @@ pub type Model {
     total_signatures: Int,
     total_packages: Int,
     timeseries: List(#(Int, birl.Time)),
+    ranked: List(msg.Package),
+    popular: List(msg.Package),
   )
 }
 
@@ -71,6 +73,8 @@ pub fn init() {
     total_signatures: 0,
     total_packages: 0,
     timeseries: [],
+    ranked: [],
+    popular: [],
   )
 }
 
@@ -102,18 +106,15 @@ pub fn update_input(model: Model, content: String) {
   Model(..model, input: content)
 }
 
-pub fn update_analytics(
-  model: Model,
-  analytics: #(Int, Int, Int, List(#(Int, birl.Time))),
-) {
-  let #(total_searches, total_signatures, total_packages, timeseries) =
-    analytics
+pub fn update_analytics(model: Model, analytics: msg.Analytics) {
   Model(
     ..model,
-    timeseries:,
-    total_searches:,
-    total_signatures:,
-    total_packages:,
+    timeseries: analytics.timeseries,
+    total_searches: analytics.total_searches,
+    total_signatures: analytics.total_signatures,
+    total_packages: analytics.total_indexed,
+    ranked: analytics.ranked,
+    popular: analytics.popular,
   )
 }
 
@@ -348,10 +349,12 @@ pub fn reset(model: Model) {
     show_old_packages: False,
     show_documentation_search: False,
     show_vector_search: False,
-    timeseries: [],
-    total_searches: 0,
-    total_signatures: 0,
-    total_packages: 0,
+    timeseries: model.timeseries,
+    total_searches: model.total_searches,
+    total_signatures: model.total_signatures,
+    total_packages: model.total_packages,
+    ranked: model.ranked,
+    popular: model.popular,
   )
 }
 

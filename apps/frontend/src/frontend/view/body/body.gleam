@@ -1,4 +1,5 @@
 import birl
+import chart.{Dataset}
 import data/model.{type Model}
 import data/msg
 import data/search_result
@@ -12,9 +13,9 @@ import gleam/dict
 import gleam/float
 import gleam/int
 import gleam/list
+import gleam/option
 import gleam/result
 import gleam/string
-import line_chart.{Dataset}
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
@@ -249,10 +250,43 @@ fn analytics_box(title: String, count: Int) {
   ])
 }
 
+fn popularity_chart(model: Model) {
+  let data =
+    list.filter(model.popular, fn(p) {
+      p.repository != "https://github.com/gleam-lang/gleam"
+    })
+  use <- bool.guard(when: list.is_empty(data), return: el.none())
+  chart.bar_chart("#ff851b", {
+    let acc = Dataset([], [])
+    use Dataset(dates, value), package <- list.fold_right(data, acc)
+    case package.popularity {
+      option.None -> Dataset(dates, value)
+      option.Some(popularity) -> {
+        let label = package.name
+        Dataset([label, ..dates], [popularity, ..value])
+      }
+    }
+  })
+}
+
+fn ranked_chart(model: Model) {
+  let data =
+    list.filter(model.ranked, fn(p) {
+      p.name != "gleam_stdlib" && p.name != "gleeunit"
+    })
+  use <- bool.guard(when: list.is_empty(data), return: el.none())
+  chart.bar_chart("#ffaff3", {
+    let acc = Dataset([], [])
+    use Dataset(dates, value), package <- list.fold_right(data, acc)
+    let label = package.name
+    Dataset([label, ..dates], [package.rank, ..value])
+  })
+}
+
 fn analytics_chart(model: Model) {
   let data = model.timeseries
   use <- bool.guard(when: list.is_empty(data), return: el.none())
-  line_chart.line_chart({
+  chart.line_chart({
     let acc = Dataset([], [])
     use Dataset(dates, value), #(count, date) <- list.fold(data, acc)
     let day = birl.get_day(date)
@@ -264,44 +298,86 @@ fn analytics_chart(model: Model) {
   })
 }
 
+fn analytics_title(title: String, border: Bool) {
+  el.fragment([
+    h.div([a.class("matches-titles")], [
+      h.div([a.class("matches-title")], [h.text(title)]),
+    ]),
+    case border {
+      False -> el.none()
+      True ->
+        h.div(
+          [
+            a.style([
+              #("height", "1px"),
+              #("max-width", "800px"),
+              #("margin-bottom", "0px"),
+              #("background", "var(--border-color)"),
+            ]),
+          ],
+          [],
+        )
+    },
+  ])
+}
+
+fn view_analytics(model: Model) {
+  el.fragment([
+    sidebar(model),
+    h.main([a.class("main"), a.style([#("padding", "24px 36px")])], [
+      analytics_title("Gloogle analytics", True),
+      analytics_title("Global analytics", False),
+      h.div([a.class("analytics-box-wrapper")], [
+        analytics_box("Number of searches", model.total_searches),
+        analytics_box("Number of signatures indexed", model.total_signatures),
+        analytics_box("Number of packages indexed", model.total_packages),
+      ]),
+      analytics_title("Searches per day — Last 30 days", False),
+      h.div([a.class("analytics-charts-wrapper")], [analytics_chart(model)]),
+      analytics_title("Gleam ecosystem analytics", True),
+      analytics_title("Popular packages — Stars on GitHub", False),
+      h.div([a.class("analytics-box-wrapper")], [
+        analytics_box(
+          "Stars on gleam-lang/glang",
+          model.popular
+            |> list.find(fn(p) {
+              p.repository == "https://github.com/gleam-lang/gleam"
+            })
+            |> result.map(fn(p) { p.popularity |> option.unwrap(0) })
+            |> result.unwrap(0),
+        ),
+      ]),
+      h.div([a.class("analytics-charts-wrapper")], [popularity_chart(model)]),
+      analytics_title(
+        "Most used packages — Used as dependencies on Hex",
+        False,
+      ),
+      h.div([a.class("analytics-box-wrapper")], [
+        analytics_box(
+          "Packages using gleam_stdlib",
+          model.ranked
+            |> list.find(fn(p) { p.name == "gleam_stdlib" })
+            |> result.map(fn(p) { p.rank })
+            |> result.unwrap(0),
+        ),
+        analytics_box(
+          "Packages using gleeunit",
+          model.ranked
+            |> list.find(fn(p) { p.name == "gleeunit" })
+            |> result.map(fn(p) { p.rank })
+            |> result.unwrap(0),
+        ),
+      ]),
+      h.div([a.class("analytics-charts-wrapper")], [ranked_chart(model)]),
+    ]),
+  ])
+}
+
 pub fn body(model: Model) {
   case model.route {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
     router.Trending -> h.main([a.class("main")], [view_trending(model)])
-    router.Analytics ->
-      el.fragment([
-        sidebar(model),
-        h.main([a.class("main"), a.style([#("padding", "24px 36px")])], [
-          h.div([a.class("matches-titles")], [
-            h.div([a.class("matches-title")], [h.text("Global analytics")]),
-          ]),
-          h.div([a.class("analytics-box-wrapper")], [
-            analytics_box("Number of searches", model.total_searches),
-            analytics_box(
-              "Number of signatures indexed",
-              model.total_signatures,
-            ),
-            analytics_box("Number of packages indexed", model.total_packages),
-          ]),
-          h.div([a.class("matches-titles")], [
-            h.div([a.class("matches-title")], [
-              h.text("Searches per day — Last 30 days"),
-            ]),
-          ]),
-          h.div(
-            [
-              a.style([
-                #("max-width", "850px"),
-                #("border", "1px solid var(--border-color)"),
-                #("border-radius", "10px"),
-                #("overflow", "hidden"),
-                #("padding", "12px"),
-              ]),
-            ],
-            [analytics_chart(model)],
-          ),
-        ]),
-      ])
+    router.Analytics -> view_analytics(model)
     router.Search(_) -> {
       let key = model.search_key(model.submitted_input, model)
       el.fragment([

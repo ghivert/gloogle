@@ -12,7 +12,6 @@ import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option
-import gleam/pair
 import gleam/result
 import gleam/string_builder
 import tasks/hex as syncing
@@ -126,6 +125,16 @@ fn search(query: String, ctx: Context) {
   ])
 }
 
+fn encode_package(package: #(String, String, Int, option.Option(Int))) {
+  let #(name, repository, rank, popularity) = package
+  json.object([
+    #("name", json.string(name)),
+    #("repository", json.string(repository)),
+    #("rank", json.int(rank)),
+    #("popularity", json.nullable(popularity, json.int)),
+  ])
+}
+
 pub fn handle_get(req: Request, ctx: Context) {
   case wisp.path_segments(req) {
     ["healthcheck"] -> wisp.ok()
@@ -149,17 +158,23 @@ pub fn handle_get(req: Request, ctx: Context) {
         use total <- result.try(queries.get_total_searches(ctx.db))
         use signatures <- result.try(queries.get_total_signatures(ctx.db))
         use packages <- result.try(queries.get_total_packages(ctx.db))
+        use #(ranked, popular) <- result.try({
+          queries.select_more_popular_packages(ctx.db)
+        })
         let total = list.first(total) |> result.unwrap(0)
         let signatures = list.first(signatures) |> result.unwrap(0)
         let packages = list.first(packages) |> result.unwrap(0)
-        Ok(#(timeseries, total, signatures, packages))
+        Ok(#(timeseries, total, signatures, packages, ranked, popular))
       }
       |> result.map(fn(content) {
-        let #(timeseries, total, signatures, packages) = content
+        let #(timeseries, total, signatures, packages, ranked, popular) =
+          content
         json.object([
           #("total", json.int(total)),
           #("signatures", json.int(signatures)),
           #("packages", json.int(packages)),
+          #("ranked", json.array(ranked, encode_package)),
+          #("popular", json.array(popular, encode_package)),
           #("timeseries", {
             json.array(timeseries, fn(row) {
               json.object([

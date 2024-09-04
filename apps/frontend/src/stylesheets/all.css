@@ -582,3 +582,11 @@ lazy-node:has(:not(:defined)) {
   gap: 24px;
   flex-wrap: wrap;
 }
+
+.analytics-charts-wrapper {
+  max-width: 800px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 12px;
+}

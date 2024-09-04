@@ -74,6 +74,16 @@ pub fn main() {
     |> lustre.start("#app", Nil)
 }
 
+fn decode_package(dyn) {
+  dynamic.decode4(
+    msg.Package,
+    dynamic.field("name", dynamic.string),
+    dynamic.field("repository", dynamic.string),
+    dynamic.field("rank", dynamic.int),
+    dynamic.field("popularity", dynamic.optional(dynamic.int)),
+  )(dyn)
+}
+
 fn init(_) {
   let initial =
     modem.initial_uri()
@@ -90,10 +100,10 @@ fn init(_) {
     |> http.get(config.api_endpoint() <> "/trendings", _),
   )
   |> update.add_effect(
-    msg.Analytics
+    msg.OnAnalytics
     |> http.expect_json(
-      dynamic.decode4(
-        fn(a, b, c, d) { #(a, b, c, d) },
+      dynamic.decode6(
+        msg.Analytics,
         dynamic.field("total", dynamic.int),
         dynamic.field("signatures", dynamic.int),
         dynamic.field("packages", dynamic.int),
@@ -110,6 +120,8 @@ fn init(_) {
             }),
           ))
         }),
+        dynamic.field("ranked", dynamic.list(decode_package)),
+        dynamic.field("popular", dynamic.list(decode_package)),
       ),
       _,
     )
@@ -142,7 +154,7 @@ fn update(model: Model, msg: Msg) {
       handle_search_results(model, input, search_results)
     msg.OnCheckFilter(filter, value) ->
       handle_oncheck_filter(model, filter, value)
-    msg.Analytics(analytics) -> {
+    msg.OnAnalytics(analytics) -> {
       case analytics {
         Error(_) -> #(model, effect.none())
         Ok(analytics) ->

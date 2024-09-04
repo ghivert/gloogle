@@ -2,6 +2,7 @@ import birl
 import data/package
 import data/search_result.{type SearchResults}
 import frontend/router
+import gleam/option
 import lustre_http as http
 import plinth/browser/event.{type Event}
 
@@ -15,6 +16,26 @@ pub type Filter {
   VectorSearch
 }
 
+pub type Package {
+  Package(
+    name: String,
+    repository: String,
+    rank: Int,
+    popularity: option.Option(Int),
+  )
+}
+
+pub type Analytics {
+  Analytics(
+    total_searches: Int,
+    total_signatures: Int,
+    total_indexed: Int,
+    timeseries: List(#(Int, birl.Time)),
+    ranked: List(Package),
+    popular: List(Package),
+  )
+}
+
 pub type Msg {
   None
   OnSearchFocus(event: Event)
@@ -26,7 +47,7 @@ pub type Msg {
   Reset
   ScrollTo(String)
   OnEscape
-  Analytics(Result(#(Int, Int, Int, List(#(Int, birl.Time))), http.HttpError))
+  OnAnalytics(Result(Analytics, http.HttpError))
   OnRouteChange(router.Route)
   OnCheckFilter(Filter, Bool)
 }

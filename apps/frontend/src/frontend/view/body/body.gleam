@@ -11,11 +11,10 @@ import gleam/bool
 import gleam/dict
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
-import line_chart
+import line_chart.{Dataset}
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
@@ -239,6 +238,28 @@ fn format_huge_number(number: Int) {
   }
 }
 
+fn analytics_box(title: String, count: Int) {
+  h.div([a.class("analytics-box")], [
+    h.div([a.class("analytics-title")], [h.text(title)]),
+    h.text(format_huge_number(count)),
+  ])
+}
+
+fn analytics_chart(model: Model) {
+  let data = model.timeseries
+  use <- bool.guard(when: list.is_empty(data), return: el.none())
+  line_chart.line_chart({
+    let acc = Dataset([], [])
+    use Dataset(dates, value), #(count, date) <- list.fold(data, acc)
+    let day = birl.get_day(date)
+    let label =
+      [day.year, day.month, day.date]
+      |> list.map(int.to_string)
+      |> string.join("/")
+    Dataset([label, ..dates], [count, ..value])
+  })
+}
+
 pub fn body(model: Model) {
   case model.route {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
@@ -246,54 +267,34 @@ pub fn body(model: Model) {
     router.Analytics ->
       el.fragment([
         sidebar(model),
-        h.main([a.class("main")], [
+        h.main([a.class("main"), a.style([#("padding", "24px")])], [
+          h.div([a.class("matches-titles")], [
+            h.div([a.class("matches-title")], [h.text("Global analytics")]),
+          ]),
+          h.div([a.class("analytics-box-wrapper")], [
+            analytics_box("Number of searches", model.total_searches),
+            analytics_box(
+              "Number of signatures indexed",
+              model.total_signatures,
+            ),
+            analytics_box("Number of packages indexed", model.total_packages),
+          ]),
+          h.div([a.class("matches-titles")], [
+            h.div([a.class("matches-title")], [
+              h.text("Searches per day — Last 30 days"),
+            ]),
+          ]),
           h.div(
-            [a.class("items-wrapper"), a.style([#("padding-left", "24px")])],
             [
-              h.div([a.class("matches-titles")], [
-                h.div([a.class("matches-title")], [h.text("Global analytics")]),
-              ]),
-              h.div([a.class("analytics-box-wrapper")], [
-                h.div([a.class("analytics-box")], [
-                  h.div([a.class("analytics-title")], [
-                    h.text("Number of searches"),
-                  ]),
-                  h.text(format_huge_number(model.total_searches)),
-                ]),
-                h.div([a.class("analytics-box")], [
-                  h.div([a.class("analytics-title")], [
-                    h.text("Number of signatures indexed"),
-                  ]),
-                  h.text(format_huge_number(model.total_signatures)),
-                ]),
-                h.div([a.class("analytics-box")], [
-                  h.div([a.class("analytics-title")], [
-                    h.text("Number of packages indexed"),
-                  ]),
-                  h.text(format_huge_number(model.total_packages)),
-                ]),
-              ]),
-              h.div([a.class("matches-titles")], [
-                h.div([a.class("matches-title")], [h.text("Last 30 days")]),
-              ]),
-              h.div([a.style([#("width", "auto"), #("height", "500px")])], [
-                case model.timeseries {
-                  [] -> el.none()
-                  data -> {
-                    line_chart.line_chart({
-                      use line_chart.Dataset(dates, value), #(count, date) <- list.fold(
-                        data,
-                        line_chart.Dataset([], []),
-                      )
-                      line_chart.Dataset([birl.to_iso8601(date), ..dates], [
-                        count,
-                        ..value
-                      ])
-                    })
-                  }
-                },
+              a.style([
+                #("max-width", "850px"),
+                #("border", "1px solid var(--border-color)"),
+                #("border-radius", "10px"),
+                #("overflow", "hidden"),
+                #("padding", "12px"),
               ]),
             ],
+            [analytics_chart(model)],
           ),
         ]),
       ])

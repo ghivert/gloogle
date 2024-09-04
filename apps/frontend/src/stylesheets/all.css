@@ -565,8 +565,8 @@ lazy-node:has(:not(:defined)) {
   line-height: 1.75;
   width: 250px;
   height: 250px;
-  /* height: 200px; */
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .analytics-title {
@@ -576,4 +576,5 @@ lazy-node:has(:not(:defined)) {
 .analytics-box-wrapper {
   display: flex;
   gap: 24px;
+  flex-wrap: wrap;
 }

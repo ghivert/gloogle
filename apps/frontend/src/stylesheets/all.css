@@ -447,7 +447,7 @@ lazy-node:has(:not(:defined)) {
 .sidebar-links {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
   padding: 12px;
 }
 
@@ -552,4 +552,27 @@ lazy-node:has(:not(:defined)) {
   font-size: 0.8rem;
   line-height: 1.6;
   font-weight: 400;
+}
+
+.analytics-box {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 2.5rem;
+  line-height: 1.75;
+  width: 200px;
+  /* height: 200px; */
+  justify-content: space-between;
+}
+
+.analytics-title {
+  font-size: 1rem;
+}
+
+.analytics-box-wrapper {
+  display: flex;
+  gap: 24px;
 }

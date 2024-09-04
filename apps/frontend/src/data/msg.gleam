@@ -26,7 +26,7 @@ pub type Msg {
   Reset
   ScrollTo(String)
   OnEscape
-  Analytics(Result(List(#(Int, birl.Time)), http.HttpError))
+  Analytics(Result(#(Int, Int, Int, List(#(Int, birl.Time))), http.HttpError))
   OnRouteChange(router.Route)
   OnCheckFilter(Filter, Bool)
 }

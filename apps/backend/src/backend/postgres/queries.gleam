@@ -3,12 +3,12 @@ import backend/data/hex_user.{type HexUser}
 import backend/error
 import backend/gleam/context
 import birl.{type Time}
-import birl/duration
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/hexpm
 import gleam/int
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -153,6 +153,27 @@ fn get_current_package_owners(db: pgo.Connection, package_id: Int) {
    FROM package_owner
    WHERE package_owner.package_id = $1"
   |> pgo.execute(db, [pid], dynamic.element(0, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_total_searches(db: pgo.Connection) {
+  "SELECT SUM(occurences) FROM search_analytics"
+  |> pgo.execute(db, [], dynamic.element(0, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_total_signatures(db: pgo.Connection) {
+  "SELECT COUNT(*) FROM package_type_fun_signature"
+  |> pgo.execute(db, [], dynamic.element(0, dynamic.int))
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
+pub fn get_total_packages(db: pgo.Connection) {
+  "SELECT COUNT(*) FROM package"
+  |> pgo.execute(db, [], dynamic.element(0, dynamic.int))
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
 }

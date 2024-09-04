@@ -12,6 +12,7 @@ import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option
+import gleam/pair
 import gleam/result
 import gleam/string_builder
 import tasks/hex as syncing
@@ -143,14 +144,31 @@ pub fn handle_get(req: Request, ctx: Context) {
       })
       |> result.unwrap(wisp.internal_server_error())
     ["analytics"] -> {
-      queries.get_timeseries_count(ctx.db)
+      {
+        use timeseries <- result.try(queries.get_timeseries_count(ctx.db))
+        use total <- result.try(queries.get_total_searches(ctx.db))
+        use signatures <- result.try(queries.get_total_signatures(ctx.db))
+        use packages <- result.try(queries.get_total_packages(ctx.db))
+        let total = list.first(total) |> result.unwrap(0)
+        let signatures = list.first(signatures) |> result.unwrap(0)
+        let packages = list.first(packages) |> result.unwrap(0)
+        Ok(#(timeseries, total, signatures, packages))
+      }
       |> result.map(fn(content) {
-        json.array(content, fn(row) {
-          json.object([
-            #("count", json.int(row.0)),
-            #("date", json.string(birl.to_iso8601(row.1))),
-          ])
-        })
+        let #(timeseries, total, signatures, packages) = content
+        json.object([
+          #("total", json.int(total)),
+          #("signatures", json.int(signatures)),
+          #("packages", json.int(packages)),
+          #("timeseries", {
+            json.array(timeseries, fn(row) {
+              json.object([
+                #("count", json.int(row.0)),
+                #("date", json.string(birl.to_iso8601(row.1))),
+              ])
+            })
+          }),
+        ])
         |> json.to_string_builder
         |> wisp.json_response(200)
       })

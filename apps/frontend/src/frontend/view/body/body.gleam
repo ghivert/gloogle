@@ -1,3 +1,4 @@
+import birl
 import data/model.{type Model}
 import data/msg
 import data/search_result
@@ -8,8 +9,13 @@ import frontend/strings as frontend_strings
 import frontend/view/search_input/search_input
 import gleam/bool
 import gleam/dict
+import gleam/float
+import gleam/int
+import gleam/io
+import gleam/list
 import gleam/result
 import gleam/string
+import line_chart
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
@@ -220,12 +226,77 @@ fn sidebar_link(href href: String, title title: String, icon icon) {
   ])
 }
 
+fn format_huge_number(number: Int) {
+  let number = int.to_float(number)
+  let g = number /. 1_000_000_000.0
+  let m = number /. 1_000_000.0
+  let k = number /. 1000.0
+  case number {
+    _ if g >. 1.0 -> float.to_string(g) |> string.slice(0, 5) <> " G"
+    _ if m >. 1.0 -> float.to_string(m) |> string.slice(0, 5) <> " M"
+    _ if k >. 1.0 -> float.to_string(k) |> string.slice(0, 5) <> " K"
+    _ -> float.round(number) |> int.to_string
+  }
+}
+
 pub fn body(model: Model) {
   case model.route {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
     router.Trending -> h.main([a.class("main")], [view_trending(model)])
     router.Analytics ->
-      el.fragment([sidebar(model), h.main([a.class("main")], [])])
+      el.fragment([
+        sidebar(model),
+        h.main([a.class("main")], [
+          h.div(
+            [a.class("items-wrapper"), a.style([#("padding-left", "24px")])],
+            [
+              h.div([a.class("matches-titles")], [
+                h.div([a.class("matches-title")], [h.text("Global analytics")]),
+              ]),
+              h.div([a.class("analytics-box-wrapper")], [
+                h.div([a.class("analytics-box")], [
+                  h.div([a.class("analytics-title")], [
+                    h.text("Number of searches"),
+                  ]),
+                  h.text(format_huge_number(model.total_searches)),
+                ]),
+                h.div([a.class("analytics-box")], [
+                  h.div([a.class("analytics-title")], [
+                    h.text("Number of signatures indexed"),
+                  ]),
+                  h.text(format_huge_number(model.total_signatures)),
+                ]),
+                h.div([a.class("analytics-box")], [
+                  h.div([a.class("analytics-title")], [
+                    h.text("Number of packages indexed"),
+                  ]),
+                  h.text(format_huge_number(model.total_packages)),
+                ]),
+              ]),
+              h.div([a.class("matches-titles")], [
+                h.div([a.class("matches-title")], [h.text("Last 30 days")]),
+              ]),
+              h.div([a.style([#("width", "auto"), #("height", "500px")])], [
+                case model.timeseries {
+                  [] -> el.none()
+                  data -> {
+                    line_chart.line_chart({
+                      use line_chart.Dataset(dates, value), #(count, date) <- list.fold(
+                        data,
+                        line_chart.Dataset([], []),
+                      )
+                      line_chart.Dataset([birl.to_iso8601(date), ..dates], [
+                        count,
+                        ..value
+                      ])
+                    })
+                  }
+                },
+              ]),
+            ],
+          ),
+        ]),
+      ])
     router.Search(_) -> {
       let key = model.search_key(model.submitted_input, model)
       el.fragment([

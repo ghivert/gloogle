@@ -12,7 +12,6 @@ import frontend/view/body/search_result as sr
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
-import gleam/io
 import gleam/option.{None, Some}
 import gleam/pair
 import gleam/result
@@ -93,17 +92,25 @@ fn init(_) {
   |> update.add_effect(
     msg.Analytics
     |> http.expect_json(
-      dynamic.list(dynamic.decode2(
-        pair.new,
-        dynamic.field("count", dynamic.int),
-        dynamic.field("date", fn(dyn) {
-          dynamic.string(dyn)
-          |> result.then(fn(t) {
-            birl.parse(t)
-            |> result.replace_error([])
-          })
+      dynamic.decode4(
+        fn(a, b, c, d) { #(a, b, c, d) },
+        dynamic.field("total", dynamic.int),
+        dynamic.field("signatures", dynamic.int),
+        dynamic.field("packages", dynamic.int),
+        dynamic.field("timeseries", {
+          dynamic.list(dynamic.decode2(
+            pair.new,
+            dynamic.field("count", dynamic.int),
+            dynamic.field("date", fn(dyn) {
+              dynamic.string(dyn)
+              |> result.then(fn(t) {
+                birl.parse(t)
+                |> result.replace_error([])
+              })
+            }),
+          ))
         }),
-      )),
+      ),
       _,
     )
     |> http.get(config.api_endpoint() <> "/analytics", _),

@@ -1,4 +1,4 @@
-FROM --platform=x86_64 ghcr.io/gleam-lang/gleam:v1.4.0-erlang-alpine AS builder
+FROM --platform=x86_64 ghcr.io/gleam-lang/gleam:v1.4.1-erlang-alpine AS builder
 
 RUN apk add build-base ca-certificates
 RUN mkdir -p /build/backend/src

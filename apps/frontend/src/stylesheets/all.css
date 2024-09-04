@@ -563,7 +563,8 @@ lazy-node:has(:not(:defined)) {
   border-radius: 10px;
   font-size: 2.5rem;
   line-height: 1.75;
-  width: 200px;
+  width: 250px;
+  height: 250px;
   /* height: 200px; */
   justify-content: space-between;
 }

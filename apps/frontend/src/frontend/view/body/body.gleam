@@ -232,9 +232,9 @@ fn format_huge_number(number: Int) {
   let m = number /. 1_000_000.0
   let k = number /. 1000.0
   case number {
-    _ if g >. 1.0 -> float.to_string(g) |> string.slice(0, 5) <> " G"
-    _ if m >. 1.0 -> float.to_string(m) |> string.slice(0, 5) <> " M"
-    _ if k >. 1.0 -> float.to_string(k) |> string.slice(0, 5) <> " K"
+    _ if g >. 1.0 -> float.to_string(g) |> string.slice(0, 6) <> " G"
+    _ if m >. 1.0 -> float.to_string(m) |> string.slice(0, 6) <> " M"
+    _ if k >. 10.0 -> float.to_string(k) |> string.slice(0, 6) <> " K"
     _ -> float.round(number) |> int.to_string
   }
 }

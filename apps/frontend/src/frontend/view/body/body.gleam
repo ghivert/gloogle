@@ -349,19 +349,19 @@ fn view_analytics(model: Model) {
       ]),
       h.div([a.class("analytics-charts-wrapper")], [popularity_chart(model)]),
       analytics_title(
-        "Most used packages — Used as dependencies on Hex",
+        "Most used packages — Used as dependencies on Hex, counted by release",
         False,
       ),
       h.div([a.class("analytics-box-wrapper")], [
         analytics_box(
-          "Packages using gleam_stdlib",
+          "Packages releases using gleam_stdlib",
           model.ranked
             |> list.find(fn(p) { p.name == "gleam_stdlib" })
             |> result.map(fn(p) { p.rank })
             |> result.unwrap(0),
         ),
         analytics_box(
-          "Packages using gleeunit",
+          "Packages releases using gleeunit",
           model.ranked
             |> list.find(fn(p) { p.name == "gleeunit" })
             |> result.map(fn(p) { p.rank })

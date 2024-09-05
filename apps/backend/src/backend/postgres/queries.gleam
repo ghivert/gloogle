@@ -92,6 +92,8 @@ pub fn select_more_popular_packages(db: pgo.Connection) {
     "SELECT name, repository, rank, (popularity -> 'github')::int
     FROM package
     WHERE popularity -> 'github' IS NOT NULL
+      AND name != 'funtil'
+      AND name != 'dew'
     ORDER BY popularity -> 'github' DESC
     LIMIT 23"
     |> pgo.execute(db, [], decoder)

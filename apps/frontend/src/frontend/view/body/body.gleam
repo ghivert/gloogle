@@ -258,7 +258,7 @@ fn popularity_chart(model: Model) {
   use <- bool.guard(when: list.is_empty(data), return: el.none())
   chart.bar_chart("#ff851b", {
     let acc = Dataset([], [])
-    use Dataset(dates, value), package <- list.fold_right(data, acc)
+    use Dataset(dates, value), package <- list.fold(list.reverse(data), acc)
     case package.popularity {
       option.None -> Dataset(dates, value)
       option.Some(popularity) -> {
@@ -277,7 +277,7 @@ fn ranked_chart(model: Model) {
   use <- bool.guard(when: list.is_empty(data), return: el.none())
   chart.bar_chart("#ffaff3", {
     let acc = Dataset([], [])
-    use Dataset(dates, value), package <- list.fold_right(data, acc)
+    use Dataset(dates, value), package <- list.fold(list.reverse(data), acc)
     let label = package.name
     Dataset([label, ..dates], [package.rank, ..value])
   })

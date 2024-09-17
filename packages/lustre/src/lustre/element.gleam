@@ -274,7 +274,7 @@ pub fn fragment(elements: List(Element(msg))) -> Element(msg) {
 }
 
 fn flatten_fragment_elements(elements: List(Element(msg))) {
-  list.fold_right(elements, [], fn(new_elements, element) {
+  list.fold(list.reverse(elements), [], fn(new_elements, element) {
     case element {
       // Only flatten one level, the runtime handles next level children
       // alternatively, this could flatten deeply, but it doesn't save

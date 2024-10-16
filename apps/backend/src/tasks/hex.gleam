@@ -154,7 +154,6 @@ fn extract_release_interfaces_from_db(
   id: Int,
   release: hexpm.Release,
 ) {
-  use _ <- result.try_recover(queries.lookup_release(state.db, id, release))
   use r <- result.try(queries.upsert_release(state.db, id, release, None, None))
   r.rows
   |> list.first()

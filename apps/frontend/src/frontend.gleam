@@ -12,6 +12,7 @@ import frontend/view/body/search_result as sr
 import gleam/bool
 import gleam/dict
 import gleam/dynamic
+import gleam/io
 import gleam/option.{None, Some}
 import gleam/pair
 import gleam/result
@@ -100,6 +101,10 @@ fn init(_) {
     |> http.get(config.api_endpoint() <> "/trendings", _),
   )
   |> update.add_effect(
+    http.expect_json(dynamic.list(package.decoder), msg.Packages)
+    |> http.get(config.api_endpoint() <> "/packages", _),
+  )
+  |> update.add_effect(
     msg.OnAnalytics
     |> http.expect_json(
       dynamic.decode6(
@@ -135,11 +140,13 @@ fn on_url_change(uri: Uri) -> Msg {
 }
 
 fn update(model: Model, msg: Msg) {
-  case msg {
+  case io.debug(msg) {
     msg.UpdateInput(content) -> update_input(model, content)
     msg.SubmitSearch -> submit_search(model)
     msg.Reset -> reset(model)
     msg.None -> update.none(model)
+    msg.Packages(Ok(packages)) -> model.Model(..model, packages:) |> update.none
+    msg.Packages(_) -> update.none(model)
     msg.ScrollTo(id) -> scroll_to(model, id)
     msg.OnRouteChange(route) -> handle_route_change(model, route)
     msg.Trendings(trendings) -> handle_trendings(model, trendings)
@@ -242,6 +249,7 @@ fn handle_route_change(model: Model, route: router.Route) {
   let model = model.update_route(model, route)
   case route {
     router.Home -> model.update_input(model, "")
+    router.Packages -> model.update_input(model, "")
     router.Trending -> model.update_input(model, "")
     router.Analytics -> model.update_input(model, "")
     router.Search(q) ->

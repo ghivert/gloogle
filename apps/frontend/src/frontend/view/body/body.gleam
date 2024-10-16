@@ -178,6 +178,7 @@ fn sidebar(model: Model) {
     h.div([a.class("sidebar-spacer"), disabled], []),
     h.div([a.class("sidebar-links")], [
       sidebar_link(href: "/analytics", icon: icons.trends(), title: "Analytics"),
+      sidebar_link(href: "/packages", icon: icons.gift(), title: "Packages"),
       // s.sidebar_link_wrapper([], [
       //   s.sidebar_icon([], [icons.shortcuts()]),
       //   s.sidebar_link([], [el.text("Shortcuts")]),
@@ -373,9 +374,65 @@ fn view_analytics(model: Model) {
   ])
 }
 
+fn view_packages(model: Model) {
+  el.fragment([
+    sidebar(model),
+    h.main(
+      [a.class("main"), a.style([#("padding", "24px 36px")])],
+      list.intersperse(
+        {
+          use package <- list.map(model.packages)
+          h.div([a.class("search-result")], [
+            h.div([a.class("search-details")], [
+              h.div([a.class("search-details-name")], [h.text(package.name)]),
+              h.div([a.class("search-details-links")], [
+                case package.hex_url {
+                  option.None -> el.none()
+                  option.Some(url) ->
+                    h.a([a.href(url), a.target("_blank"), a.rel("noreferrer")], [
+                      h.text("Show hex"),
+                    ])
+                },
+                case package.documentation {
+                  option.None -> el.none()
+                  option.Some(url) ->
+                    h.a([a.href(url), a.target("_blank"), a.rel("noreferrer")], [
+                      h.text("Show documentation"),
+                    ])
+                },
+              ]),
+            ]),
+            case package.description {
+              option.None -> el.none()
+              option.Some(description) ->
+                h.div([a.class("search-body")], [
+                  h.div([a.class("signature")], [h.text(description)]),
+                ])
+            },
+            h.div([a.class("search-details-links")], [
+              case package.repository {
+                option.None -> el.none()
+                option.Some(url) ->
+                  h.a([a.href(url), a.target("_blank"), a.rel("noreferrer")], [
+                    h.text("Show repository"),
+                  ])
+              },
+              h.div([a.class("search-details-licences")], [
+                package.licenses |> string.join(" ") |> h.text,
+              ]),
+            ]),
+          ])
+        },
+        h.div([a.class("search-result-separator")], []),
+      ),
+    ),
+  ])
+}
+
 pub fn body(model: Model) {
   case model.route {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
+    router.Packages -> view_packages(model)
     router.Trending -> h.main([a.class("main")], [view_trending(model)])
     router.Analytics -> view_analytics(model)
     router.Search(_) -> {

@@ -38,6 +38,7 @@ pub type Analytics {
 
 pub type Msg {
   None
+  Packages(packages: Result(List(package.Package), http.HttpError))
   OnSearchFocus(event: Event)
   SubmitSearch
   UpdateIsMobile(is_mobile: Bool)

@@ -590,3 +590,13 @@ lazy-node:has(:not(:defined)) {
   overflow: hidden;
   padding: 12px;
 }
+
+.search-details-links {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.search-details-links a {
+  color: var(--input-text-color);
+}

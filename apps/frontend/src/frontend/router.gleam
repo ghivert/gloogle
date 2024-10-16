@@ -8,6 +8,7 @@ import lustre/effect
 pub type Route {
   Home
   Search(query: String)
+  Packages
   Trending
   Analytics
 }
@@ -15,6 +16,7 @@ pub type Route {
 pub fn parse_uri(uri: Uri) -> Route {
   case uri.path_segments(uri.path) {
     ["search"] -> handle_search_path(uri)
+    ["packages"] -> Packages
     ["trending"] -> Trending
     ["analytics"] -> Analytics
     _ -> Home
@@ -38,6 +40,7 @@ pub fn update_page_title(route: Route) {
   use _ <- effect.from()
   case route {
     Home -> ffi.update_title("Gloogle")
+    Packages -> ffi.update_title("Gloogle — Packages")
     Search(q) -> ffi.update_title("Gloogle — Search " <> q)
     Trending -> ffi.update_title("Gloogle — Trending")
     Analytics -> ffi.update_title("Gloogle — Analytics")

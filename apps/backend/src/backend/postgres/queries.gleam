@@ -925,6 +925,48 @@ pub fn select_package_by_popularity(db: pgo.Connection, page: Int) {
   |> result.map_error(error.DatabaseError)
 }
 
+pub fn select_package_by_updated_at(db: pgo.Connection) {
+  "SELECT
+    name,
+    repository,
+    documentation,
+    hex_url,
+    licenses,
+    description,
+    rank,
+    popularity
+  FROM package
+  ORDER BY updated_at DESC"
+  |> pgo.execute(
+    db,
+    [],
+    dynamic.decode8(
+      fn(a, b, c, d, e, f, g, h) {
+        json.object([
+          #("name", json.string(a)),
+          #("repository", json.nullable(b, json.string)),
+          #("documentation", json.nullable(c, json.string)),
+          #("hex-url", json.nullable(d, json.string)),
+          #("licenses", json.string(e)),
+          #("description", json.nullable(f, json.string)),
+          #("rank", json.int(g)),
+          #("popularity", json.nullable(h, json.string)),
+        ])
+      },
+      dynamic.element(0, dynamic.string),
+      dynamic.element(1, dynamic.optional(dynamic.string)),
+      dynamic.element(2, dynamic.optional(dynamic.string)),
+      dynamic.element(3, dynamic.optional(dynamic.string)),
+      dynamic.element(4, dynamic.string),
+      dynamic.element(5, dynamic.optional(dynamic.string)),
+      dynamic.element(6, dynamic.int),
+      dynamic.element(7, dynamic.optional(dynamic.string)),
+    ),
+  )
+  |> result.map(fn(r) { r.rows })
+  |> result.map_error(error.DatabaseError)
+}
+
 pub fn insert_analytics(
   db: pgo.Connection,
   id: Int,

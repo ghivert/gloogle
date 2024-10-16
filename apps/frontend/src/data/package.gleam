@@ -1,4 +1,5 @@
 import gleam/dynamic
+import gleam/io
 import gleam/json
 import gleam/option.{type Option}
 import gleam/result
@@ -34,7 +35,8 @@ pub fn decoder(dyn) {
     dynamic.field("popularity", fn(dyn) {
       use data <- result.try(dynamic.optional(dynamic.string)(dyn))
       option.unwrap(data, "{}")
-      |> json.decode(using: dynamic.field("github", dynamic.int))
+      |> json.decode(using: dynamic.optional_field("github", dynamic.int))
+      |> result.map(option.unwrap(_, 0))
       |> result.replace_error([dynamic.DecodeError("", "", [])])
     }),
   )(dyn)

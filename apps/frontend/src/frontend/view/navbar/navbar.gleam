@@ -6,10 +6,7 @@ import lustre/element/html as h
 
 fn navbar_links() {
   s.nav_links([], [
-    s.trending([], [
-      h.text("Packages"),
-      s.coming_soon([], [h.text(" (coming soon…)")]),
-    ]),
+    s.nav_link([a.href("/packages")], [h.text("Packages")]),
     s.nav_link([a.href("/analytics")], [h.text("Analytics")]),
   ])
 }
@@ -19,7 +16,7 @@ pub fn navbar(model: Model) {
   s.navbar(transparent, [a.class("navbar")], [
     case model.route {
       router.Home -> navbar_links()
-      router.Search(_) | router.Trending | router.Analytics ->
+      router.Search(_) | router.Trending | router.Analytics | router.Packages ->
         s.navbar_search([], [
           s.navbar_search_title([a.href("/")], [
             s.search_lucy(40, [a.src("/images/lucy.svg")]),

@@ -138,6 +138,12 @@ fn encode_package(package: #(String, String, Int, option.Option(Int))) {
 pub fn handle_get(req: Request, ctx: Context) {
   case wisp.path_segments(req) {
     ["healthcheck"] -> wisp.ok()
+    ["packages"] ->
+      queries.select_package_by_updated_at(ctx.db)
+      |> result.unwrap([])
+      |> json.preprocessed_array
+      |> json.to_string_builder
+      |> wisp.json_response(200)
     ["trendings"] ->
       wisp.get_query(req)
       |> list.find(fn(item) { item.0 == "page" })

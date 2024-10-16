@@ -10,7 +10,7 @@ COPY packages /packages
 
 RUN cd /build/backend && gleam export erlang-shipment
 
-FROM --platform=x86_64 ghcr.io/gleam-lang/gleam:v1.4.0-erlang-alpine AS runner
+FROM --platform=x86_64 ghcr.io/gleam-lang/gleam:v1.4.1-erlang-alpine AS runner
 LABEL org.opencontainers.image.source=https://github.com/ghivert/gloogle
 
 RUN apk add build-base ca-certificates inotify-tools

@@ -318,19 +318,33 @@ pub fn upsert_release(
   let url = pgo.text(release.url)
   let package_interface = pgo.nullable(pgo.text, package_interface)
   let gleam_toml = pgo.nullable(pgo.text, gleam_toml)
-  let args = [package_id, version, url, package_interface, gleam_toml]
+  let inserted_at =
+    release.inserted_at
+    |> birl.to_erlang_universal_datetime
+    |> dynamic.from
+    |> dynamic.unsafe_coerce
+  let args = [
+    package_id,
+    version,
+    url,
+    package_interface,
+    gleam_toml,
+    inserted_at,
+  ]
   "INSERT INTO package_release (
      package_id,
      version,
      url,
      package_interface,
-     gleam_toml
-   ) VALUES ($1, $2, $3, $4, $5)
+     gleam_toml,
+     inserted_at
+   ) VALUES ($1, $2, $3, $4, $5, $6)
    ON CONFLICT (package_id, version) DO UPDATE
      SET
        url = $3,
        package_interface = $4,
-       gleam_toml = $5
+       gleam_toml = $5,
+       inserted_at = $6
    RETURNING id, package_interface, gleam_toml"
   |> pgo.execute(
     db,

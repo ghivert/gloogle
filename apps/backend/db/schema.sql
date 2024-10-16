@@ -247,7 +247,8 @@ CREATE TABLE public.package_release (
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     package_interface text,
     gleam_toml text,
-    retirement jsonb
+    retirement jsonb,
+    inserted_at timestamp without time zone
 );
 
 
@@ -611,4 +612,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240801211520'),
     ('20240801220817'),
     ('20240902224247'),
-    ('20240902225236');
+    ('20240902225236'),
+    ('20241016151324');

@@ -6,7 +6,7 @@ import lustre/element/html as h
 
 fn navbar_links() {
   s.nav_links([], [
-    s.nav_link([a.href("/packages")], [h.text("Packages")]),
+    // s.nav_link([a.href("/packages")], [h.text("Packages")]),
     s.nav_link([a.href("/analytics")], [h.text("Analytics")]),
   ])
 }

@@ -178,7 +178,7 @@ fn sidebar(model: Model) {
     h.div([a.class("sidebar-spacer"), disabled], []),
     h.div([a.class("sidebar-links")], [
       sidebar_link(href: "/analytics", icon: icons.trends(), title: "Analytics"),
-      sidebar_link(href: "/packages", icon: icons.gift(), title: "Packages"),
+      // sidebar_link(href: "/packages", icon: icons.gift(), title: "Packages"),
       // s.sidebar_link_wrapper([], [
       //   s.sidebar_icon([], [icons.shortcuts()]),
       //   s.sidebar_link([], [el.text("Shortcuts")]),

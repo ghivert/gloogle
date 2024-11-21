@@ -28,11 +28,11 @@ pub fn view() {
         h.text("Gloogle is designed with 🔥 by "),
         h.a(
           [
-            a.href("https://gaspard.design/"),
+            a.href("https://gaspardbuffet.com/"),
             a.target("_blank"),
             a.rel("noreferrer"),
           ],
-          [h.text("gaspard.design")],
+          [h.text("Gaspard Buffet")],
         ),
       ]),
     ]),

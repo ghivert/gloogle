@@ -1,5 +1,5 @@
 import api/hex
-import backend/config.{type Context}
+import backend/context.{type Context}
 import backend/error
 import backend/gleam/type_search/msg as type_search
 import backend/postgres/queries
@@ -13,14 +13,14 @@ import gleam/json
 import gleam/list
 import gleam/option
 import gleam/result
-import gleam/string_builder
+import gleam/string_tree
 import tasks/hex as syncing
 import wisp.{type Request, type Response}
 
 fn empty_json() {
   let content = "{}"
   content
-  |> string_builder.from_string()
+  |> string_tree.from_string()
   |> wisp.json_response(200)
 }
 
@@ -50,18 +50,18 @@ fn search(query: String, ctx: Context) {
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
     |> list.filter(fn(i) {
-      !list.contains(list.concat([exact_type_searches, exact_name_matches]), i)
+      !list.contains(list.flatten([exact_type_searches, exact_name_matches]), i)
     })
 
   let exact_matches =
-    list.concat([exact_name_matches, exact_module_and_name_matches])
+    list.flatten([exact_name_matches, exact_module_and_name_matches])
 
   let matches =
     queries.content_search(ctx.db, query)
     |> result.map_error(error.debug_log)
     |> result.unwrap([])
     |> list.filter(fn(i) {
-      !list.contains(list.concat([exact_matches, exact_type_searches]), i)
+      !list.contains(list.flatten([exact_matches, exact_type_searches]), i)
     })
 
   let signature_searches =
@@ -70,7 +70,7 @@ fn search(query: String, ctx: Context) {
     |> result.unwrap([])
     |> list.filter(fn(i) {
       !list.contains(
-        list.concat([exact_matches, exact_type_searches, matches]),
+        list.flatten([exact_matches, exact_type_searches, matches]),
         i,
       )
     })
@@ -81,7 +81,7 @@ fn search(query: String, ctx: Context) {
     |> result.unwrap([])
     |> list.filter(fn(i) {
       !list.contains(
-        list.concat([
+        list.flatten([
           exact_matches,
           exact_type_searches,
           matches,
@@ -97,7 +97,7 @@ fn search(query: String, ctx: Context) {
     |> result.unwrap([])
     |> list.filter(fn(i) {
       !list.contains(
-        list.concat([
+        list.flatten([
           exact_matches,
           exact_type_searches,
           matches,

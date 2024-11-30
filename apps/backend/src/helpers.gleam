@@ -5,14 +5,16 @@ import gleam/float
 import gleam/json
 import gleam/list
 import gleam/pair
-import gleam/pgo
 import gleam/result
+import pog
 
-pub fn convert_time(time: Time) -> pgo.Value {
+@external(erlang, "backend_ffi", "coerce")
+fn coerce(a: a) -> b
+
+pub fn convert_time(time: Time) -> pog.Value {
   time
-  |> birl.to_erlang_universal_datetime()
-  |> dynamic.from()
-  |> dynamic.unsafe_coerce()
+  |> birl.to_erlang_universal_datetime
+  |> coerce
 }
 
 pub fn decode_time(data: Dynamic) {

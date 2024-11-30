@@ -1,6 +1,5 @@
 import aws4_request
-import backend/config
-import birl
+import backend/context
 import gleam/http
 import gleam/http/request
 import gleam/httpc
@@ -8,9 +7,8 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 
 fn request(url: String, method: http.Method, body: Option(BitArray)) {
-  let date = birl.to_erlang_universal_datetime(birl.now())
-  use bucket_uri <- result.try(config.bucket_uri())
-  use #(access_key, secret_key) <- result.try(config.scaleway_keys())
+  use bucket_uri <- result.try(context.bucket_uri())
+  use #(access_key, secret_key) <- result.try(context.scaleway_keys())
   request.new()
   |> request.set_method(method)
   |> request.set_path(url)
@@ -18,9 +16,19 @@ fn request(url: String, method: http.Method, body: Option(BitArray)) {
   |> request.set_host(bucket_uri)
   |> request.set_scheme(http.Https)
   |> request.set_header("content-type", "application/octet-stream")
-  |> aws4_request.sign(date, access_key, secret_key, "fr-par", "s3")
+  |> sign(access_key, secret_key)
   |> httpc.send_bits()
-  |> result.nil_error()
+  |> result.replace_error(Nil)
+}
+
+fn sign(request, access_key_id, secret_access_key) {
+  aws4_request.signer(
+    access_key_id:,
+    secret_access_key:,
+    region: "fr-par",
+    service: "s3",
+  )
+  |> aws4_request.sign_bits(request)
 }
 
 pub fn get(name: String) {

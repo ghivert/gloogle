@@ -5,8 +5,8 @@ import gleam/int
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
-import gleam/pgo
 import gleam/result
+import pog
 
 pub type TypeSearch {
   TypeSearch(keys: Keys, rows: List(Int))
@@ -48,25 +48,25 @@ fn update_keys(
         parse.DiscardName -> panic as "No Discard name in add"
         parse.Index(_value, index) -> {
           let value = int.to_string(index)
-          dict.update(keys.keys, value, fn(k) {
+          dict.upsert(keys.keys, value, fn(k) {
             let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
             update_keys(k, rest, updater)
           })
         }
         parse.Custom(value, kinds) ->
-          dict.update(keys.keys, value, fn(k) {
+          dict.upsert(keys.keys, value, fn(k) {
             let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
             update_keys(k, list.append(kinds, rest), updater)
           })
         parse.Function(kinds, return) -> {
           let kinds = postpend(kinds, return)
-          dict.update(keys.keys, "fn", fn(k) {
+          dict.upsert(keys.keys, "fn", fn(k) {
             let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
             update_keys(k, list.append(kinds, rest), updater)
           })
         }
         parse.Tuple(kinds) -> {
-          dict.update(keys.keys, "#()", fn(k) {
+          dict.upsert(keys.keys, "#()", fn(k) {
             let k = option.unwrap(k, Keys(keys: dict.new(), next: next))
             update_keys(k, list.append(kinds, rest), updater)
           })
@@ -112,7 +112,7 @@ fn get_next_tree(
   keys: Keys,
   kind: Kind,
   env: Dict(Int, String),
-  db: pgo.Connection,
+  db: pog.Connection,
 ) -> List(#(Keys, Dict(Int, String))) {
   case kind {
     parse.DiscardName -> {
@@ -182,7 +182,7 @@ fn find_next_tree(
   kind: Kind,
   kinds: List(Kind),
   env: Dict(Int, String),
-  db: pgo.Connection,
+  db: pog.Connection,
 ) -> List(Int) {
   case kind {
     parse.DiscardName -> {
@@ -252,7 +252,7 @@ fn do_find(
   searches: TypeSearch,
   kinds: List(Kind),
   env: Dict(Int, String),
-  db: pgo.Connection,
+  db: pog.Connection,
 ) {
   case kinds {
     [] -> searches.rows
@@ -260,7 +260,7 @@ fn do_find(
   }
 }
 
-pub fn find(searches: TypeSearch, kind: Kind, db: pgo.Connection) {
+pub fn find(searches: TypeSearch, kind: Kind, db: pog.Connection) {
   case kind {
     Function(kinds, return_value) ->
       kinds

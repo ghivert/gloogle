@@ -1,4 +1,4 @@
-import backend/config
+import backend/context
 import radiate
 import wisp
 
@@ -7,7 +7,7 @@ fn print_radiate_update(_state: state, path: String) {
 }
 
 pub fn radiate() {
-  case config.is_dev() {
+  case context.is_dev() {
     False -> Nil
     True -> {
       let assert Ok(_) =

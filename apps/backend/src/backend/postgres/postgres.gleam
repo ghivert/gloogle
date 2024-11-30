@@ -1,26 +1,15 @@
-import backend/config.{type Config, type Context, Context}
 import backend/error
 import gleam/bool
 import gleam/list
 import gleam/option.{type Option, Some}
-import gleam/pgo.{Config}
 import gleam/result
 import gleam/string
 import gleam/uri
+import pog.{Config}
 
-pub fn connect(cnf: Config) {
-  let assert Ok(config) = parse_database_url(cnf.database_url)
-  config
-  |> pgo.connect()
-  |> fn(db) {
-    Context(
-      db: db,
-      hex_api_key: cnf.hex_api_key,
-      github_token: cnf.github_token,
-      env: cnf.env,
-      type_search_subject: option.None,
-    )
-  }
+pub fn connect(database_url: String) {
+  let assert Ok(config) = parse_database_url(database_url)
+  pog.connect(config)
 }
 
 fn parse_database_url(database_url: String) {
@@ -33,7 +22,7 @@ fn parse_database_url(database_url: String) {
     return: Error(error.UnknownError("No postgres protocol")),
   )
 
-  pgo.default_config()
+  pog.default_config()
   |> fn(cnf) { Config(..cnf, database: string.replace(db_uri.path, "/", "")) }
   |> update_config(db_uri.userinfo, add_user_info)
   |> update_config(db_uri.host, fn(cnf, u) { Config(..cnf, host: u) })
@@ -51,15 +40,15 @@ fn parse_database_url(database_url: String) {
 }
 
 fn update_config(
-  cnf: pgo.Config,
+  cnf: pog.Config,
   field: Option(a),
-  mapper: fn(pgo.Config, a) -> pgo.Config,
+  mapper: fn(pog.Config, a) -> pog.Config,
 ) {
   option.map(field, fn(u) { mapper(cnf, u) })
   |> option.unwrap(cnf)
 }
 
-fn add_user_info(c: pgo.Config, u: String) {
+fn add_user_info(c: pog.Config, u: String) {
   case string.split(u, ":") {
     [user, password] -> Config(..c, user: user, password: Some(password))
     [user] -> Config(..c, user: user)

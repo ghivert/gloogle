@@ -3,12 +3,12 @@ import gleam/dict.{type Dict}
 import gleam/erlang/process.{type Subject}
 import gleam/option.{type Option}
 import gleam/package_interface
-import gleam/pgo
+import pog
 import tom
 
 pub type Context {
   Context(
-    db: pgo.Connection,
+    db: pog.Connection,
     package_interface: package_interface.Package,
     gleam_toml: Dict(String, tom.Toml),
     /// Allow to bypass parameters relations if activated.

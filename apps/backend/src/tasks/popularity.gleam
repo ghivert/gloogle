@@ -1,5 +1,5 @@
 import api/github
-import backend/config.{type Context}
+import backend/context.{type Context}
 import backend/postgres/queries
 import gleam/bool
 import gleam/dict
@@ -11,8 +11,8 @@ import wisp
 
 pub fn compute_popularity(ctx: Context) {
   case ctx.env {
-    config.Development -> Ok(Nil)
-    config.Production -> {
+    context.Development -> Ok(Nil)
+    context.Production -> {
       wisp.log_info("Syncing popularity")
       do_compute_popularity(ctx, offset: 0)
       |> function.tap(fn(_) { wisp.log_info("Syncing popularity finished!") })

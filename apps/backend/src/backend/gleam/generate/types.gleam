@@ -7,17 +7,17 @@ import gleam/dict
 import gleam/dynamic
 import gleam/json.{type Json}
 import gleam/list
-import gleam/option
+import gleam/option.{type Option, None, Some}
 import gleam/order
 import gleam/package_interface.{
   type Constant, type Function, type Implementations, type Parameter, type Type,
   type TypeAlias, type TypeConstructor, type TypeDefinition,
 }
 import gleam/pair
-import gleam/pgo
 import gleam/result
 import gleam/set.{type Set}
 import gleam/verl
+import pog
 
 fn reduce_components(
   components: List(a),
@@ -105,8 +105,8 @@ fn type_to_json(ctx: Context, type_: Type) {
       let res = extract_parameters_relation(ctx, name, package, module)
       use ref <- result.map(res)
       let new_ids = case ref {
-        option.None -> gen.1
-        option.Some(ref) -> set.insert(gen.1, ref.1)
+        None -> gen.1
+        Some(ref) -> set.insert(gen.1, ref.1)
       }
       json.object([
         #("kind", json.string("named")),
@@ -122,38 +122,47 @@ fn type_to_json(ctx: Context, type_: Type) {
 }
 
 fn find_package_release(ctx: Context, package: String, requirement: String) {
-  let decoder = dynamic.tuple2(dynamic.int, dynamic.string)
-  use response <- result.try({
-    "SELECT package_release.id, package_release.version
+  "SELECT package_release.id, package_release.version
      FROM package
      JOIN package_release
        ON package.id = package_release.package_id
      WHERE package.name = $1"
-    |> pgo.execute(ctx.db, [pgo.text(package)], decoder)
-    |> result.map_error(error.DatabaseError)
-  })
-  response.rows
-  |> keep_matching_releases(requirement)
+  |> pog.query
+  |> pog.parameter(pog.text(package))
+  |> pog.returning(dynamic.tuple2(dynamic.int, dynamic.string))
+  |> pog.execute(ctx.db)
+  |> result.map_error(error.DatabaseError)
+  |> result.map(fn(response) { response.rows })
+  |> result.map(keep_matching_releases(_, requirement))
 }
 
 fn keep_matching_releases(rows: List(#(Int, String)), requirement: String) {
-  let requirement = bit_array.from_string(requirement)
   rows
-  |> list.filter(fn(r) {
-    let version = bit_array.from_string(r.1)
-    let is_matching = verl.is_match(version: version, requirement: requirement)
-    result.unwrap(is_matching, False)
-  })
-  |> list.sort(fn(a, b) {
-    let a = bit_array.from_string(a.1)
-    let b = bit_array.from_string(b.1)
-    case verl.gte(version: a, with: b) {
-      True -> order.Lt
-      False -> order.Gt
-    }
-  })
-  |> list.map(fn(a) { a.0 })
-  |> Ok()
+  |> list.filter(keep_matching_requirement(_, requirement))
+  |> list.sort(by_decreasing_version)
+  |> list.map(pair.first)
+}
+
+fn keep_matching_requirement(release: #(Int, String), requirement: String) {
+  let #(_release_id, release_version) = release
+  let requirement = bit_array.from_string(requirement)
+  let version = bit_array.from_string(release_version)
+  let is_matching = verl.is_match(version:, requirement:)
+  result.unwrap(is_matching, False)
+}
+
+fn by_decreasing_version(
+  release_1: #(Int, String),
+  release_2: #(Int, String),
+) -> order.Order {
+  let #(_, release_1_version) = release_1
+  let #(_, release_2_version) = release_2
+  let release_1_version = bit_array.from_string(release_1_version)
+  let release_2_version = bit_array.from_string(release_2_version)
+  case verl.gte(version: release_1_version, with: release_2_version) {
+    True -> order.Lt
+    False -> order.Gt
+  }
 }
 
 fn find_signature_from_release(
@@ -162,11 +171,9 @@ fn find_signature_from_release(
   module: String,
   releases: List(Int),
 ) {
-  use acc, release <- list.fold(releases, Error(Nil))
+  use acc, release <- list.fold(releases, error.empty())
   use <- bool.guard(when: result.is_ok(acc), return: acc)
-  let args = [pgo.text(name), pgo.text(module), pgo.int(release)]
-  use t <- result.try({
-    "SELECT release.version, signature.id
+  "SELECT release.version, signature.id
      FROM package_release release
      JOIN package_module module
        ON module.package_release_id = release.id
@@ -175,11 +182,17 @@ fn find_signature_from_release(
      WHERE signature.name = $1
        AND module.name = $2
        AND module.package_release_id = $3"
-    |> pgo.execute(ctx.db, args, dynamic.tuple2(dynamic.string, dynamic.int))
-    |> result.nil_error()
+  |> pog.query
+  |> pog.parameter(pog.text(name))
+  |> pog.parameter(pog.text(module))
+  |> pog.parameter(pog.int(release))
+  |> pog.returning(dynamic.tuple2(dynamic.string, dynamic.int))
+  |> pog.execute(ctx.db)
+  |> result.map_error(error.DatabaseError)
+  |> result.try(fn(response) {
+    list.first(response.rows)
+    |> error.replace_nil("[find_signature_from_release] No row")
   })
-  list.first(t.rows)
-  |> result.nil_error()
 }
 
 fn find_type_signature(
@@ -188,9 +201,9 @@ fn find_type_signature(
   package: String,
   module: String,
   releases: List(Int),
-) -> Result(option.Option(#(String, Int)), error.Error) {
+) -> Result(Option(#(String, Int)), error.Error) {
   case find_signature_from_release(ctx, name, module, releases) {
-    Ok(value) -> Ok(option.Some(value))
+    Ok(value) -> Ok(Some(value))
     Error(_) -> {
       let slug = package <> "/" <> module
       let package_name = ctx.package_interface.name
@@ -205,7 +218,7 @@ fn find_type_signature(
         True ->
           case dict.get(ctx.package_interface.modules, module) {
             // Module is hidden, everything is correct, type is hidden.
-            Error(_) -> Ok(option.None)
+            Error(_) -> Ok(None)
             // Module is not hidden, checking if type is hidden by itself.
             Ok(mod) -> {
               let slug = slug <> "." <> name
@@ -220,7 +233,7 @@ fn find_type_signature(
                 Error(_) ->
                   case dict.get(mod.types, name) {
                     // Type is hidden, returning None because it can't be extracted.
-                    Error(_) -> Ok(option.None)
+                    Error(_) -> Ok(None)
                     // Type is not hidden, returning an error to restart the extraction.
                     Ok(_) -> {
                       let id = package_name <> ", looking for " <> slug
@@ -241,17 +254,15 @@ fn extract_parameters_relation(
   name: String,
   package: String,
   module: String,
-) -> Result(option.Option(#(String, Int)), error.Error) {
-  use <- bool.guard(when: is_prelude(package, module), return: Ok(option.None))
+) -> Result(Option(#(String, Int)), error.Error) {
+  use <- bool.guard(when: is_prelude(package, module), return: Ok(None))
   use requirement <- result.try(toml.find_package_requirement(ctx, package))
   use releases <- result.try(find_package_release(ctx, package, requirement))
-  use error <- result.try_recover({
-    find_type_signature(ctx, name, package, module, releases)
+  find_type_signature(ctx, name, package, module, releases)
+  |> result.try_recover(fn(error) {
+    use <- bool.guard(when: ctx.ignore_parameters_errors, return: Ok(None))
+    Error(error)
   })
-  case ctx.ignore_parameters_errors {
-    False -> Error(error)
-    True -> Ok(option.None)
-  }
 }
 
 fn is_prelude(package: String, module: String) {

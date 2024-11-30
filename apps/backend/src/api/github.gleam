@@ -8,7 +8,7 @@ import gleam/httpc
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, Some}
-import gleam/regex
+import gleam/regexp
 import gleam/result
 
 fn query(
@@ -17,12 +17,7 @@ fn query(
   variables: Option(json.Json),
   decoder: dynamic.Decoder(a),
 ) {
-  let body =
-    json.object([
-      #("query", json.string(query)),
-      #("variables", json.nullable(variables, function.identity)),
-    ])
-  use response <- result.try(
+  use response <- result.try({
     request.new()
     |> request.set_header("authorization", "Bearer " <> token)
     |> request.set_header("user-agent", "gloogle / 1.0.0")
@@ -30,19 +25,27 @@ fn query(
     |> request.set_scheme(http.Https)
     |> request.set_host("api.github.com")
     |> request.set_path("/graphql")
-    |> request.set_body(json.to_string(body))
+    |> request.set_body(encode_body(query, variables))
     |> httpc.send()
-    |> result.map_error(error.FetchError),
-  )
+    |> result.map_error(error.FetchError)
+  })
 
   response.body
   |> json.decode(using: decoder)
   |> result.map_error(error.JsonError)
 }
 
+fn encode_body(query: String, variables: Option(json.Json)) -> String {
+  json.object([
+    #("query", json.string(query)),
+    #("variables", json.nullable(variables, function.identity)),
+  ])
+  |> json.to_string
+}
+
 fn match_repository_name(repo_url: String) {
-  let assert Ok(owner_name) = regex.from_string("https://github.com/(.+)/(.+)")
-  regex.scan(with: owner_name, content: repo_url)
+  let assert Ok(owner_name) = regexp.from_string("https://github.com/(.+)/(.+)")
+  regexp.scan(with: owner_name, content: repo_url)
   |> list.first()
   |> result.replace_error(error.UnknownError(
     "No repository match for " <> repo_url,

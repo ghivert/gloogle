@@ -1,5 +1,6 @@
--module(gloogle_hex_ffi).
--export([extract_tar/4, remove_tar/1, is_match/2, get_home/0, set_level/1]).
+-module(backend_ffi).
+
+-export([extract_tar/4, remove_tar/1, is_match/2, get_home/0, set_level/1, coerce/1]).
 
 package_interface_path(ContentDest, BaseName) ->
   BuildFolder = <<"/build/dev/docs/">>,
@@ -20,14 +21,22 @@ extract_tar(Binary, BaseName, Version, Slug) ->
   ContentDest = <<PackagePath/binary, "/contents">>,
   Content = <<PackagePath/binary, "/contents.tar.gz">>,
   case erl_tar:extract({binary, Binary}, [{cwd, PackagePath}]) of
-    {error, _} -> {error, nil};
+    {error, _} ->
+      {error, nil};
     _ ->
-      Url = <<"https://hexdocs.pm/", BaseName/binary, "/", Version/binary, "/package-interface.json">>,
+      Url =
+        <<"https://hexdocs.pm/",
+          BaseName/binary,
+          "/",
+          Version/binary,
+          "/package-interface.json">>,
       erl_tar:extract(Content, [{cwd, ContentDest}, compressed]),
       {PackageInterface, Result} =
         case httpc:request(Url) of
-          {ok, {{_, 200, _}, _, HttpBody}} -> save_file(ContentDest, HttpBody);
-          {ok, {200, HttpBody}} -> save_file(ContentDest, HttpBody);
+          {ok, {{_, 200, _}, _, HttpBody}} ->
+            save_file(ContentDest, HttpBody);
+          {ok, {200, HttpBody}} ->
+            save_file(ContentDest, HttpBody);
           {error, _} ->
             BuildCmd = <<"cd ", ContentDest/binary, " && gleam docs build">>,
             Res = os:cmd(binary_to_list(BuildCmd)),
@@ -45,15 +54,22 @@ remove_tar(Slug) ->
 
 is_match(Version, Requirement) ->
   case verl:is_match(Version, Requirement) of
-    {error, _} -> {error, nil};
-    Bool -> {ok, Bool}
+    {error, _} ->
+      {error, nil};
+    Bool ->
+      {ok, Bool}
   end.
 
 get_home() ->
   case init:get_argument(home) of
-    {ok, Content} -> {ok, unicode:characters_to_binary(Content)};
-    error -> {error, nil}
+    {ok, Content} ->
+      {ok, unicode:characters_to_binary(Content)};
+    error ->
+      {error, nil}
   end.
 
 set_level(Level) ->
   logger:set_primary_config(level, Level).
+
+coerce(A) ->
+  A.

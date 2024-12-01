@@ -1,10 +1,10 @@
 import birl
 import data/package
 import data/search_result.{type SearchResults}
+import frontend/discuss
 import frontend/router
 import gleam/dynamic.{type Dynamic}
 import gleam/option
-import lustre_http as http
 
 pub type Filter {
   Functions
@@ -37,19 +37,17 @@ pub type Analytics {
 }
 
 pub type Msg {
-  ApiReturnedAnalytics(Result(Analytics, http.HttpError))
-  ApiReturnedPackages(packages: Result(List(package.Package), http.HttpError))
-  ApiReturnedSearchResults(
-    input: String,
-    result: Result(SearchResults, http.HttpError),
-  )
-  ApiReturnedTrendings(result: Result(List(package.Package), http.HttpError))
-  BrowserChangedRoute(router.Route)
+  ApiReturnedAnalytics(analytics: Analytics)
+  ApiReturnedPackages(packages: List(package.Package))
+  ApiReturnedSearchResults(input: String, search_results: SearchResults)
+  ApiReturnedTrendings(trendings: List(package.Package))
+  AppRequiredDiscussToast(message: discuss.DiscussError)
+  BrowserChangedRoute(route: router.Route)
   BrowserResizedViewport(is_mobile: Bool)
-  UserClickedSidebarName(String)
+  UserClickedSidebarName(id: String)
   UserFocusedSearch(event: Dynamic)
-  UserInputtedSearch(String)
+  UserInputtedSearch(query: String)
   UserPressedEscape
   UserSubmittedSearch
-  UserToggledFilter(Filter, Bool)
+  UserToggledFilter(filter: Filter, value: Bool)
 }

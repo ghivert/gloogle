@@ -5,6 +5,6 @@
     "clean": "gleam clean"
   },
   "devDependencies": {
-    "@chouqueth/gleam": "^1.6.1"
+    "@chouqueth/gleam": "^1.6.2"
   }
 }

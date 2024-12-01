@@ -11,17 +11,18 @@ typescript_declarations = true
 [dependencies]
 birl = ">= 1.7.1 and < 2.0.0"
 bright = ">= 0.1.0 and < 1.0.0"
-gleam_javascript = "~> 0.8"
+gleam_javascript = ">= 0.13.0 and < 1.0.0"
 gleam_json = ">= 1.0.1 and < 2.0.0"
 gleam_regexp = ">= 1.0.0 and < 2.0.0"
 gleam_stdlib = "~> 0.34 or ~> 1.0"
 lustre = ">= 4.6.1 and < 5.0.0"
-lustre_http = "~> 0.5"
 modem = ">= 2.0.0 and < 3.0.0"
 sketch = ">= 3.0.0 and < 4.0.0"
 sketch_magic = {path = "../../packages/sketch_magic"}
 vitools = {path = "../../packages/vitools"}
 grille_pain = ">= 1.1.0 and < 2.0.0"
+gleam_fetch = ">= 0.4.0 and < 1.0.0"
+gleam_http = ">= 3.7.1 and < 4.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

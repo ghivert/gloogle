@@ -8,19 +8,17 @@ function findSearchResultChild(shadowRoot, id) {
 }
 
 export function scrollTo(id) {
-  return function (_) {
-    const cache = document.getElementsByTagName('lazy-node')
-    if (!cache?.[0]) return
-    const elem = findSearchResultChild(cache[0].shadowRoot, id)
-    if (!elem) return
-    const elemRect = elem.getBoundingClientRect()
-    const navbarRect = document
-      .getElementsByClassName('navbar')?.[0]
-      ?.getBoundingClientRect()
-    const bodyRect = document.body.getBoundingClientRect()
-    const top = elemRect.top - bodyRect.top - (navbarRect?.height ?? 0) - 12
-    window.scrollTo({ top, behavior: 'smooth' })
-  }
+  const cache = document.getElementsByTagName('lazy-node')
+  if (!cache?.[0]) return
+  const elem = findSearchResultChild(cache[0].shadowRoot, id)
+  if (!elem) return
+  const elemRect = elem.getBoundingClientRect()
+  const navbarRect = document
+    .getElementsByClassName('navbar')?.[0]
+    ?.getBoundingClientRect()
+  const bodyRect = document.body.getBoundingClientRect()
+  const top = elemRect.top - bodyRect.top - (navbarRect?.height ?? 0) - 12
+  window.scrollTo({ top, behavior: 'smooth' })
 }
 
 export function captureMessage(content) {

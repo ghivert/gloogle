@@ -4,18 +4,18 @@ import data/msg
 import data/package
 import data/search_result
 import frontend/discuss
+import frontend/effects/api
 import frontend/effects/window
 import frontend/errors
-import frontend/ffi
 import frontend/router
 import gleam/bool
 import gleam/dict
 import gleam/dynamic.{type Dynamic}
-import gleam/option.{None, Some}
+import gleam/list
+import gleam/option
 import gleam/pair
 import grille_pain/lustre/toast
 import lustre/effect
-import modem
 import toast/error as toast_error
 
 pub fn handle_analytics(model: Data, analytics: analytics.Analytics) {
@@ -37,7 +37,7 @@ pub fn handle_search_results(
   search_results
   |> model.update_search_results(model, input, _)
   |> model.toggle_loading
-  |> pair.new(modem.push("/search", Some("q=" <> input), None))
+  |> pair.new(router.push(router.Search("q=" <> input)))
 }
 
 pub fn handle_trendings(model: Data, trendings: List(package.Package)) {
@@ -76,8 +76,7 @@ pub fn handle_resized_viewport(model: Data, is_mobile: Bool) {
 }
 
 pub fn handle_clicked_sidebar_name(model: Data, id: String) {
-  ffi.scroll_to(element: id)
-  |> effect.from
+  window.scroll_to(element: id)
   |> pair.new(model, _)
 }
 
@@ -104,31 +103,15 @@ pub fn handle_submitted_search(model: Data) {
       let new_route = router.Search(new_model.submitted_input)
       let is_same_route = new_model.route == new_route
       use <- bool.guard(when: is_same_route, return: #(new_model, effect.none()))
-      new_model
-      |> pair.new(
-        effect.batch([
-          modem.push("search", Some("q=" <> new_model.submitted_input), None),
-          window.blur(),
-        ]),
-      )
+      [router.push(router.Search("q=" <> new_model.submitted_input))]
+      |> list.prepend(window.blur())
+      |> effect.batch
+      |> pair.new(new_model, _)
     }
     Error(_) -> {
+      let effects = effect.batch([api.get_search(model), window.blur()])
       model.toggle_loading(new_model)
-      |> pair.new({
-        use dispatch <- effect.from
-        discuss.about(["search"])
-        |> discuss.query([#("q", model.input)])
-        |> discuss.expect(search_result.decode_search_results)
-        |> discuss.on_success(fn(search_results) {
-          model.input
-          |> msg.ApiReturnedSearchResults(input: _, search_results:)
-          |> dispatch
-        })
-        |> discuss.on_error(fn(e) { dispatch(msg.AppRequiredDiscussToast(e)) })
-        |> discuss.start
-        Nil
-      })
-      |> fn(a) { #(a.0, effect.batch([a.1, window.blur()])) }
+      |> pair.new(effects)
     }
   }
 }

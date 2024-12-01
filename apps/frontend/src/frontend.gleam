@@ -1,114 +1,35 @@
 import bright
-import data/analytics
 import data/model.{type Model}
 import data/msg.{type Msg}
-import data/package
-import frontend/discuss
+import frontend/effects/api
 import frontend/effects/window
 import frontend/router
+import frontend/setup
 import frontend/update
 import frontend/view
-import frontend/view/body/search_result as sr
-import gleam/dynamic
-
-import gleam/result
-
-import grille_pain
-
-import grille_pain/options
-import lustre
 import lustre/effect
-import lustre/lazy
-import modem
-import sketch
-import sketch/magic
 
 pub fn main() {
-  let assert Ok(_) = setup_sketch()
-  let assert Ok(_) = setup_components()
-  let assert Ok(_) = setup_grille_pain()
-  let assert Ok(_) = start_application()
-}
-
-fn setup_sketch() {
-  use cache <- result.try(sketch.cache(strategy: sketch.Ephemeral))
-  use _ <- result.try(magic.setup(cache))
-  Ok(Nil)
-}
-
-fn setup_components() {
-  use _ <- result.try(lazy.setup())
-  use _ <- result.try(sr.setup())
-  Ok(Nil)
-}
-
-fn setup_grille_pain() {
-  options.default()
-  |> options.timeout(5000)
-  |> grille_pain.setup()
-}
-
-fn start_application() {
-  lustre.application(init, update, view.view)
-  |> lustre.start("#app", Nil)
-}
-
-fn get_initial_uri() {
-  modem.initial_uri()
-  |> result.map(router.parse_uri)
-  |> result.unwrap(router.Home)
-}
-
-fn init_modem() {
-  use uri <- modem.init
-  router.parse_uri(uri)
-  |> msg.BrowserChangedRoute
-}
-
-fn get_trendings() {
-  use dispatch <- effect.from
-  discuss.about(["trendings"])
-  |> discuss.expect(dynamic.list(package.decode))
-  |> discuss.on_success(fn(m) { dispatch(msg.ApiReturnedTrendings(m)) })
-  |> discuss.on_error(fn(e) { dispatch(msg.AppRequiredDiscussToast(e)) })
-  |> discuss.start
-  Nil
-}
-
-fn get_packages() {
-  use dispatch <- effect.from
-  discuss.about(["packages"])
-  |> discuss.expect(dynamic.list(package.decode))
-  |> discuss.on_success(fn(m) { dispatch(msg.ApiReturnedPackages(m)) })
-  |> discuss.on_error(fn(e) { dispatch(msg.AppRequiredDiscussToast(e)) })
-  |> discuss.start
-  Nil
-}
-
-fn get_analytics() {
-  use dispatch <- effect.from
-  discuss.about(["analytics"])
-  |> discuss.expect(analytics.decode)
-  |> discuss.on_success(fn(m) { dispatch(msg.ApiReturnedAnalytics(m)) })
-  |> discuss.on_error(fn(e) { dispatch(msg.AppRequiredDiscussToast(e)) })
-  |> discuss.start
-  Nil
+  let assert Ok(_) = setup.sketch()
+  let assert Ok(_) = setup.components()
+  let assert Ok(_) = setup.grille_pain()
+  let assert Ok(_) = setup.start_application(init, update, view.view)
 }
 
 fn init(_) -> #(Model, effect.Effect(Msg)) {
-  let uri = get_initial_uri()
+  let route = setup.initial_route()
   let model = bright.init(model.init_data(), model.Computed)
   use model <- bright.start(model)
-  use model <- bright.update(model, update.handle_changed_route(_, uri))
+  use model <- bright.update(model, update.handle_changed_route(_, route))
   use model <- bright.update(model, update.handle_submitted_search)
   model
-  |> bright.run(fn(_, _) { init_modem() })
+  |> bright.run(fn(_, _) { setup.modem() })
   |> bright.run(fn(data, _) { router.update_page_title(data.route) })
   |> bright.run(fn(_, _) { window.subscribe_focus() })
   |> bright.run(fn(_, _) { window.subscribe_is_mobile() })
-  |> bright.run(fn(_, _) { get_trendings() })
-  |> bright.run(fn(_, _) { get_packages() })
-  |> bright.run(fn(_, _) { get_analytics() })
+  |> bright.run(fn(_, _) { api.get_trendings() })
+  |> bright.run(fn(_, _) { api.get_packages() })
+  |> bright.run(fn(_, _) { api.get_analytics() })
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {

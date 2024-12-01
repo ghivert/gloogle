@@ -31,6 +31,11 @@ pub fn subscribe_is_mobile() {
   dispatch(msg.BrowserResizedViewport(is_mobile))
 }
 
+pub fn scroll_to(element id: String) {
+  use _ <- effect.from
+  do_scroll_to(id)
+}
+
 // FFI
 
 @external(javascript, "../../gloogle.ffi.mjs", "subscribeFocus")
@@ -50,3 +55,6 @@ fn do_key(event: Dynamic) -> Result(String, Nil)
 
 @external(javascript, "../../gloogle.ffi.mjs", "blur")
 fn do_blur() -> Nil
+
+@external(javascript, "../../gloogle.ffi.mjs", "scrollTo")
+pub fn do_scroll_to(element id: String) -> Nil

@@ -24,9 +24,8 @@ export function scrollTo(id) {
 export function captureMessage(content) {
   const isDev = !!import.meta.env.DEV
   if (isDev) return content
-  const isSentryDefined = typeof Sentry !== 'undefined'
-  const canCaptureMessage = Sentry?.captureMessage === 'function'
-  if (isSentryDefined && canCaptureMessage) Sentry.captureMessage(content)
+  if (typeof Sentry !== 'undefined' && Sentry?.captureMessage === 'function')
+    Sentry.captureMessage(content)
   return content
 }
 

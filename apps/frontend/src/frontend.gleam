@@ -11,44 +11,42 @@ import frontend/view
 import frontend/view/body/search_result as sr
 import gleam/bool
 import gleam/dict
-import gleam/dynamic
-import gleam/io
+import gleam/dynamic.{type Dynamic}
 import gleam/option.{None, Some}
 import gleam/pair
 import gleam/result
 import gleam/uri.{type Uri}
-
-// import grille_pain
-// import grille_pain/lustre/toast
-// import grille_pain/options
+import grille_pain
+import grille_pain/lustre/toast
+import grille_pain/options
 import lustre
 import lustre/effect
+import lustre/event
 import lustre/lazy
 import lustre/update
 import lustre_http as http
 import modem
-import plinth/browser/event.{type Event}
-import sketch/lustre as sketch
-import sketch/options as sketch_options
+import sketch
+import sketch/magic
 import toast/error as toast_error
 
-fn focus(on id: String, event event: Event) {
+fn focus(on id: String, event event: Dynamic) {
   use _ <- effect.from()
   use <- bool.guard(when: ffi.is_active(id), return: Nil)
   event.prevent_default(event)
   ffi.focus(on: id, event: event)
 }
 
-fn unfocus() {
+fn blur() {
   use _ <- effect.from()
-  ffi.unfocus()
+  ffi.blur()
 }
 
 fn subscribe_focus() {
   use dispatch <- effect.from()
   use event <- ffi.subscribe_focus()
-  case event.key(event) {
-    "Escape" -> dispatch(msg.OnEscape)
+  case ffi.key(event) {
+    Ok("Escape") -> dispatch(msg.OnEscape)
     _ -> dispatch(msg.OnSearchFocus(event))
   }
 }
@@ -60,18 +58,17 @@ fn subscribe_is_mobile() {
 }
 
 pub fn main() {
-  let assert Ok(cache) = sketch.setup(sketch_options.node())
+  let assert Ok(cache) = sketch.cache(strategy: sketch.Ephemeral)
+  let assert Ok(_) = magic.setup(cache)
   let assert Ok(_) = lazy.setup()
   let assert Ok(_) = sr.setup()
-  // let assert Ok(_) =
-  //   options.default()
-  //   |> options.timeout(5000)
-  //   |> grille_pain.setup()
+  let assert Ok(_) =
+    options.default()
+    |> options.timeout(5000)
+    |> grille_pain.setup()
 
   let assert Ok(_) =
-    view.view
-    |> sketch.compose(cache)
-    |> lustre.application(init, update, _)
+    lustre.application(init, update, view.view)
     |> lustre.start("#app", Nil)
 }
 
@@ -140,7 +137,7 @@ fn on_url_change(uri: Uri) -> Msg {
 }
 
 fn update(model: Model, msg: Msg) {
-  case io.debug(msg) {
+  case msg {
     msg.UpdateInput(content) -> update_input(model, content)
     msg.SubmitSearch -> submit_search(model)
     msg.Reset -> reset(model)
@@ -152,7 +149,7 @@ fn update(model: Model, msg: Msg) {
     msg.Trendings(trendings) -> handle_trendings(model, trendings)
     msg.OnSearchFocus(event) ->
       update.effect(model, focus(on: "search-input", event: event))
-    msg.OnEscape -> update.effect(model, unfocus())
+    msg.OnEscape -> update.effect(model, blur())
     msg.UpdateIsMobile(is_mobile) ->
       model
       |> model.update_is_mobile(is_mobile)
@@ -214,14 +211,14 @@ fn submit_search(model: Model) {
         Some("q=" <> new_model.submitted_input)
         |> modem.push("search", _, None)
       })
-      |> update.add_effect(unfocus())
+      |> update.add_effect(blur())
     }
     Error(_) ->
       msg.SearchResults(input: model.input, result: _)
       |> http.expect_json(search_result.decode_search_results, _)
       |> http.get(config.api_endpoint() <> "/search?q=" <> model.input, _)
       |> update.effect(model.toggle_loading(new_model), _)
-      |> update.add_effect(unfocus())
+      |> update.add_effect(blur())
   }
 }
 
@@ -266,7 +263,7 @@ fn display_toast(
   |> result.map_error(fn(error) {
     toast_error.describe_http_error(error)
     |> option.map(errors.capture_message)
-    // |> option.map(toast.error)
+    |> option.map(toast.error)
     |> option.map(fn(_) { effect.none() })
   })
   |> result.unwrap_error(option.None)

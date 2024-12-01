@@ -5,31 +5,30 @@ import frontend/view/body/body
 import frontend/view/footer/footer
 import frontend/view/navbar/navbar
 import lustre/element as el
-import sketch
-import sketch/lustre/element as l
+import sketch as s
+import sketch/magic
+import sketch/magic/element/html as h
 import sketch/media
 import sketch/size.{px}
 
 fn layout(attributes, children) {
-  l.memo("div", attributes, children, [
-    sketch.display("grid"),
-    sketch.grid_template_areas(
-      "\"sidebar navbar\"
-       \"sidebar main\"
-       \"sidebar footer\"",
-    ),
-    sketch.property("--a-color", palette.dark.faff_pink),
-    sketch.grid_template_columns("auto 1fr"),
-    sketch.grid_template_rows("auto 1fr auto"),
-    sketch.min_height(size.vh(100)),
-    sketch.media(media.max_width(px(700)), [
-      sketch.grid_template_areas("\"navbar\" \"main\" \"footer\""),
-      sketch.grid_template_columns("1fr"),
+  s.class([
+    s.display("grid"),
+    s.grid_template_areas(["sidebar navbar", "sidebar main", "sidebar footer"]),
+    s.property("--a-color", palette.dark.faff_pink),
+    s.grid_template_columns("auto 1fr"),
+    s.grid_template_rows("auto 1fr auto"),
+    s.min_height(size.vh(100)),
+    s.media(media.max_width(px(700)), [
+      s.grid_template_areas(["navbar", "main", "footer"]),
+      s.grid_template_columns("1fr"),
     ]),
   ])
+  |> h.div(attributes, children)
 }
 
 pub fn view(model: Model) {
+  use <- magic.render([magic.node()])
   layout([], [
     navbar.navbar(model),
     body.body(model),

@@ -1,4 +1,3 @@
-import data/msg
 import data/search_result
 import data/signature.{type Parameter, type Type, Parameter}
 import frontend/view/helpers
@@ -33,7 +32,7 @@ fn render_parameters(count: Int) {
       do_render_parameters(0, int.max(count - 1, 0), [])
       |> list.reverse()
       |> list.intersperse(h.text(", "))
-      |> fn(t) { list.concat([[h.text("(")], t, [h.text(")")]]) }
+      |> fn(t) { list.flatten([[h.text("(")], t, [h.text(")")]]) }
   }
 }
 
@@ -41,7 +40,7 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
   case type_ {
     signature.Tuple(width, elements) -> {
       let inline = width + indent <= 80
-      list.concat([
+      list.flatten([
         [helpers.idt(indent), h.text("#(")],
         case inline {
           False -> [
@@ -49,13 +48,13 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
             ..{
               list.map(elements, view_type(_, indent + 2))
               |> list.intersperse([h.text(","), helpers.newline()])
-              |> list.concat()
+              |> list.flatten()
             }
           ]
           True ->
             list.map(elements, view_type(_, 0))
             |> list.intersperse([h.text(", ")])
-            |> list.concat()
+            |> list.flatten()
         },
         [
           bool.guard(inline, h.text(""), fn() { helpers.idt(indent) }),
@@ -65,19 +64,19 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
     }
     signature.Fn(width, parameters, return) -> {
       let inline = width + indent <= 80
-      list.concat([
+      list.flatten([
         [helpers.idt(indent), t.keyword("fn"), h.text("(")],
         case inline {
           True ->
             list.map(parameters, view_type(_, 0))
             |> list.intersperse([h.text(", ")])
-            |> list.concat()
+            |> list.flatten()
           False -> [
             helpers.newline(),
             ..{
               list.map(parameters, view_type(_, indent + 2))
               |> list.intersperse([h.text(","), helpers.newline()])
-              |> list.concat()
+              |> list.flatten()
             }
           ]
         },
@@ -113,7 +112,7 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
     signature.Named(width, name, package, module, parameters, version) -> {
       let inline = width + indent <= 80
       let is_params = !list.is_empty(parameters)
-      list.concat([
+      list.flatten([
         [
           helpers.idt(indent),
           case version {
@@ -143,13 +142,13 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
           True ->
             list.map(parameters, view_type(_, 0))
             |> list.intersperse([h.text(", ")])
-            |> list.concat()
+            |> list.flatten()
           False -> [
             helpers.newline(),
             ..{
               list.map(parameters, view_type(_, indent + 2))
               |> list.intersperse([h.text(","), helpers.newline()])
-              |> list.concat()
+              |> list.flatten()
             }
           ]
         },
@@ -167,7 +166,7 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
 
 fn view_parameter(parameter: Parameter, indent: Int) {
   let Parameter(width, label, type_) = parameter
-  list.concat([
+  list.flatten([
     case label {
       None -> [el.none()]
       Some(label) -> [helpers.idt(indent), t.label(label), h.text(": ")]
@@ -183,7 +182,7 @@ fn view_parameter(parameter: Parameter, indent: Int) {
 fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
   let inline = constructor.params_width <= 70
   let has_params = !list.is_empty(constructor.parameters)
-  list.concat([
+  list.flatten([
     [
       helpers.idt(indent),
       t.type_(constructor.name),
@@ -194,17 +193,17 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
     ],
     case inline {
       False ->
-        list.concat([
+        list.flatten([
           [helpers.newline()],
           list.map(constructor.parameters, view_parameter(_, { indent + 2 }))
             |> list.intersperse([h.text(","), helpers.newline()])
-            |> list.concat(),
+            |> list.flatten(),
           [h.text(","), helpers.newline()],
         ])
       True ->
         list.map(constructor.parameters, view_parameter(_, 0))
         |> list.intersperse([h.text(", ")])
-        |> list.concat()
+        |> list.flatten()
     },
     case has_params, inline {
       False, _ -> []
@@ -217,7 +216,7 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
 pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg)) {
   case item.json_signature {
     signature.TypeDefinition(parameters, constructors) ->
-      list.concat([
+      list.flatten([
         [t.keyword("type "), t.fun(item.name), ..render_parameters(parameters)],
         case constructors {
           [] -> []
@@ -229,7 +228,7 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
             constructors
             |> list.map(view_type_constructor(_, 2))
             |> list.intersperse([helpers.newline()])
-            |> list.concat()
+            |> list.flatten()
         },
         case constructors {
           [] -> []
@@ -237,7 +236,7 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
         },
       ])
     signature.Constant(width, type_) ->
-      list.concat([
+      list.flatten([
         [t.keyword("const "), t.fun(item.name), h.text(" = ")],
         case width > 80 {
           True -> [helpers.newline(), ..view_type(type_, 2)]
@@ -245,7 +244,7 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
         },
       ])
     signature.TypeAlias(width, parameters, alias) -> {
-      list.concat([
+      list.flatten([
         [
           t.keyword("type "),
           t.type_(item.name),
@@ -259,11 +258,11 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
       ])
     }
     signature.Function(_width, params_width, name, return, parameters) -> {
-      list.concat([
+      list.flatten([
         [t.keyword("fn "), t.fun(name), h.text("(")],
         case params_width > 70 {
           True ->
-            list.concat([
+            list.flatten([
               [helpers.newline(), helpers.idt(2)],
               list.map(parameters, view_parameter(_, 2))
                 |> list.intersperse([
@@ -271,13 +270,13 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
                   helpers.newline(),
                   helpers.idt(2),
                 ])
-                |> list.concat(),
+                |> list.flatten(),
               [h.text(","), helpers.newline()],
             ])
           False ->
             list.map(parameters, view_parameter(_, 0))
             |> list.intersperse([h.text(", ")])
-            |> list.concat()
+            |> list.flatten()
         },
         [
           h.text(") -> "),

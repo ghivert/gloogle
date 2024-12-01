@@ -67,7 +67,7 @@ fn empty_state(
   ])
 }
 
-pub fn view_trending(model: Model) {
+pub fn view_trending(_model: Model) {
   el.none()
   // case model.trendings {
   //   None ->

@@ -2,9 +2,9 @@ import birl
 import data/package
 import data/search_result.{type SearchResults}
 import frontend/router
+import gleam/dynamic.{type Dynamic}
 import gleam/option
 import lustre_http as http
-import plinth/browser/event.{type Event}
 
 pub type Filter {
   Functions
@@ -39,7 +39,7 @@ pub type Analytics {
 pub type Msg {
   None
   Packages(packages: Result(List(package.Package), http.HttpError))
-  OnSearchFocus(event: Event)
+  OnSearchFocus(event: Dynamic)
   SubmitSearch
   UpdateIsMobile(is_mobile: Bool)
   SearchResults(input: String, result: Result(SearchResults, http.HttpError))

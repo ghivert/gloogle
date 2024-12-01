@@ -6,12 +6,11 @@ import data/search_result.{type SearchResult, type SearchResults}
 import frontend/router
 import frontend/view/body/cache
 import gleam/dict.{type Dict}
-import gleam/function
 import gleam/int
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
-import gleam/regex
+import gleam/regexp
 import gleam/result
 import gleam/string
 import lustre/element.{type Element}
@@ -189,8 +188,8 @@ fn extract_package_version(
   acc: Dict(String, String),
   search_result: search_result.SearchResult,
 ) -> Dict(String, String) {
-  let assert Ok(re) = regex.from_string("^[0-9]*.[0-9]*.[0-9]*$")
-  case regex.check(re, search_result.version) {
+  let assert Ok(re) = regexp.from_string("^[0-9]*.[0-9]*.[0-9]*$")
+  case regexp.check(re, search_result.version) {
     False -> acc
     True ->
       case dict.get(acc, search_result.package_name) {
@@ -275,11 +274,11 @@ pub fn update_search_results_filter(model: Model) {
   let filter = fn(s) {
     case list.is_empty(or_filters) {
       True -> True
-      False -> list.any(or_filters, function.apply1(_, s))
+      False -> list.any(or_filters, fn(f) { f(s) })
     }
     && case list.is_empty(and_filters) {
       True -> True
-      False -> list.any(and_filters, function.apply1(_, s))
+      False -> list.any(and_filters, fn(f) { f(s) })
     }
     && show_old(s)
   }

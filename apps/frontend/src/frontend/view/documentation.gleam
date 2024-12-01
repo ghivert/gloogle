@@ -19,7 +19,7 @@ pub fn view(document: String) {
     |> string.split("\n")
     |> list.map(remove_leading_space)
     |> string.join("\n")
-    |> converter()
+    |> converter
     |> a.attribute("dangerous-unescaped-html", _)
   h.div([content, a.class("documentation")], [])
 }

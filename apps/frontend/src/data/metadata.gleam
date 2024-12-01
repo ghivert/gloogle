@@ -1,5 +1,5 @@
 import data/implementations.{type Implementations, Implementations}
-import decoder_extra
+import gleam/decoder_extra
 import gleam/dynamic
 import gleam/option.{type Option}
 

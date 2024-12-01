@@ -42,9 +42,10 @@ fn start_http_server(ctx) {
   let secret_key_base = context.get_secret_key_base()
   router.handle_request(_, ctx)
   |> wisp_mist.handler(secret_key_base)
-  |> mist.new()
+  |> mist.new
+  |> mist.bind("0.0.0.0")
   |> mist.port(port)
-  |> mist.start_http()
+  |> mist.start_http_server
 }
 
 fn start_periodic_workers(ctx) {

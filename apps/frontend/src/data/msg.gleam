@@ -1,10 +1,9 @@
-import birl
+import data/analytics
 import data/package
 import data/search_result.{type SearchResults}
 import frontend/discuss
 import frontend/router
 import gleam/dynamic.{type Dynamic}
-import gleam/option
 
 pub type Filter {
   Functions
@@ -16,28 +15,8 @@ pub type Filter {
   VectorSearch
 }
 
-pub type Package {
-  Package(
-    name: String,
-    repository: String,
-    rank: Int,
-    popularity: option.Option(Int),
-  )
-}
-
-pub type Analytics {
-  Analytics(
-    total_searches: Int,
-    total_signatures: Int,
-    total_indexed: Int,
-    timeseries: List(#(Int, birl.Time)),
-    ranked: List(Package),
-    popular: List(Package),
-  )
-}
-
 pub type Msg {
-  ApiReturnedAnalytics(analytics: Analytics)
+  ApiReturnedAnalytics(analytics: analytics.Analytics)
   ApiReturnedPackages(packages: List(package.Package))
   ApiReturnedSearchResults(input: String, search_results: SearchResults)
   ApiReturnedTrendings(trendings: List(package.Package))

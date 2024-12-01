@@ -1,5 +1,5 @@
-import data/search_result
 import data/signature.{type Parameter, type Type, Parameter}
+import data/type_search
 import frontend/view/helpers
 import frontend/view/types as t
 import gleam/bool
@@ -213,11 +213,15 @@ fn view_type_constructor(constructor: signature.TypeConstructor, indent: Int) {
   ])
 }
 
-pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg)) {
+pub fn view_signature(item: type_search.TypeSearch) -> List(el.Element(msg)) {
   case item.json_signature {
     signature.TypeDefinition(parameters, constructors) ->
       list.flatten([
-        [t.keyword("type "), t.fun(item.name), ..render_parameters(parameters)],
+        [
+          t.keyword("type "),
+          t.fun(item.type_name),
+          ..render_parameters(parameters)
+        ],
         case constructors {
           [] -> []
           _ -> [h.text(" {"), helpers.newline()]
@@ -237,7 +241,7 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
       ])
     signature.Constant(width, type_) ->
       list.flatten([
-        [t.keyword("const "), t.fun(item.name), h.text(" = ")],
+        [t.keyword("const "), t.fun(item.type_name), h.text(" = ")],
         case width > 80 {
           True -> [helpers.newline(), ..view_type(type_, 2)]
           False -> view_type(type_, 0)
@@ -247,7 +251,7 @@ pub fn view_signature(item: search_result.SearchResult) -> List(el.Element(msg))
       list.flatten([
         [
           t.keyword("type "),
-          t.type_(item.name),
+          t.type_(item.type_name),
           ..render_parameters(parameters)
         ],
         [h.text(" = ")],

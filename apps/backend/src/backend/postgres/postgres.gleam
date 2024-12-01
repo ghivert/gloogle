@@ -9,7 +9,9 @@ import pog.{Config}
 
 pub fn connect(database_url: String) {
   let assert Ok(config) = parse_database_url(database_url)
-  pog.connect(config)
+  config
+  |> pog.rows_as_map(True)
+  |> pog.connect
 }
 
 fn parse_database_url(database_url: String) {

@@ -1,8 +1,11 @@
 import birl
+import bright
+import data/analytics
 import data/kind
 import data/msg.{type Msg}
 import data/package.{type Package}
-import data/search_result.{type SearchResult, type SearchResults}
+import data/search_result.{type SearchResults, SearchResults}
+import data/type_search.{type TypeSearch}
 import frontend/router
 import frontend/view/body/cache
 import gleam/dict.{type Dict}
@@ -18,8 +21,11 @@ import lustre/element.{type Element}
 pub type Index =
   List(#(#(String, String), List(#(String, String))))
 
-pub type Model {
-  Model(
+pub type Model =
+  bright.Bright(Data, Computed)
+
+pub type Data {
+  Data(
     input: String,
     search_results: Dict(String, SearchResults),
     index: Index,
@@ -41,18 +47,22 @@ pub type Model {
     total_signatures: Int,
     total_packages: Int,
     timeseries: List(#(Int, birl.Time)),
-    ranked: List(msg.Package),
-    popular: List(msg.Package),
+    ranked: List(analytics.Package),
+    popular: List(analytics.Package),
   )
+}
+
+pub type Computed {
+  Computed
 }
 
 @external(javascript, "../gloogle.ffi.mjs", "isMobile")
 fn is_mobile() -> Bool
 
-pub fn init() {
+pub fn init_data() {
   let search_results = search_result.Start
   let index = compute_index(search_results)
-  Model(
+  Data(
     input: "",
     search_results: dict.new(),
     index: index,
@@ -79,36 +89,36 @@ pub fn init() {
   )
 }
 
-pub fn update_route(model: Model, route: router.Route) {
-  Model(..model, route: route)
+pub fn update_route(model: Data, route: router.Route) {
+  Data(..model, route: route)
 }
 
-pub fn update_submitted_input(model: Model) {
-  Model(..model, submitted_input: model.input)
+pub fn update_submitted_input(model: Data) {
+  Data(..model, submitted_input: model.input)
 }
 
-pub fn update_is_mobile(model: Model, is_mobile: Bool) {
-  Model(..model, is_mobile: is_mobile)
+pub fn update_is_mobile(model: Data, is_mobile: Bool) {
+  Data(..model, is_mobile: is_mobile)
 }
 
-pub fn update_trendings(model: Model, trendings: List(Package)) {
+pub fn update_trendings(model: Data, trendings: List(Package)) {
   model.trendings
   |> option.unwrap([])
   |> list.append(trendings)
   |> option.Some
-  |> fn(t) { Model(..model, trendings: t) }
+  |> fn(t) { Data(..model, trendings: t) }
 }
 
-pub fn toggle_loading(model: Model) {
-  Model(..model, loading: !model.loading)
+pub fn toggle_loading(model: Data) {
+  Data(..model, loading: !model.loading)
 }
 
-pub fn update_input(model: Model, content: String) {
-  Model(..model, input: content)
+pub fn update_input(model: Data, content: String) {
+  Data(..model, input: content)
 }
 
-pub fn update_analytics(model: Model, analytics: msg.Analytics) {
-  Model(
+pub fn update_analytics(model: Data, analytics: analytics.Analytics) {
+  Data(
     ..model,
     timeseries: analytics.timeseries,
     total_searches: analytics.total_searches,
@@ -119,7 +129,7 @@ pub fn update_analytics(model: Model, analytics: msg.Analytics) {
   )
 }
 
-pub fn search_key(key key: String, model model: Model) {
+pub fn search_key(key key: String, model model: Data) {
   key
   <> string.inspect([
     model.keep_functions,
@@ -137,7 +147,7 @@ fn default_search_key(key key: String) {
 }
 
 pub fn update_search_results(
-  model: Model,
+  model: Data,
   key: String,
   search_results: SearchResults,
 ) {
@@ -145,7 +155,7 @@ pub fn update_search_results(
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> model.view_cache
-    search_result.SearchResults(types, e, m, s, d, mods) ->
+    SearchResults(types, e, m, s, d, mods) ->
       cache.cache_search_results(
         model.submitted_input,
         index,
@@ -158,7 +168,7 @@ pub fn update_search_results(
       )
       |> dict.insert(model.view_cache, key, _)
   }
-  Model(
+  Data(
     ..model,
     search_results: dict.insert(model.search_results, key, search_results),
     index: index,
@@ -186,7 +196,7 @@ fn is_higher(new: List(Int), old: List(Int)) {
 
 fn extract_package_version(
   acc: Dict(String, String),
-  search_result: search_result.SearchResult,
+  search_result: TypeSearch,
 ) -> Dict(String, String) {
   let assert Ok(re) = regexp.from_string("^[0-9]*.[0-9]*.[0-9]*$")
   case regexp.check(re, search_result.version) {
@@ -218,7 +228,7 @@ fn extract_package_version(
   }
 }
 
-pub fn update_search_results_filter(model: Model) {
+pub fn update_search_results_filter(model: Data) {
   let default_key = default_search_key(model.submitted_input)
   let show_old = case model.show_old_packages {
     True -> fn(_) { True }
@@ -229,7 +239,7 @@ pub fn update_search_results_filter(model: Model) {
           case search_results {
             search_result.Start | search_result.InternalServerError ->
               dict.new()
-            search_result.SearchResults(t, e, m, s, d, mods) -> {
+            SearchResults(t, e, m, s, d, mods) -> {
               dict.new()
               |> list.fold(t, _, extract_package_version)
               |> list.fold(e, _, extract_package_version)
@@ -241,7 +251,7 @@ pub fn update_search_results_filter(model: Model) {
           }
         }
       }
-      fn(a: search_result.SearchResult) {
+      fn(a: TypeSearch) {
         case dict.get(last_versions, a.package_name) {
           Error(_) -> False
           Ok(content) -> content == a.version
@@ -251,21 +261,21 @@ pub fn update_search_results_filter(model: Model) {
   }
   let or_filters =
     [
-      #(model.keep_functions, fn(s: search_result.SearchResult) {
-        s.kind == kind.Function
+      #(model.keep_functions, fn(s: TypeSearch) {
+        s.signature_kind == kind.Function
       }),
-      #(model.keep_types, fn(s: search_result.SearchResult) {
-        s.kind == kind.TypeDefinition
+      #(model.keep_types, fn(s: TypeSearch) {
+        s.signature_kind == kind.TypeDefinition
       }),
-      #(model.keep_aliases, fn(s: search_result.SearchResult) {
-        s.kind == kind.TypeAlias
+      #(model.keep_aliases, fn(s: TypeSearch) {
+        s.signature_kind == kind.TypeAlias
       }),
     ]
     |> list.filter(fn(a) { a.0 })
     |> list.map(pair.second)
   let and_filters =
     [
-      #(model.keep_documented, fn(s: search_result.SearchResult) {
+      #(model.keep_documented, fn(s: TypeSearch) {
         string.length(s.documentation) > 0
       }),
     ]
@@ -289,8 +299,8 @@ pub fn update_search_results_filter(model: Model) {
       let search_results = case search_results {
         search_result.Start | search_result.InternalServerError ->
           search_results
-        search_result.SearchResults(t, e, m, s, d, mods) ->
-          search_result.SearchResults(
+        SearchResults(t, e, m, s, d, mods) ->
+          SearchResults(
             t |> list.filter(filter),
             e |> list.filter(filter),
             m |> list.filter(filter),
@@ -309,7 +319,7 @@ pub fn update_search_results_filter(model: Model) {
       let view_cache = case search_results {
         search_result.Start | search_result.InternalServerError ->
           model.view_cache
-        search_result.SearchResults(types, e, m, s, d, mods) ->
+        SearchResults(types, e, m, s, d, mods) ->
           cache.cache_search_results(
             model.submitted_input,
             index,
@@ -322,7 +332,7 @@ pub fn update_search_results_filter(model: Model) {
           )
           |> dict.insert(model.view_cache, key, _)
       }
-      Model(
+      Data(
         ..model,
         search_results: dict.insert(model.search_results, key, search_results),
         index: index,
@@ -332,8 +342,8 @@ pub fn update_search_results_filter(model: Model) {
   }
 }
 
-pub fn reset(model: Model) {
-  Model(
+pub fn reset(model: Data) {
+  Data(
     search_results: model.search_results,
     input: "",
     index: [],
@@ -363,7 +373,7 @@ pub fn reset(model: Model) {
 fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
     search_result.Start | search_result.InternalServerError -> []
-    search_result.SearchResults(types, exact, others, searches, docs, modules) -> {
+    SearchResults(types, exact, others, searches, docs, modules) -> {
       []
       |> insert_module_names(types)
       |> insert_module_names(exact)
@@ -376,11 +386,11 @@ fn compute_index(search_results: SearchResults) -> Index {
   }
 }
 
-fn insert_module_names(index: Index, search_results: List(SearchResult)) {
+fn insert_module_names(index: Index, search_results: List(TypeSearch)) {
   use acc, val <- list.fold(search_results, index)
   let key = #(val.package_name, val.version)
   list.key_find(acc, key)
   |> result.unwrap([])
-  |> fn(i) { list.prepend(i, #(val.module_name, val.name)) }
+  |> fn(i) { list.prepend(i, #(val.module_name, val.type_name)) }
   |> fn(i) { list.key_set(acc, key, i) }
 }

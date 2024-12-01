@@ -17,11 +17,11 @@ pub type HexUser {
 pub fn decode(data) {
   dynamic.decode6(
     HexUser,
-    dynamic.element(0, dynamic.int),
-    dynamic.element(1, dynamic.string),
-    dynamic.element(2, dynamic.optional(dynamic.string)),
-    dynamic.element(3, dynamic.string),
-    dynamic.element(4, helpers.decode_time),
-    dynamic.element(5, helpers.decode_time),
+    dynamic.field("id", dynamic.int),
+    dynamic.field("username", dynamic.string),
+    dynamic.field("email", dynamic.optional(dynamic.string)),
+    dynamic.field("url", dynamic.string),
+    dynamic.field("created_at", helpers.decode_time),
+    dynamic.field("updated_at", helpers.decode_time),
   )(data)
 }

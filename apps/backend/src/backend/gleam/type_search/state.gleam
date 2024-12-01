@@ -8,6 +8,7 @@ import gleam/function
 import gleam/list
 import gleam/option
 import gleam/otp/actor
+import gleam/pair
 import gleam/result
 import pog
 
@@ -101,7 +102,11 @@ fn compute_rows(
      OFFSET $1"
     |> pog.query
     |> pog.parameter(pog.int(offset))
-    |> pog.returning(dynamic.tuple2(dynamic.string, dynamic.int))
+    |> pog.returning(dynamic.decode2(
+      pair.new,
+      dynamic.field("signature_", dynamic.string),
+      dynamic.field("id", dynamic.int),
+    ))
     |> pog.execute(db)
     |> result.map(fn(r) { r.rows })
     |> result.unwrap([])

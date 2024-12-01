@@ -4,7 +4,6 @@ import gleam/fetch
 import gleam/http
 import gleam/http/request
 import gleam/http/response
-import gleam/io
 import gleam/javascript/promise
 import gleam/list
 import gleam/result

@@ -3,6 +3,9 @@ import backend/data/hex_user.{type HexUser}
 import backend/error
 import backend/gleam/context
 import birl.{type Time}
+import data/analytics
+import data/package
+import data/type_search
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -48,7 +51,7 @@ pub fn upsert_most_recent_hex_timestamp(db: pog.Connection, latest: Time) {
    VALUES (1, $1)
    ON CONFLICT (id) DO UPDATE
      SET last_check = $1
-   RETURNING *"
+   RETURNING id, last_check"
   |> pog.query
   |> pog.parameter(helpers.convert_time(latest))
   |> pog.returning(hex_read.decode)
@@ -83,18 +86,18 @@ pub fn upsert_search_analytics(db: pog.Connection, query: String) {
 
 pub fn select_more_popular_packages(db: pog.Connection) {
   use ranked <- result.try({
-    "SELECT name, repository, rank, (popularity -> 'github')::int
+    "SELECT name, repository, rank, (popularity -> 'github')::int AS popularity
     FROM package
     ORDER BY rank DESC
     LIMIT 22"
     |> pog.query
-    |> pog.returning(decode_popular_package)
+    |> pog.returning(analytics.decode_package)
     |> pog.execute(db)
     |> result.map(fn(r) { r.rows })
     |> result.map_error(error.DatabaseError)
   })
   use popular <- result.try({
-    "SELECT name, repository, rank, (popularity -> 'github')::int
+    "SELECT name, repository, rank, (popularity -> 'github')::int AS popularity
     FROM package
     WHERE popularity -> 'github' IS NOT NULL
       AND name != 'funtil'
@@ -102,21 +105,12 @@ pub fn select_more_popular_packages(db: pog.Connection) {
     ORDER BY popularity -> 'github' DESC
     LIMIT 23"
     |> pog.query
-    |> pog.returning(decode_popular_package)
+    |> pog.returning(analytics.decode_package)
     |> pog.execute(db)
     |> result.map(fn(r) { r.rows })
     |> result.map_error(error.DatabaseError)
   })
   Ok(#(ranked, popular))
-}
-
-fn decode_popular_package(dyn) {
-  dynamic.tuple4(
-    dynamic.string,
-    dynamic.string,
-    dynamic.int,
-    dynamic.optional(dynamic.int),
-  )(dyn)
 }
 
 pub fn select_last_day_search_analytics(db: pog.Connection) {
@@ -127,7 +121,11 @@ pub fn select_last_day_search_analytics(db: pog.Connection) {
    WHERE updated_at >= $1"
   |> pog.query
   |> pog.parameter(helpers.convert_time(now))
-  |> pog.returning(dynamic.tuple2(dynamic.string, dynamic.int))
+  |> pog.returning(dynamic.decode2(
+    pair.new,
+    dynamic.field("query", dynamic.string),
+    dynamic.field("occurences", dynamic.int),
+  ))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
@@ -170,7 +168,11 @@ pub fn get_timeseries_count(db: pog.Connection) {
   GROUP BY at.date
   ORDER BY date DESC"
   |> pog.query
-  |> pog.returning(dynamic.tuple2(dynamic.int, helpers.decode_time))
+  |> pog.returning(dynamic.decode2(
+    pair.new,
+    dynamic.field("searches", dynamic.int),
+    dynamic.field("date", helpers.decode_time),
+  ))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -200,39 +202,39 @@ fn upsert_package_owners(db: pog.Connection, owners: List(hexpm.PackageOwner)) {
 }
 
 fn get_current_package_owners(db: pog.Connection, package_id: Int) {
-  "SELECT package_owner.hex_user_id
+  "SELECT package_owner.hex_user_id AS user_id
    FROM package_owner
    WHERE package_owner.package_id = $1"
   |> pog.query
   |> pog.parameter(pog.int(package_id))
-  |> pog.returning(dynamic.element(0, dynamic.int))
+  |> pog.returning(dynamic.field("user_id", dynamic.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
 }
 
 pub fn get_total_searches(db: pog.Connection) {
-  "SELECT SUM(occurences) FROM search_analytics"
+  "SELECT SUM(occurences) occurences FROM search_analytics"
   |> pog.query
-  |> pog.returning(dynamic.element(0, dynamic.int))
+  |> pog.returning(dynamic.field("occurences", dynamic.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
 }
 
 pub fn get_total_signatures(db: pog.Connection) {
-  "SELECT COUNT(*) FROM package_type_fun_signature"
+  "SELECT COUNT(*) c FROM package_type_fun_signature"
   |> pog.query
-  |> pog.returning(dynamic.element(0, dynamic.int))
+  |> pog.returning(dynamic.field("c", dynamic.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
 }
 
 pub fn get_total_packages(db: pog.Connection) {
-  "SELECT COUNT(*) FROM package"
+  "SELECT COUNT(*) c FROM package"
   |> pog.query
-  |> pog.returning(dynamic.element(0, dynamic.int))
+  |> pog.returning(dynamic.field("c", dynamic.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
@@ -320,7 +322,7 @@ pub fn upsert_package(db: pog.Connection, package: hexpm.Package) {
   |> pog.parameter(package.meta.links |> helpers.json_dict() |> pog.text())
   |> pog.parameter(package.meta.licenses |> helpers.json_list() |> pog.text())
   |> pog.parameter(pog.nullable(pog.text, package.meta.description))
-  |> pog.returning(dynamic.element(0, dynamic.int))
+  |> pog.returning(dynamic.field("id", dynamic.int))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
@@ -363,10 +365,11 @@ pub fn upsert_release(
     |> birl.to_erlang_universal_datetime
     |> coerce
   })
-  |> pog.returning(dynamic.tuple3(
-    dynamic.int,
-    dynamic.optional(dynamic.string),
-    dynamic.optional(dynamic.string),
+  |> pog.returning(dynamic.decode3(
+    fn(a, b, c) { #(a, b, c) },
+    dynamic.field("id", dynamic.int),
+    dynamic.field("package_interface", dynamic.optional(dynamic.string)),
+    dynamic.field("gleam_toml", dynamic.optional(dynamic.string)),
   ))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
@@ -383,10 +386,11 @@ pub fn lookup_release(
   |> pog.query
   |> pog.parameter(pog.int(package_id))
   |> pog.parameter(pog.text(release.version))
-  |> pog.returning(dynamic.tuple3(
-    dynamic.int,
-    dynamic.optional(dynamic.string),
-    dynamic.optional(dynamic.string),
+  |> pog.returning(dynamic.decode3(
+    fn(a, b, c) { #(a, b, c) },
+    dynamic.field("id", dynamic.int),
+    dynamic.field("package_interface", dynamic.optional(dynamic.string)),
+    dynamic.field("gleam_toml", dynamic.optional(dynamic.string)),
   ))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
@@ -456,7 +460,11 @@ pub fn get_package_release_ids(
   |> pog.query
   |> pog.parameter(pog.text(package.name))
   |> pog.parameter(pog.text(package.version))
-  |> pog.returning(dynamic.tuple2(dynamic.int, dynamic.int))
+  |> pog.returning(dynamic.decode2(
+    pair.new,
+    dynamic.field("package_id", dynamic.int),
+    dynamic.field("package_release_id", dynamic.int),
+  ))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
@@ -482,7 +490,7 @@ pub fn upsert_package_module(db: pog.Connection, module: context.Module) {
       |> pog.text()
     })
     |> pog.parameter(pog.int(module.release_id))
-    |> pog.returning(dynamic.element(0, dynamic.int))
+    |> pog.returning(dynamic.field("id", dynamic.int))
     |> pog.execute(db)
     |> result.map_error(error.DatabaseError)
   })
@@ -565,7 +573,7 @@ pub fn upsert_package_type_fun_signature(
     |> option.map(pog.text)
     |> option.unwrap(pog.null())
   })
-  |> pog.returning(dynamic.element(0, dynamic.int))
+  |> pog.returning(dynamic.field("id", dynamic.int))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -600,7 +608,7 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
      AND levenshtein_less_equal(name, $1, 2) <= 2"
   |> pog.query
   |> pog.parameter(pog.text(name))
-  |> pog.returning(dynamic.element(0, dynamic.string))
+  |> pog.returning(dynamic.field("name", dynamic.string))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -609,13 +617,13 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
 pub fn name_search(db: pog.Connection, query: String) {
   "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -630,7 +638,7 @@ pub fn name_search(db: pog.Connection, query: String) {
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(query))
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -640,13 +648,13 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
   "WITH splitted_name AS (SELECT string_to_array($1, '.') AS full_name)
    SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -664,7 +672,7 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(query))
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -684,13 +692,13 @@ fn transform_query(q: String) {
 pub fn content_search(db: pog.Connection, query: String) {
   "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -712,50 +720,22 @@ pub fn content_search(db: pog.Connection, query: String) {
   |> pog.query
   |> pog.parameter(pog.text(query))
   |> pog.parameter(pog.text(transform_query(query)))
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
-fn decode_type_search(dyn) {
-  dynamic.decode8(
-    fn(a, b, c, d, e, f, g, h) { #(a, b, c, d, e, f, g, h) },
-    dynamic.element(0, dynamic.string),
-    dynamic.element(1, dynamic.string),
-    dynamic.element(2, dynamic.string),
-    dynamic.element(3, dynamic.dynamic),
-    dynamic.element(4, dynamic.dynamic),
-    dynamic.element(5, dynamic.string),
-    dynamic.element(6, dynamic.string),
-    dynamic.element(7, dynamic.string),
-  )(dyn)
-}
-
-pub fn type_search_to_json(item) {
-  let #(a, b, c, d, e, f, g, h) = item
-  json.object([
-    #("name", json.string(a)),
-    #("documentation", json.string(b)),
-    #("kind", json.string(c)),
-    #("metadata", coerce(d)),
-    #("json_signature", coerce(e)),
-    #("module_name", json.string(f)),
-    #("package_name", json.string(g)),
-    #("version", json.string(h)),
-  ])
-}
-
 pub fn signature_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -770,7 +750,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(q))
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -779,13 +759,13 @@ pub fn signature_search(db: pog.Connection, q: String) {
 pub fn documentation_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -800,7 +780,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(q))
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -809,13 +789,13 @@ pub fn documentation_search(db: pog.Connection, q: String) {
 pub fn module_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -839,7 +819,7 @@ pub fn module_search(db: pog.Connection, q: String) {
    ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
   |> pog.query
   |> pog.parameter(pog.text(q))
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -853,13 +833,13 @@ pub fn exact_type_search(db: pog.Connection, q: List(Int)) {
   {
     "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
-     s.documentation,
+     s.documentation documentation,
      s.kind signature_kind,
-     s.metadata,
+     s.metadata metadata,
      s.json_signature,
      m.name module_name,
-     p.name,
-     r.version,
+     p.name package_name,
+     r.version version,
      p.rank package_rank,
      string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
    FROM package_type_fun_signature s
@@ -876,7 +856,7 @@ pub fn exact_type_search(db: pog.Connection, q: List(Int)) {
   }
   |> pog.query
   |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.int(q)) })
-  |> pog.returning(decode_type_search)
+  |> pog.returning(type_search.decode)
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -891,7 +871,7 @@ pub fn select_gleam_toml(db: pog.Connection, offset: Int) {
    OFFSET $1"
   |> pog.query
   |> pog.parameter(pog.int(offset))
-  |> pog.returning(dynamic.element(0, dynamic.string))
+  |> pog.returning(dynamic.field("gleam_toml", dynamic.string))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -912,7 +892,11 @@ pub fn select_package_repository_address(db: pog.Connection, offset: Int) {
   |> pog.query
   |> pog.parameter(pog.int(offset))
   |> pog.returning(fn(dyn) {
-    dynamic.tuple2(dynamic.int, dynamic.optional(dynamic.string))(dyn)
+    dynamic.decode2(
+      pair.new,
+      dynamic.field("id", dynamic.int),
+      dynamic.field("repository", dynamic.optional(dynamic.string)),
+    )(dyn)
     |> result.map(fn(content) {
       case content {
         #(id, Some(repo)) -> Some(#(id, repo))
@@ -963,28 +947,7 @@ pub fn select_package_by_popularity(db: pog.Connection, page: Int) {
   OFFSET $1"
   |> pog.query
   |> pog.parameter(pog.int(offset))
-  |> pog.returning(dynamic.decode8(
-    fn(a, b, c, d, e, f, g, h) {
-      json.object([
-        #("name", json.string(a)),
-        #("repository", json.nullable(b, json.string)),
-        #("documentation", json.nullable(c, json.string)),
-        #("hex-url", json.nullable(d, json.string)),
-        #("licenses", json.string(e)),
-        #("description", json.nullable(f, json.string)),
-        #("rank", json.int(g)),
-        #("popularity", json.nullable(h, json.string)),
-      ])
-    },
-    dynamic.element(0, dynamic.string),
-    dynamic.element(1, dynamic.optional(dynamic.string)),
-    dynamic.element(2, dynamic.optional(dynamic.string)),
-    dynamic.element(3, dynamic.optional(dynamic.string)),
-    dynamic.element(4, dynamic.string),
-    dynamic.element(5, dynamic.optional(dynamic.string)),
-    dynamic.element(6, dynamic.int),
-    dynamic.element(7, dynamic.optional(dynamic.string)),
-  ))
+  |> pog.returning(package.decode)
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
@@ -1003,28 +966,7 @@ pub fn select_package_by_updated_at(db: pog.Connection) {
   FROM package
   ORDER BY updated_at DESC"
   |> pog.query
-  |> pog.returning(dynamic.decode8(
-    fn(a, b, c, d, e, f, g, h) {
-      json.object([
-        #("name", json.string(a)),
-        #("repository", json.nullable(b, json.string)),
-        #("documentation", json.nullable(c, json.string)),
-        #("hex-url", json.nullable(d, json.string)),
-        #("licenses", json.string(e)),
-        #("description", json.nullable(f, json.string)),
-        #("rank", json.int(g)),
-        #("popularity", json.nullable(h, json.string)),
-      ])
-    },
-    dynamic.element(0, dynamic.string),
-    dynamic.element(1, dynamic.optional(dynamic.string)),
-    dynamic.element(2, dynamic.optional(dynamic.string)),
-    dynamic.element(3, dynamic.optional(dynamic.string)),
-    dynamic.element(4, dynamic.string),
-    dynamic.element(5, dynamic.optional(dynamic.string)),
-    dynamic.element(6, dynamic.int),
-    dynamic.element(7, dynamic.optional(dynamic.string)),
-  ))
+  |> pog.returning(package.decode)
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)

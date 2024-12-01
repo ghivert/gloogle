@@ -1,5 +1,5 @@
 import data/msg
-import data/search_result
+import data/type_search
 import frontend/view/body/search_result as sr
 import frontend/view/types as t
 import gleam/list
@@ -8,7 +8,7 @@ import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
 
-fn view_search_results(search_results: List(search_result.SearchResult)) {
+fn view_search_results(search_results: List(type_search.TypeSearch)) {
   list.map(search_results, sr.view)
   |> list.intersperse(h.div([a.class("search-result-separator")], []))
   |> el.fragment
@@ -76,12 +76,12 @@ fn types_separator() {
 pub fn cache_search_results(
   search: String,
   index: List(#(#(String, String), List(#(String, String)))),
-  types: List(search_result.SearchResult),
-  exact: List(search_result.SearchResult),
-  others: List(search_result.SearchResult),
-  searches: List(search_result.SearchResult),
-  docs_searches: List(search_result.SearchResult),
-  modules_searches: List(search_result.SearchResult),
+  types: List(type_search.TypeSearch),
+  exact: List(type_search.TypeSearch),
+  others: List(type_search.TypeSearch),
+  searches: List(type_search.TypeSearch),
+  docs_searches: List(type_search.TypeSearch),
+  modules_searches: List(type_search.TypeSearch),
 ) {
   h.div([a.class("search-results-wrapper")], [
     sidebar(search, index),

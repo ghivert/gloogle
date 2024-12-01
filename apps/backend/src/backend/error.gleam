@@ -42,15 +42,13 @@ pub fn log_dynamic_error(error: dynamic.DecodeError) {
 pub fn log_decode_error(error: json.DecodeError) {
   case error {
     json.UnexpectedEndOfInput -> wisp.log_warning("Unexpected end of input")
-    json.UnexpectedByte(byte, position) -> {
+    json.UnexpectedByte(byte) -> {
       wisp.log_warning("Unexpected byte")
       wisp.log_warning("  byte: " <> byte)
-      wisp.log_warning("  position: " <> int.to_string(position))
     }
-    json.UnexpectedSequence(byte, position) -> {
+    json.UnexpectedSequence(byte) -> {
       wisp.log_warning("Unexpected sequence")
       wisp.log_warning("  byte: " <> byte)
-      wisp.log_warning("  position: " <> int.to_string(position))
     }
     json.UnexpectedFormat(errors) -> {
       wisp.log_warning("Unexpected format")

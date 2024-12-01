@@ -1,4 +1,4 @@
-import data/model.{type Model}
+import data/model.{type Data}
 import frontend/router
 import frontend/view/navbar/styles as s
 import lustre/attribute as a
@@ -11,7 +11,7 @@ fn navbar_links() {
   ])
 }
 
-pub fn navbar(model: Model) {
+pub fn navbar(model: Data) {
   let transparent = model.route == router.Home
   s.navbar(transparent, [a.class("navbar")], [
     case model.route {

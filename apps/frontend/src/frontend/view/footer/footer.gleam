@@ -1,4 +1,4 @@
-import data/model.{type Model}
+import data/model.{type Data}
 import data/msg
 import frontend/view/footer/links.{links}
 import frontend/view/footer/styles as s
@@ -39,7 +39,7 @@ pub fn view() {
   ])
 }
 
-pub fn search_bar(model: Model) {
+pub fn search_bar(model: Data) {
   use <- bool.guard(when: !model.is_mobile, return: el.none())
   h.div([a.class("footer-search")], [
     h.form([e.on_submit(msg.UserSubmittedSearch)], [

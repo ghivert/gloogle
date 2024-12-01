@@ -122,14 +122,18 @@ fn type_to_json(ctx: Context, type_: Type) {
 }
 
 fn find_package_release(ctx: Context, package: String, requirement: String) {
-  "SELECT package_release.id, package_release.version
+  "SELECT package_release.id id, package_release.version version
      FROM package
      JOIN package_release
        ON package.id = package_release.package_id
      WHERE package.name = $1"
   |> pog.query
   |> pog.parameter(pog.text(package))
-  |> pog.returning(dynamic.tuple2(dynamic.int, dynamic.string))
+  |> pog.returning(dynamic.decode2(
+    pair.new,
+    dynamic.field("id", dynamic.int),
+    dynamic.field("version", dynamic.string),
+  ))
   |> pog.execute(ctx.db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(response) { response.rows })
@@ -173,7 +177,7 @@ fn find_signature_from_release(
 ) {
   use acc, release <- list.fold(releases, error.empty())
   use <- bool.guard(when: result.is_ok(acc), return: acc)
-  "SELECT release.version, signature.id
+  "SELECT release.version version, signature.id id
      FROM package_release release
      JOIN package_module module
        ON module.package_release_id = release.id
@@ -186,7 +190,11 @@ fn find_signature_from_release(
   |> pog.parameter(pog.text(name))
   |> pog.parameter(pog.text(module))
   |> pog.parameter(pog.int(release))
-  |> pog.returning(dynamic.tuple2(dynamic.string, dynamic.int))
+  |> pog.returning(dynamic.decode2(
+    pair.new,
+    dynamic.field("version", dynamic.string),
+    dynamic.field("id", dynamic.int),
+  ))
   |> pog.execute(ctx.db)
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {

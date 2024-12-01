@@ -1,5 +1,6 @@
 import data/implementations
-import data/search_result.{type SearchResult}
+import data/search_result
+import data/type_search.{type TypeSearch}
 import frontend/colors/palette
 import frontend/icons
 import frontend/view/body/signature
@@ -11,6 +12,7 @@ import gleam/dict
 import gleam/dynamic
 import gleam/list
 import gleam/option
+import gleam/pair
 import gleam/result
 import lustre
 import lustre/attribute as a
@@ -18,14 +20,13 @@ import lustre/effect
 import lustre/element
 import lustre/element/html as h
 import lustre/event as e
-import lustre/update
 
 pub type Model {
-  Model(item: option.Option(SearchResult), opened: Bool)
+  Model(item: option.Option(TypeSearch), opened: Bool)
 }
 
 pub type Msg {
-  Received(option.Option(SearchResult))
+  Received(option.Option(TypeSearch))
   ToggleOpen
 }
 
@@ -41,7 +42,7 @@ pub fn setup() {
   |> lustre.register("search-result")
 }
 
-pub fn view(item: SearchResult) {
+pub fn view(item: TypeSearch) {
   let attributes = [a.property("item", item)]
   element.element("search-result", attributes, [])
 }
@@ -51,7 +52,7 @@ fn update(model, msg) {
     ToggleOpen -> Model(..model, opened: !model.opened)
     Received(search_result) -> Model(item: search_result, opened: False)
   }
-  |> update.none
+  |> pair.new(effect.none())
 }
 
 fn implementation_pill(item) {
@@ -82,7 +83,7 @@ fn internal_view(model: Model) -> element.Element(Msg) {
   use <- bool.guard(when: option.is_none(model.item), return: element.none())
   let assert option.Some(item) = model.item
   let package_id = item.package_name <> "@" <> item.version
-  let id = package_id <> "-" <> item.module_name <> "-" <> item.name
+  let id = package_id <> "-" <> item.module_name <> "-" <> item.type_name
   h.div([a.class("search-result"), a.id(id)], [
     h.div([a.class("search-details")], [
       h.div([a.class("search-details-name")], [
@@ -99,7 +100,7 @@ fn internal_view(model: Model) -> element.Element(Msg) {
   ])
 }
 
-fn view_name(item: SearchResult) {
+fn view_name(item: TypeSearch) {
   let class = a.class("qualified-name")
   let href = search_result.hexdocs_link(item)
   h.a([class, a.target("_blank"), a.rel("noreferrer"), a.href(href)], [
@@ -108,11 +109,11 @@ fn view_name(item: SearchResult) {
     t.dark_white("."),
     t.keyword(item.module_name),
     t.dark_white("."),
-    t.fun(item.name),
+    t.fun(item.type_name),
   ])
 }
 
-fn view_documentation_arrow(model: Model, item: SearchResult) {
+fn view_documentation_arrow(model: Model, item: TypeSearch) {
   use <- bool.guard(when: item.documentation == "", return: element.none())
   let no_implementation = option.is_none(item.metadata.implementations)
   use <- bool.guard(when: no_implementation, return: element.none())
@@ -132,14 +133,14 @@ fn view_documentation_arrow(model: Model, item: SearchResult) {
   ])
 }
 
-fn view_implementation_pills(model: Model, item: SearchResult) {
+fn view_implementation_pills(model: Model, item: TypeSearch) {
   use <- bool.guard(when: !model.opened, return: element.none())
   item.metadata.implementations
   |> option.map(implementation_pills)
   |> option.unwrap(element.none())
 }
 
-fn view_documentation(model: Model, item: SearchResult) {
+fn view_documentation(model: Model, item: TypeSearch) {
   use <- bool.guard(when: item.documentation == "", return: element.none())
   use <- bool.guard(when: !model.opened, return: element.none())
   h.div([a.class("documentation")], [documentation.view(item.documentation)])

@@ -1,11 +1,13 @@
 import api/hex
 import backend/context.{type Context}
 import backend/error
-import backend/gleam/type_search/msg as type_search
+import backend/gleam/type_search/msg
 import backend/postgres/queries
 import backend/web
-import birl
 import cors_builder as cors
+import data/analytics
+import data/package
+import data/type_search
 import gleam/erlang/process
 import gleam/http
 import gleam/int
@@ -30,7 +32,7 @@ fn search(query: String, ctx: Context) {
 
   let exact_type_searches =
     option.then(ctx.type_search_subject, fn(subject) {
-      process.try_call(subject, type_search.Find(_, query), within: 25_000)
+      process.try_call(subject, msg.Find(_, query), within: 25_000)
       |> option.from_result
       |> option.flatten
     })
@@ -109,29 +111,14 @@ fn search(query: String, ctx: Context) {
     })
 
   json.object([
-    #(
-      "exact-type-matches",
-      json.array(exact_type_searches, queries.type_search_to_json),
-    ),
-    #("exact-matches", json.array(exact_matches, queries.type_search_to_json)),
-    #("matches", json.array(matches, queries.type_search_to_json)),
-    #("searches", json.array(signature_searches, queries.type_search_to_json)),
+    #("exact-type-matches", json.array(exact_type_searches, type_search.encode)),
+    #("exact-matches", json.array(exact_matches, type_search.encode)),
+    #("matches", json.array(matches, type_search.encode)),
+    #("searches", json.array(signature_searches, type_search.encode)),
     #("docs-searches", {
-      json.array(documentation_searches, queries.type_search_to_json)
+      json.array(documentation_searches, type_search.encode)
     }),
-    #("module-searches", {
-      json.array(module_searches, queries.type_search_to_json)
-    }),
-  ])
-}
-
-fn encode_package(package: #(String, String, Int, option.Option(Int))) {
-  let #(name, repository, rank, popularity) = package
-  json.object([
-    #("name", json.string(name)),
-    #("repository", json.string(repository)),
-    #("rank", json.int(rank)),
-    #("popularity", json.nullable(popularity, json.int)),
+    #("module-searches", { json.array(module_searches, type_search.encode) }),
   ])
 }
 
@@ -141,8 +128,8 @@ pub fn handle_get(req: Request, ctx: Context) {
     ["packages"] ->
       queries.select_package_by_updated_at(ctx.db)
       |> result.unwrap([])
-      |> json.preprocessed_array
-      |> json.to_string_builder
+      |> json.array(package.encode)
+      |> json.to_string_tree
       |> wisp.json_response(200)
     ["trendings"] ->
       wisp.get_query(req)
@@ -153,44 +140,36 @@ pub fn handle_get(req: Request, ctx: Context) {
       |> queries.select_package_by_popularity(ctx.db, _)
       |> result.map(fn(content) {
         content
-        |> json.preprocessed_array()
-        |> json.to_string_builder()
+        |> json.array(package.encode)
+        |> json.to_string_tree
         |> wisp.json_response(200)
       })
       |> result.unwrap(wisp.internal_server_error())
     ["analytics"] -> {
       {
         use timeseries <- result.try(queries.get_timeseries_count(ctx.db))
-        use total <- result.try(queries.get_total_searches(ctx.db))
+        use total_searches <- result.try(queries.get_total_searches(ctx.db))
         use signatures <- result.try(queries.get_total_signatures(ctx.db))
         use packages <- result.try(queries.get_total_packages(ctx.db))
         use #(ranked, popular) <- result.try({
           queries.select_more_popular_packages(ctx.db)
         })
-        let total = list.first(total) |> result.unwrap(0)
-        let signatures = list.first(signatures) |> result.unwrap(0)
-        let packages = list.first(packages) |> result.unwrap(0)
-        Ok(#(timeseries, total, signatures, packages, ranked, popular))
+        let total_searches = list.first(total_searches) |> result.unwrap(0)
+        let total_signatures = list.first(signatures) |> result.unwrap(0)
+        let total_indexed = list.first(packages) |> result.unwrap(0)
+        Ok(analytics.Analytics(
+          timeseries:,
+          total_searches:,
+          total_signatures:,
+          total_indexed:,
+          ranked:,
+          popular:,
+        ))
       }
       |> result.map(fn(content) {
-        let #(timeseries, total, signatures, packages, ranked, popular) =
-          content
-        json.object([
-          #("total", json.int(total)),
-          #("signatures", json.int(signatures)),
-          #("packages", json.int(packages)),
-          #("ranked", json.array(ranked, encode_package)),
-          #("popular", json.array(popular, encode_package)),
-          #("timeseries", {
-            json.array(timeseries, fn(row) {
-              json.object([
-                #("count", json.int(row.0)),
-                #("date", json.string(birl.to_iso8601(row.1))),
-              ])
-            })
-          }),
-        ])
-        |> json.to_string_builder
+        content
+        |> analytics.encode
+        |> json.to_string_tree
         |> wisp.json_response(200)
       })
       |> result.map_error(error.debug_log)
@@ -202,7 +181,7 @@ pub fn handle_get(req: Request, ctx: Context) {
       |> result.replace_error(error.EmptyError)
       |> result.map(fn(item) { search(item.1, ctx) })
       |> result.unwrap(json.object([#("error", json.string("internal"))]))
-      |> json.to_string_builder()
+      |> json.to_string_tree
       |> wisp.json_response(200)
     }
     _ -> wisp.not_found()

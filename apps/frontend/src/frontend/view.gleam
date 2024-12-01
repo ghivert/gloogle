@@ -1,3 +1,4 @@
+import bright
 import data/model.{type Model}
 import frontend/colors/palette
 import frontend/router
@@ -29,12 +30,13 @@ fn layout(attributes, children) {
 
 pub fn view(model: Model) {
   use <- magic.render([magic.node()])
+  use data, _computed <- bright.view(model)
   layout([], [
-    navbar.navbar(model),
-    body.body(model),
-    case model.route {
+    navbar.navbar(data),
+    body.body(data),
+    case data.route {
       router.Home -> footer.view()
-      router.Search(_) -> footer.search_bar(model)
+      router.Search(_) -> footer.search_bar(data)
       _ -> el.none()
     },
   ])

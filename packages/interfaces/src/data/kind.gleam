@@ -1,4 +1,5 @@
 import gleam/dynamic
+import gleam/json
 import gleam/result
 
 pub type Kind {
@@ -8,7 +9,7 @@ pub type Kind {
   Constant
 }
 
-pub fn decode_kind(dyn) {
+pub fn decode(dyn) {
   use str <- result.try(dynamic.string(dyn))
   case str {
     "function" -> Ok(Function)
@@ -19,7 +20,17 @@ pub fn decode_kind(dyn) {
   }
 }
 
-pub fn display_kind(kind) {
+pub fn encode(kind) {
+  case kind {
+    Function -> "function"
+    TypeDefinition -> "type_definition"
+    TypeAlias -> "type_alias"
+    Constant -> "constant"
+  }
+  |> json.string
+}
+
+pub fn display(kind) {
   case kind {
     Function -> "Function"
     TypeDefinition -> "Type"

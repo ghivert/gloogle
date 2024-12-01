@@ -3,6 +3,7 @@ import gleam/decoder_extra
 import gleam/dynamic
 import gleam/json
 import gleam/option.{type Option}
+import gleam/pair
 
 pub type Metadata {
   Metadata(
@@ -28,33 +29,25 @@ pub fn decode(dyn) {
 }
 
 pub fn encode(metadata: Metadata) {
+  let Metadata(deprecation:, implementations:) = metadata
   []
-  |> fn(elems) {
-    case metadata.deprecation {
-      option.None -> elems
-      option.Some(deprecation) -> [#("deprecation", json.string(deprecation))]
-    }
-  }
-  |> fn(elems) {
-    case metadata.implementations {
-      option.None -> elems
-      option.Some(implementations) -> [
-        #(
-          "implementations",
-          json.object([
-            #("gleam", json.bool(implementations.gleam)),
-            #(
-              "uses_erlang_externals",
-              json.bool(implementations.uses_erlang_externals),
-            ),
-            #(
-              "uses_javascript_externals",
-              json.bool(implementations.uses_javascript_externals),
-            ),
-          ]),
-        ),
-      ]
-    }
-  }
+  |> append_optional(deprecation, fn(d) { #("deprecation", json.string(d)) })
+  |> append_optional(implementations, encode_implementations)
   |> json.object
+}
+
+fn encode_implementations(i: Implementations) {
+  json.object([
+    #("gleam", json.bool(i.gleam)),
+    #("uses_erlang_externals", json.bool(i.uses_erlang_externals)),
+    #("uses_javascript_externals", json.bool(i.uses_javascript_externals)),
+  ])
+  |> pair.new("implementations", _)
+}
+
+fn append_optional(elems, data, mapper) {
+  case data {
+    option.None -> elems
+    option.Some(data) -> [mapper(data), ..elems]
+  }
 }

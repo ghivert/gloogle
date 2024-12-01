@@ -18,18 +18,15 @@ pub type State {
 
 pub fn init(db: pog.Connection) {
   let init = fn() {
-    let search =
-      compute_rows(0, db, #(0, type_search.empty()), {
-        fn(search: #(Int, TypeSearch), row: #(String, Int)) {
-          let #(signature, id) = row
-          signature
-          |> parse.parse_function
-          |> result.map(fn(kind) {
-            #(search.0 + 1, type_search.add(search.1, kind, id))
-          })
-          |> result.unwrap(search)
-        }
-      })
+    let search = {
+      use search, row <- compute_rows(0, db, #(0, type_search.empty()))
+      let idx = search.0 + 1
+      let #(signature, id) = row
+      signature
+      |> parse.parse_function
+      |> result.map(fn(kind) { #(idx, type_search.add(search.1, kind, id)) })
+      |> result.unwrap(search)
+    }
     process.new_selector()
     |> process.selecting(process.new_subject(), function.identity)
     |> actor.Ready(State(db, search.1), _)
@@ -57,7 +54,6 @@ fn loop(msg: msg.Msg, state: State) -> actor.Next(msg.Msg, State) {
       |> actor.continue
     }
   }
-  actor.continue(state)
 }
 
 fn is_permutable(list: List(a), len: Int) {

@@ -37,18 +37,19 @@ pub type Analytics {
 }
 
 pub type Msg {
-  None
-  Packages(packages: Result(List(package.Package), http.HttpError))
-  OnSearchFocus(event: Dynamic)
-  SubmitSearch
-  UpdateIsMobile(is_mobile: Bool)
-  SearchResults(input: String, result: Result(SearchResults, http.HttpError))
-  Trendings(result: Result(List(package.Package), http.HttpError))
-  UpdateInput(String)
-  Reset
-  ScrollTo(String)
-  OnEscape
-  OnAnalytics(Result(Analytics, http.HttpError))
-  OnRouteChange(router.Route)
-  OnCheckFilter(Filter, Bool)
+  ApiReturnedAnalytics(Result(Analytics, http.HttpError))
+  ApiReturnedPackages(packages: Result(List(package.Package), http.HttpError))
+  ApiReturnedSearchResults(
+    input: String,
+    result: Result(SearchResults, http.HttpError),
+  )
+  ApiReturnedTrendings(result: Result(List(package.Package), http.HttpError))
+  BrowserChangedRoute(router.Route)
+  BrowserResizedViewport(is_mobile: Bool)
+  UserClickedSidebarName(String)
+  UserFocusedSearch(event: Dynamic)
+  UserInputtedSearch(String)
+  UserPressedEscape
+  UserSubmittedSearch
+  UserToggledFilter(Filter, Bool)
 }

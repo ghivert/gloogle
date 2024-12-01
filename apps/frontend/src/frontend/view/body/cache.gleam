@@ -32,11 +32,13 @@ fn sidebar(
         ..list.map(modules, fn(module) {
           let #(module, name) = module
           let id = package.0 <> "@" <> package.1 <> "-" <> module <> "-" <> name
-          h.div([a.class("sidebar-module-name"), e.on_click(msg.ScrollTo(id))], [
-            t.keyword(module),
-            h.text("."),
-            t.fun(name),
-          ])
+          h.div(
+            [
+              a.class("sidebar-module-name"),
+              e.on_click(msg.UserClickedSidebarName(id)),
+            ],
+            [t.keyword(module), h.text("."), t.fun(name)],
+          )
         })
       ])
     }

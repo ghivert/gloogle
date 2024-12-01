@@ -46,15 +46,15 @@ fn subscribe_focus() {
   use dispatch <- effect.from()
   use event <- ffi.subscribe_focus()
   case ffi.key(event) {
-    Ok("Escape") -> dispatch(msg.OnEscape)
-    _ -> dispatch(msg.OnSearchFocus(event))
+    Ok("Escape") -> dispatch(msg.UserPressedEscape)
+    _ -> dispatch(msg.UserFocusedSearch(event))
   }
 }
 
 fn subscribe_is_mobile() {
   use dispatch <- effect.from()
   use is_mobile <- ffi.suscribe_is_mobile()
-  dispatch(msg.UpdateIsMobile(is_mobile))
+  dispatch(msg.BrowserResizedViewport(is_mobile))
 }
 
 pub fn main() {
@@ -94,15 +94,15 @@ fn init(_) {
   |> update.add_effect(subscribe_focus())
   |> update.add_effect(subscribe_is_mobile())
   |> update.add_effect(
-    http.expect_json(dynamic.list(package.decoder), msg.Trendings)
+    http.expect_json(dynamic.list(package.decoder), msg.ApiReturnedTrendings)
     |> http.get(config.api_endpoint() <> "/trendings", _),
   )
   |> update.add_effect(
-    http.expect_json(dynamic.list(package.decoder), msg.Packages)
+    http.expect_json(dynamic.list(package.decoder), msg.ApiReturnedPackages)
     |> http.get(config.api_endpoint() <> "/packages", _),
   )
   |> update.add_effect(
-    msg.OnAnalytics
+    msg.ApiReturnedAnalytics
     |> http.expect_json(
       dynamic.decode6(
         msg.Analytics,
@@ -133,32 +133,12 @@ fn init(_) {
 
 fn on_url_change(uri: Uri) -> Msg {
   router.parse_uri(uri)
-  |> msg.OnRouteChange()
+  |> msg.BrowserChangedRoute
 }
 
 fn update(model: Model, msg: Msg) {
   case msg {
-    msg.UpdateInput(content) -> update_input(model, content)
-    msg.SubmitSearch -> submit_search(model)
-    msg.Reset -> reset(model)
-    msg.None -> update.none(model)
-    msg.Packages(Ok(packages)) -> model.Model(..model, packages:) |> update.none
-    msg.Packages(_) -> update.none(model)
-    msg.ScrollTo(id) -> scroll_to(model, id)
-    msg.OnRouteChange(route) -> handle_route_change(model, route)
-    msg.Trendings(trendings) -> handle_trendings(model, trendings)
-    msg.OnSearchFocus(event) ->
-      update.effect(model, focus(on: "search-input", event: event))
-    msg.OnEscape -> update.effect(model, blur())
-    msg.UpdateIsMobile(is_mobile) ->
-      model
-      |> model.update_is_mobile(is_mobile)
-      |> update.none
-    msg.SearchResults(input, search_results) ->
-      handle_search_results(model, input, search_results)
-    msg.OnCheckFilter(filter, value) ->
-      handle_oncheck_filter(model, filter, value)
-    msg.OnAnalytics(analytics) -> {
+    msg.ApiReturnedAnalytics(analytics) -> {
       case analytics {
         Error(_) -> #(model, effect.none())
         Ok(analytics) ->
@@ -167,6 +147,23 @@ fn update(model: Model, msg: Msg) {
           |> update.none()
       }
     }
+    msg.ApiReturnedPackages(Ok(packages)) ->
+      model.Model(..model, packages:) |> update.none
+    msg.ApiReturnedPackages(_) -> update.none(model)
+    msg.ApiReturnedSearchResults(input, search_results) ->
+      handle_search_results(model, input, search_results)
+    msg.ApiReturnedTrendings(trendings) -> handle_trendings(model, trendings)
+    msg.BrowserChangedRoute(route) -> handle_route_change(model, route)
+    msg.BrowserResizedViewport(is_mobile) ->
+      model |> model.update_is_mobile(is_mobile) |> update.none
+    msg.UserClickedSidebarName(id) -> scroll_to(model, id)
+    msg.UserFocusedSearch(event) ->
+      update.effect(model, focus(on: "search-input", event: event))
+    msg.UserInputtedSearch(content) -> update_input(model, content)
+    msg.UserPressedEscape -> update.effect(model, blur())
+    msg.UserSubmittedSearch -> submit_search(model)
+    msg.UserToggledFilter(filter, value) ->
+      handle_oncheck_filter(model, filter, value)
   }
 }
 
@@ -191,12 +188,6 @@ fn update_input(model: Model, content: String) {
   |> update.none
 }
 
-fn reset(model: Model) {
-  model
-  |> model.reset
-  |> update.none
-}
-
 fn submit_search(model: Model) {
   use <- bool.guard(when: model.input == "", return: #(model, effect.none()))
   use <- bool.guard(when: model.loading, return: #(model, effect.none()))
@@ -214,7 +205,7 @@ fn submit_search(model: Model) {
       |> update.add_effect(blur())
     }
     Error(_) ->
-      msg.SearchResults(input: model.input, result: _)
+      msg.ApiReturnedSearchResults(input: model.input, result: _)
       |> http.expect_json(search_result.decode_search_results, _)
       |> http.get(config.api_endpoint() <> "/search?q=" <> model.input, _)
       |> update.effect(model.toggle_loading(new_model), _)

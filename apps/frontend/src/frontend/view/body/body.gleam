@@ -28,7 +28,7 @@ fn view_search_input(model: Model) {
     |> string.length()
     |> fn(input) { input != 0 }
   }
-  h.form([a.class("search-wrapper"), e.on_submit(msg.SubmitSearch)], [
+  h.form([a.class("search-wrapper"), e.on_submit(msg.UserSubmittedSearch)], [
     h.div([a.class("search-title-wrapper")], [
       h.div([a.class("search-title")], [
         h.img([
@@ -152,7 +152,7 @@ fn sidebar(model: Model) {
       ]),
       h.form([a.class("sidebar-title-inside")], [h.text("Gloogle")]),
     ]),
-    h.form([e.on_submit(msg.SubmitSearch)], [
+    h.form([e.on_submit(msg.UserSubmittedSearch)], [
       search_input.view(model.loading, model.input, small: True),
     ]),
     h.div([a.class("sidebar-filter"), disabled], [el.text("Filters")]),
@@ -208,7 +208,7 @@ fn checkbox(active: Bool, msg: msg.Filter, name: String) {
         a.class("sidebar-checkbox-2"),
         a.type_("checkbox"),
         a.checked(active),
-        e.on_check(msg.OnCheckFilter(msg, _)),
+        e.on_check(msg.UserToggledFilter(msg, _)),
       ]),
     ]),
     h.div([a.class("sidebar-filter-name")], [el.text(name)]),

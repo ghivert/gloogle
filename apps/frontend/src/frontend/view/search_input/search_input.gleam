@@ -11,7 +11,7 @@ pub fn view(loading loading: Bool, input input: String, small small: Bool) {
         s.search_input_content([
           a.id("search-input"),
           a.placeholder("Search for a function, or a type"),
-          e.on_input(msg.UpdateInput),
+          e.on_input(msg.UserInputtedSearch),
           a.value(input),
           a.attribute("autocorrect", "off"),
           a.attribute("autocapitalize", "none"),

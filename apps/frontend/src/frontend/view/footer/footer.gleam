@@ -42,7 +42,7 @@ pub fn view() {
 pub fn search_bar(model: Model) {
   use <- bool.guard(when: !model.is_mobile, return: el.none())
   h.div([a.class("footer-search")], [
-    h.form([e.on_submit(msg.SubmitSearch)], [
+    h.form([e.on_submit(msg.UserSubmittedSearch)], [
       search_input.view(model.loading, model.input, small: True),
     ]),
   ])

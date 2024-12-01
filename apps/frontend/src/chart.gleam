@@ -7,19 +7,13 @@ pub type Dataset {
 
 pub fn line_chart(datasets: Dataset) {
   let datasets = attribute.property("datasets", datasets)
-  element.element(
-    "line-chart",
-    [attribute.style([#("display", "block")]), datasets],
-    [],
-  )
+  let attributes = [attribute.style([#("display", "block")]), datasets]
+  element.element("line-chart", attributes, [])
 }
 
 pub fn bar_chart(color: String, datasets: Dataset) {
   let datasets = attribute.property("datasets", datasets)
   let color = attribute.property("color", color)
-  element.element(
-    "bar-chart",
-    [attribute.style([#("display", "block")]), datasets, color],
-    [],
-  )
+  let attributes = [attribute.style([#("display", "block")]), datasets, color]
+  element.element("bar-chart", attributes, [])
 }

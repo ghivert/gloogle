@@ -8,27 +8,25 @@ import gleam/function
 import gleam/list
 import gleam/option
 import gleam/otp/actor
-import gleam/pgo
+import gleam/pair
 import gleam/result
+import pog
 
 pub type State {
-  State(db: pgo.Connection, search: TypeSearch)
+  State(db: pog.Connection, search: TypeSearch)
 }
 
-pub fn init(db: pgo.Connection) {
+pub fn init(db: pog.Connection) {
   let init = fn() {
-    let search =
-      compute_rows(0, db, #(0, type_search.empty()), {
-        fn(search: #(Int, TypeSearch), row: #(String, Int)) {
-          let #(signature, id) = row
-          signature
-          |> parse.parse_function
-          |> result.map(fn(kind) {
-            #(search.0 + 1, type_search.add(search.1, kind, id))
-          })
-          |> result.unwrap(search)
-        }
-      })
+    let search = {
+      use search, row <- compute_rows(0, db, #(0, type_search.empty()))
+      let idx = search.0 + 1
+      let #(signature, id) = row
+      signature
+      |> parse.parse_function
+      |> result.map(fn(kind) { #(idx, type_search.add(search.1, kind, id)) })
+      |> result.unwrap(search)
+    }
     process.new_selector()
     |> process.selecting(process.new_subject(), function.identity)
     |> actor.Ready(State(db, search.1), _)
@@ -41,7 +39,7 @@ fn loop(msg: msg.Msg, state: State) -> actor.Next(msg.Msg, State) {
     msg.Find(subject, signature) -> {
       signature
       |> parse.parse_function
-      |> result.nil_error
+      |> result.replace_error(Nil)
       |> result.then(permutation_search(state, _))
       |> option.from_result
       |> function.tap(fn(res) { process.send(subject, res) })
@@ -56,7 +54,6 @@ fn loop(msg: msg.Msg, state: State) -> actor.Next(msg.Msg, State) {
       |> actor.continue
     }
   }
-  actor.continue(state)
 }
 
 fn is_permutable(list: List(a), len: Int) {
@@ -88,11 +85,10 @@ fn permutation_search(state: State, kind: parse.Kind) {
 
 fn compute_rows(
   offset: Int,
-  db: pgo.Connection,
+  db: pog.Connection,
   default: a,
   next: fn(a, #(String, Int)) -> a,
 ) {
-  let decoder = dynamic.tuple2(dynamic.string, dynamic.int)
   let rows =
     "SELECT signature_, id
      FROM package_type_fun_signature
@@ -100,7 +96,14 @@ fn compute_rows(
      ORDER BY id ASC
      LIMIT 1000
      OFFSET $1"
-    |> pgo.execute(db, [pgo.int(offset)], decoder)
+    |> pog.query
+    |> pog.parameter(pog.int(offset))
+    |> pog.returning(dynamic.decode2(
+      pair.new,
+      dynamic.field("signature_", dynamic.string),
+      dynamic.field("id", dynamic.int),
+    ))
+    |> pog.execute(db)
     |> result.map(fn(r) { r.rows })
     |> result.unwrap([])
   use <- bool.guard(when: list.is_empty(rows), return: default)

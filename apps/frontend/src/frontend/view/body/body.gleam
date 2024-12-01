@@ -1,6 +1,6 @@
 import birl
 import chart.{Dataset}
-import data/model.{type Model}
+import data/model.{type Data}
 import data/msg
 import data/search_result
 import frontend/icons
@@ -22,13 +22,13 @@ import lustre/element/html as h
 import lustre/event as e
 import lustre/lazy
 
-fn view_search_input(model: Model) {
+fn view_search_input(model: Data) {
   let has_content = {
     model.input
     |> string.length()
     |> fn(input) { input != 0 }
   }
-  h.form([a.class("search-wrapper"), e.on_submit(msg.SubmitSearch)], [
+  h.form([a.class("search-wrapper"), e.on_submit(msg.UserSubmittedSearch)], [
     h.div([a.class("search-title-wrapper")], [
       h.div([a.class("search-title")], [
         h.img([
@@ -67,7 +67,7 @@ fn empty_state(
   ])
 }
 
-pub fn view_trending(model: Model) {
+pub fn view_trending(_model: Data) {
   el.none()
   // case model.trendings {
   //   None ->
@@ -137,7 +137,7 @@ pub fn view_trending(model: Model) {
   // }
 }
 
-fn sidebar(model: Model) {
+fn sidebar(model: Data) {
   use <- bool.guard(when: model.is_mobile, return: el.none())
   let disabled = case model.route {
     router.Search(..) -> a.style([#("opacity", "1")])
@@ -152,7 +152,7 @@ fn sidebar(model: Model) {
       ]),
       h.form([a.class("sidebar-title-inside")], [h.text("Gloogle")]),
     ]),
-    h.form([e.on_submit(msg.SubmitSearch)], [
+    h.form([e.on_submit(msg.UserSubmittedSearch)], [
       search_input.view(model.loading, model.input, small: True),
     ]),
     h.div([a.class("sidebar-filter"), disabled], [el.text("Filters")]),
@@ -208,7 +208,7 @@ fn checkbox(active: Bool, msg: msg.Filter, name: String) {
         a.class("sidebar-checkbox-2"),
         a.type_("checkbox"),
         a.checked(active),
-        e.on_check(msg.OnCheckFilter(msg, _)),
+        e.on_check(msg.UserToggledFilter(msg, _)),
       ]),
     ]),
     h.div([a.class("sidebar-filter-name")], [el.text(name)]),
@@ -251,7 +251,7 @@ fn analytics_box(title: String, count: Int) {
   ])
 }
 
-fn popularity_chart(model: Model) {
+fn popularity_chart(model: Data) {
   let data =
     list.filter(model.popular, fn(p) {
       p.repository != "https://github.com/gleam-lang/gleam"
@@ -270,7 +270,7 @@ fn popularity_chart(model: Model) {
   })
 }
 
-fn ranked_chart(model: Model) {
+fn ranked_chart(model: Data) {
   let data =
     list.filter(model.ranked, fn(p) {
       p.name != "gleam_stdlib" && p.name != "gleeunit"
@@ -284,7 +284,7 @@ fn ranked_chart(model: Model) {
   })
 }
 
-fn analytics_chart(model: Model) {
+fn analytics_chart(model: Data) {
   let data = model.timeseries
   use <- bool.guard(when: list.is_empty(data), return: el.none())
   chart.line_chart({
@@ -322,7 +322,7 @@ fn analytics_title(title: String, border: Bool) {
   ])
 }
 
-fn view_analytics(model: Model) {
+fn view_analytics(model: Data) {
   el.fragment([
     sidebar(model),
     h.main([a.class("main"), a.style([#("padding", "24px 36px")])], [
@@ -374,7 +374,7 @@ fn view_analytics(model: Model) {
   ])
 }
 
-fn view_packages(model: Model) {
+fn view_packages(model: Data) {
   el.fragment([
     sidebar(model),
     h.main(
@@ -429,7 +429,7 @@ fn view_packages(model: Model) {
   ])
 }
 
-pub fn body(model: Model) {
+pub fn body(model: Data) {
   case model.route {
     router.Home -> h.main([a.class("main")], [view_search_input(model)])
     router.Packages -> view_packages(model)

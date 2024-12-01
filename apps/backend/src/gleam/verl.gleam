@@ -1,4 +1,4 @@
-@external(erlang, "gloogle_hex_ffi", "is_match")
+@external(erlang, "backend_ffi", "is_match")
 pub fn is_match(
   version version: BitArray,
   requirement requirement: BitArray,

@@ -1,4 +1,4 @@
-import backend/config.{type Context}
+import backend/context.{type Context}
 import backend/error.{type Error}
 import backend/postgres/queries
 import gleam/dict.{type Dict}
@@ -52,7 +52,7 @@ fn get_dependencies(toml: Dict(String, tom.Toml)) {
 
 fn add_dependencies(in usages: Usages, from toml: Dict(String, tom.Toml)) {
   use usages, dep <- list.fold(from: usages, over: get_dependencies(toml))
-  dict.update(usages, dep, fn(value) { option.unwrap(value, 0) + 1 })
+  dict.upsert(usages, dep, fn(value) { option.unwrap(value, 0) + 1 })
 }
 
 fn save_packages_rank(ctx: Context, usages: Usages) {

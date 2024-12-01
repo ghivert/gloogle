@@ -114,7 +114,6 @@ lazy-node:has(:not(:defined)) {
 .qualified-name {
   overflow: hidden;
   text-overflow: ellipsis;
-  direction: rtl;
   text-decoration: none;
 }
 
@@ -335,7 +334,6 @@ lazy-node:has(:not(:defined)) {
 .sidebar-module-name {
   text-overflow: ellipsis;
   overflow: hidden;
-  direction: rtl;
   text-align: left;
   cursor: pointer;
   appearance: none;

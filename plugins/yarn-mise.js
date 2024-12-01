@@ -48,7 +48,7 @@ function addVenvInPath(path, tomlDir, venvPath, scriptEnv) {
 }
 
 module.exports = {
-  name: `plugin-hello-world`,
+  name: `yarn-mise`,
   factory: require => {
     const path = require('path')
     const fs = require('fs')

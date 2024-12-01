@@ -1,58 +1,22 @@
-import data/kind.{type Kind}
-import data/metadata.{type Metadata}
-import data/signature.{type Signature}
+import data/type_search.{type TypeSearch}
 import frontend/view/helpers
 import gleam/dynamic
-import gleam/list
-import gleam/option.{None, Some}
-import gleam/result
-
-pub type SearchResult {
-  SearchResult(
-    documentation: String,
-    module_name: String,
-    name: String,
-    kind: Kind,
-    package_name: String,
-    json_signature: Signature,
-    metadata: Metadata,
-    version: String,
-  )
-}
 
 pub type SearchResults {
   Start
   InternalServerError
   SearchResults(
-    exact_type_matches: List(SearchResult),
-    exact_name_matches: List(SearchResult),
-    name_signature_matches: List(SearchResult),
-    vector_signature_searches: List(SearchResult),
-    docs_searches: List(SearchResult),
-    module_searches: List(SearchResult),
+    exact_type_matches: List(TypeSearch),
+    exact_name_matches: List(TypeSearch),
+    name_signature_matches: List(TypeSearch),
+    vector_signature_searches: List(TypeSearch),
+    docs_searches: List(TypeSearch),
+    module_searches: List(TypeSearch),
   )
 }
 
-pub fn decode_search_result(dyn) {
-  dynamic.decode8(
-    SearchResult,
-    dynamic.field("documentation", dynamic.string),
-    dynamic.field("module_name", dynamic.string),
-    dynamic.field("name", dynamic.string),
-    dynamic.field("kind", kind.decode_kind),
-    dynamic.field("package_name", dynamic.string),
-    dynamic.field("json_signature", signature.decode_signature),
-    dynamic.field("metadata", metadata.decode_metadata),
-    dynamic.field("version", dynamic.string),
-  )(dyn)
-  |> result.map(Some)
-  |> result.try_recover(fn(_) { Ok(None) })
-}
-
 pub fn decode_search_results_list(dyn) {
-  use data <- result.map(dynamic.list(decode_search_result)(dyn))
-  use item <- list.filter_map(data)
-  option.to_result(item, "")
+  dynamic.list(type_search.decode)(dyn)
 }
 
 pub fn decode_search_results(dyn) {
@@ -72,11 +36,11 @@ pub fn decode_search_results(dyn) {
   ])(dyn)
 }
 
-pub fn hexdocs_link(search_result: SearchResult) {
+pub fn hexdocs_link(search_result: TypeSearch) {
   helpers.hexdocs_link(
     package: search_result.package_name,
     version: search_result.version,
     module: search_result.module_name,
-    name: search_result.name,
+    name: search_result.type_name,
   )
 }

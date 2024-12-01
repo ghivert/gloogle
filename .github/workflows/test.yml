@@ -16,8 +16,8 @@ jobs:
       - name: Setup BEAM
         uses: erlef/setup-beam@v1
         with:
-          otp-version: '26.0.2'
-          gleam-version: '1.4.1'
+          otp-version: '27.0.0'
+          gleam-version: '1.6.2'
           rebar3-version: '3'
           # elixir-version: "1.15.4"
       - name: Download gleam dependencies
@@ -50,8 +50,8 @@ jobs:
       - name: Setup BEAM
         uses: erlef/setup-beam@v1
         with:
-          otp-version: '26.0.2'
-          gleam-version: '1.4.1'
+          otp-version: '27.0.0'
+          gleam-version: '1.6.2'
           rebar3-version: '3'
       - name: Download gleam dependencies
         run: gleam deps download

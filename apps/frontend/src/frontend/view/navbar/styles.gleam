@@ -1,42 +1,44 @@
-import frontend/colors/palette
 import frontend/view/body/styles as body_styles
-import gleam/bool
 import sketch as s
-import sketch/lustre/element as l
+import sketch/magic/element/html as h
 import sketch/media
 import sketch/size.{px, vw}
 
 pub const search_lucy = body_styles.search_lucy
 
 pub fn search_input_wrapper(attributes, children) {
-  l.memo("form", attributes, children, [s.width_("100%")])
+  s.class([s.width_("100%")])
+  |> h.form(attributes, children)
 }
 
 pub fn navbar_search_title(attributes, children) {
-  l.memo("a", attributes, children, [
-    s.font_size(size.rem_(1.2)),
+  s.class([
+    s.font_size(size.rem(1.2)),
     s.compose(body_styles.search_title_()),
     s.text_decoration("none"),
     s.cursor("pointer"),
   ])
+  |> h.a(attributes, children)
 }
 
 pub fn nav_links(attributes, children) {
-  l.memo("div", attributes, children, [
+  s.class([
     s.display("flex"),
     s.align_items("baseline"),
     s.gap(px(48)),
     s.padding(px(48)),
     s.media(media.max_width(px(700)), [s.padding(px(12)), s.gap(px(24))]),
   ])
+  |> h.div(attributes, children)
 }
 
 pub fn coming_soon(attributes, children) {
-  l.memo("span", attributes, children, [s.font_size(size.rem_(0.7))])
+  s.class([s.font_size(size.rem(0.7))])
+  |> h.span(attributes, children)
 }
 
 pub fn trending(attributes, children) {
-  l.memo("div", attributes, children, [
+  s.class([
     s.display("flex"),
     s.flex_direction("column"),
     s.gap(px(3)),
@@ -45,18 +47,16 @@ pub fn trending(attributes, children) {
     s.white_space("nowrap"),
     s.opacity(0.3),
   ])
+  |> h.div(attributes, children)
 }
 
 pub fn nav_link(attributes, children) {
-  l.memo("a", attributes, children, [
-    s.color("var(--text-color)"),
-    s.text_decoration("none"),
-  ])
+  s.class([s.color("var(--text-color)"), s.text_decoration("none")])
+  |> h.a(attributes, children)
 }
 
 pub fn navbar(transparent: Bool, attributes, children) {
-  let id = "navbar-transparent-" <> bool.to_string(transparent)
-  l.dynamic("nav", attributes, children, id, [
+  s.class([
     s.position("sticky"),
     s.top(px(0)),
     s.justify_content("end"),
@@ -88,18 +88,20 @@ pub fn navbar(transparent: Bool, attributes, children) {
       s.padding_("18px 24px"),
     ]),
   ])
+  |> h.nav(attributes, children)
 }
 
 pub fn navbar_search(attributes, children) {
-  l.memo("div", attributes, children, [
+  s.class([
     s.display("flex"),
     s.gap(px(48)),
     s.align_items("center"),
     s.flex("1"),
     s.media(media.max_width(px(700)), [s.gap(px(24))]),
   ])
+  |> h.div(attributes, children)
 }
 
 pub fn title(a, c) {
-  l.memo("div", a, c, [])
+  h.div_(a, c)
 }

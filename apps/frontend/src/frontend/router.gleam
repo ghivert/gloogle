@@ -1,9 +1,9 @@
-import frontend/ffi
+import frontend/effects/document
 import gleam/list
 import gleam/option
 import gleam/result
 import gleam/uri.{type Uri}
-import lustre/effect
+import modem
 
 pub type Route {
   Home
@@ -37,12 +37,32 @@ fn handle_search_path(uri: Uri) {
 }
 
 pub fn update_page_title(route: Route) {
-  use _ <- effect.from()
   case route {
-    Home -> ffi.update_title("Gloogle")
-    Packages -> ffi.update_title("Gloogle — Packages")
-    Search(q) -> ffi.update_title("Gloogle — Search " <> q)
-    Trending -> ffi.update_title("Gloogle — Trending")
-    Analytics -> ffi.update_title("Gloogle — Analytics")
+    Home -> document.update_title("Gloogle")
+    Packages -> document.update_title("Gloogle — Packages")
+    Search(q) -> document.update_title("Gloogle — Search " <> q)
+    Trending -> document.update_title("Gloogle — Trending")
+    Analytics -> document.update_title("Gloogle — Analytics")
   }
+}
+
+pub fn to_uri(route: Route) -> Uri {
+  let assert Ok(uri) = case route {
+    Home -> uri.parse("/")
+    Search(query:) -> uri.parse("/search?" <> query)
+    Packages -> uri.parse("/packages")
+    Trending -> uri.parse("/trending")
+    Analytics -> uri.parse("/analytics")
+  }
+  uri
+}
+
+pub fn push(route: Route) {
+  let uri = to_uri(route)
+  modem.push(uri.path, uri.query, uri.fragment)
+}
+
+pub fn replace(route: Route) {
+  let uri = to_uri(route)
+  modem.replace(uri.path, uri.query, uri.fragment)
 }

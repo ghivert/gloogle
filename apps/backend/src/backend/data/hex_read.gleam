@@ -9,7 +9,7 @@ pub type HexRead {
 pub fn decode(data) {
   dynamic.decode2(
     HexRead,
-    dynamic.element(0, dynamic.int),
-    dynamic.element(1, helpers.decode_time),
+    dynamic.field("id", dynamic.int),
+    dynamic.field("last_check", helpers.decode_time),
   )(data)
 }

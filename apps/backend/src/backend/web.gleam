@@ -1,4 +1,4 @@
-import backend/config
+import backend/context
 import cors_builder as cors_
 import gleam/http
 import wisp.{type Request, type Response}
@@ -14,14 +14,7 @@ pub fn foundations(req: Request, handler: Handler) -> Response {
 }
 
 pub fn cors() {
-  let origin = case config.is_dev() {
-    True -> cors_.allow_origin(_, "http://localhost:5173")
-    False -> fn(cors) {
-      cors
-      |> cors_.allow_origin("https://gloogle.run")
-      |> cors_.allow_origin("https://www.gloogle.run")
-    }
-  }
+  let origin = select_origin()
   cors_.new()
   |> origin()
   |> cors_.allow_method(http.Get)
@@ -31,4 +24,17 @@ pub fn cors() {
   |> cors_.allow_header("baggage")
   |> cors_.allow_header("sentry-trace")
   |> cors_.max_age(86_400)
+}
+
+fn select_origin() {
+  case context.read_environment() {
+    context.Development -> cors_.allow_origin(_, "http://localhost:5173")
+    context.Production -> allow_production
+  }
+}
+
+fn allow_production(cors: cors_.Cors) -> cors_.Cors {
+  cors
+  |> cors_.allow_origin("https://gloogle.run")
+  |> cors_.allow_origin("https://www.gloogle.run")
 }

@@ -1,4 +1,6 @@
-function findChild(shadowRoot, id) {
+import * as gleam from './gleam.mjs'
+
+function findSearchResultChild(shadowRoot, id) {
   for (const node of shadowRoot.querySelectorAll('search-result')) {
     const elem = node.shadowRoot.getElementById(id)
     if (elem) return elem
@@ -6,29 +8,25 @@ function findChild(shadowRoot, id) {
 }
 
 export function scrollTo(id) {
-  return function (_) {
-    const cache = document.getElementsByTagName('lazy-node')
-    if (!cache?.[0]) return
-    const elem = findChild(cache[0].shadowRoot, id)
-    if (!elem) return
-    const elemRect = elem.getBoundingClientRect()
-    const navbarRect = document
-      .getElementsByClassName('navbar')?.[0]
-      ?.getBoundingClientRect()
-    const bodyRect = document.body.getBoundingClientRect()
-    const offset = elemRect.top - bodyRect.top - (navbarRect?.height ?? 0) - 12
-    window.scrollTo({ top: offset, behavior: 'smooth' })
-  }
+  const cache = document.getElementsByTagName('lazy-node')
+  if (!cache?.[0]) return
+  const elem = findSearchResultChild(cache[0].shadowRoot, id)
+  if (!elem) return
+  const elemRect = elem.getBoundingClientRect()
+  const navbarRect = document
+    .getElementsByClassName('navbar')?.[0]
+    ?.getBoundingClientRect()
+  const bodyRect = document.body.getBoundingClientRect()
+  const top = elemRect.top - bodyRect.top - (navbarRect?.height ?? 0) - 12
+  window.scrollTo({ top, behavior: 'smooth' })
 }
 
 export function captureMessage(content) {
-  if (is_dev()) return content
-  if (
-    typeof Sentry !== 'undefined' &&
-    Sentry?.captureMessage &&
-    typeof Sentry.captureMessage === 'function'
-  )
-    Sentry.captureMessage(content)
+  const isDev = !!import.meta.env.DEV
+  if (isDev) return content
+  const isSentryDefined = typeof Sentry !== 'undefined'
+  const canCaptureMessage = Sentry?.captureMessage === 'function'
+  if (isSentryDefined && canCaptureMessage) Sentry.captureMessage(content)
   return content
 }
 
@@ -66,7 +64,7 @@ export function focus(id, event) {
   }
 }
 
-export function unfocus() {
+export function blur() {
   const element = document.activeElement
   if (element) {
     element.blur()
@@ -78,11 +76,12 @@ export function isMobile() {
 }
 
 export function subscribeIsMobile(callback) {
-  window.matchMedia('(max-width: 700px)').addEventListener('change', event => {
-    if (event.matches) {
-      callback(true)
-    } else {
-      callback(false)
-    }
-  })
+  window
+    .matchMedia('(max-width: 700px)')
+    .addEventListener('change', event => callback(!!event.matches))
+}
+
+export function eventKey(event) {
+  if (event.key) return new gleam.Ok(event.key)
+  return new gleam.Error()
 }

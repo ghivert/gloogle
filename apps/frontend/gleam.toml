@@ -9,16 +9,21 @@ version = "1.0.0"
 typescript_declarations = true
 
 [dependencies]
-gleam_javascript = "~> 0.8"
-gleam_json = ">= 1.0.1 and < 2.0.0"
-gleam_stdlib = "~> 0.34 or ~> 1.0"
-lustre_http = "~> 0.5"
-plinth = ">= 0.2.0 and < 1.0.0"
-sketch = ">= 2.2.2 and < 3.0.0"
-lustre = { path = "../../packages/lustre" }
-vitools = { path = "../../packages/vitools" }
-modem = ">= 2.0.0 and < 3.0.0"
 birl = ">= 1.7.1 and < 2.0.0"
+bright = {path = "../../packages/bright"}
+gleam_fetch = ">= 0.4.0 and < 1.0.0"
+gleam_http = ">= 3.7.1 and < 4.0.0"
+gleam_javascript = ">= 0.13.0 and < 1.0.0"
+gleam_json = ">= 2.1.0 and < 3.0.0"
+gleam_regexp = ">= 1.0.0 and < 2.0.0"
+gleam_stdlib = "~> 0.34 or ~> 1.0"
+grille_pain = ">= 1.1.0 and < 2.0.0"
+interfaces = {path = "../../packages/interfaces"}
+lustre = ">= 4.6.1 and < 5.0.0"
+modem = ">= 2.0.0 and < 3.0.0"
+sketch = ">= 3.0.0 and < 4.0.0"
+sketch_magic = {path = "../../packages/sketch_magic"}
+vitools = {path = "../../packages/vitools"}
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

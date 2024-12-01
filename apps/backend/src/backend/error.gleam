@@ -2,15 +2,15 @@ import gleam/dynamic
 import gleam/int
 import gleam/json
 import gleam/list
-import gleam/pgo
 import gleam/result
 import gleam/string
+import pog
 import simplifile
 import tom
 import wisp
 
 pub type Error {
-  DatabaseError(pgo.QueryError)
+  DatabaseError(pog.QueryError)
   FetchError(dynamic.Dynamic)
   JsonError(json.DecodeError)
   SimplifileError(simplifile.FileError, String)
@@ -18,6 +18,18 @@ pub type Error {
   ParseTomlError(tom.ParseError)
   GetTomlError(tom.GetError)
   EmptyError
+}
+
+pub fn empty() {
+  Error(EmptyError)
+}
+
+pub fn new(message: String) {
+  Error(UnknownError(message))
+}
+
+pub fn replace_nil(res, message: String) {
+  result.replace_error(res, UnknownError(message))
 }
 
 pub fn log_dynamic_error(error: dynamic.DecodeError) {
@@ -30,15 +42,13 @@ pub fn log_dynamic_error(error: dynamic.DecodeError) {
 pub fn log_decode_error(error: json.DecodeError) {
   case error {
     json.UnexpectedEndOfInput -> wisp.log_warning("Unexpected end of input")
-    json.UnexpectedByte(byte, position) -> {
+    json.UnexpectedByte(byte) -> {
       wisp.log_warning("Unexpected byte")
       wisp.log_warning("  byte: " <> byte)
-      wisp.log_warning("  position: " <> int.to_string(position))
     }
-    json.UnexpectedSequence(byte, position) -> {
+    json.UnexpectedSequence(byte) -> {
       wisp.log_warning("Unexpected sequence")
       wisp.log_warning("  byte: " <> byte)
-      wisp.log_warning("  position: " <> int.to_string(position))
     }
     json.UnexpectedFormat(errors) -> {
       wisp.log_warning("Unexpected format")
@@ -54,7 +64,7 @@ pub fn log_error(error: Error) {
     FetchError(_dyn) -> wisp.log_warning("Fetch error")
     DatabaseError(error) -> {
       wisp.log_warning("Query error")
-      log_pgo_error(error)
+      log_pog_error(error)
     }
     JsonError(error) -> {
       wisp.log_warning("JSON error")
@@ -168,36 +178,36 @@ pub fn log_simplifile(error: simplifile.FileError) {
   }
 }
 
-pub fn log_pgo_error(error: pgo.QueryError) {
+pub fn log_pog_error(error: pog.QueryError) {
   case error {
-    pgo.ConstraintViolated(message, constraint, details) -> {
+    pog.ConstraintViolated(message, constraint, details) -> {
       wisp.log_warning("Constraint violated")
       wisp.log_warning("  message: " <> message)
       wisp.log_warning("  constraint: " <> constraint)
       wisp.log_warning("  details: " <> details)
     }
-    pgo.PostgresqlError(code, name, message) -> {
-      let code = result.unwrap(pgo.error_code_name(code), code)
+    pog.PostgresqlError(code, name, message) -> {
+      let code = result.unwrap(pog.error_code_name(code), code)
       wisp.log_warning("PostgreSQL error")
       wisp.log_warning("  error: " <> code)
       wisp.log_warning("  name: " <> name)
       wisp.log_warning("  message: " <> message)
     }
-    pgo.UnexpectedArgumentCount(expected, got) -> {
+    pog.UnexpectedArgumentCount(expected, got) -> {
       wisp.log_warning("Unexpected argument count")
       wisp.log_warning("  expected: " <> int.to_string(expected))
       wisp.log_warning("  got: " <> int.to_string(got))
     }
-    pgo.UnexpectedArgumentType(expected, got) -> {
+    pog.UnexpectedArgumentType(expected, got) -> {
       wisp.log_warning("Unexpected argument type")
       wisp.log_warning("  expected: " <> expected)
       wisp.log_warning("  got: " <> got)
     }
-    pgo.UnexpectedResultType(error) -> {
+    pog.UnexpectedResultType(error) -> {
       wisp.log_warning("Unexpected result type")
       list.map(error, log_dynamic_error)
       Nil
     }
-    pgo.ConnectionUnavailable -> wisp.log_warning("Connection unavailable")
+    pog.ConnectionUnavailable -> wisp.log_warning("Connection unavailable")
   }
 }

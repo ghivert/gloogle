@@ -1,0 +1,22 @@
+name = "bright"
+version = "0.1.0"
+
+description = "Be bright. Derive data in your Lustre model."
+licences = ["MIT"]
+
+[[links]]
+title = "Sponsor"
+href = "https://github.com/sponsors/ghivert"
+
+[repository]
+type = "github"
+user = "ghivert"
+repo = "bright"
+
+[dependencies]
+gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+lustre = ">= 4.6.1 and < 5.0.0"
+lustre_dev_tools = ">= 1.6.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"

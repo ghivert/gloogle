@@ -1,5 +1,4 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin'
-import 'dotenv/config'
 import { defineConfig } from 'vite'
 import gleam from 'vite-gleam'
 

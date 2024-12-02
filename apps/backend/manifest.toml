@@ -42,7 +42,7 @@ packages = [
   { name = "platform", version = "1.0.0", build_tools = ["gleam"], requirements = [], otp_app = "platform", source = "hex", outer_checksum = "8339420A95AD89AAC0F82F4C3DB8DD401041742D6C3F46132A8739F6AEB75391" },
   { name = "pog", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "pgo"], otp_app = "pog", source = "hex", outer_checksum = "48D6570C1E98F77A3C29E7ED4F1D81205DD0D870DCEC55F536EF3A57A28DF627" },
   { name = "pprint", version = "1.0.4", build_tools = ["gleam"], requirements = ["glam", "gleam_stdlib"], otp_app = "pprint", source = "hex", outer_checksum = "C310A98BDC0995644847C3C8702DE19656D6BCD638B2A8A358B97824379ECAA1" },
-  { name = "prng", version = "3.0.3", build_tools = ["gleam"], requirements = ["gleam_bitwise", "gleam_stdlib"], otp_app = "prng", source = "hex", outer_checksum = "53006736FE23A0F61828C95B505193E10905D8DB76E128F1642D3E571E08F589" },
+  { name = "prng", version = "4.0.0", build_tools = ["gleam"], requirements = ["gleam_bitwise", "gleam_stdlib", "gleam_yielder"], otp_app = "prng", source = "hex", outer_checksum = "E452F957D19CCDC1B4BD12AA6E1B33194B1EB9C2BC0B3449D96E3585602EE3AE" },
   { name = "radiate", version = "0.4.0", build_tools = ["gleam"], requirements = ["filespy", "gleam_otp", "gleam_stdlib", "shellout"], otp_app = "radiate", source = "hex", outer_checksum = "93A76A66EE4741DBFD3E79E27CBD11FE58EC3CB1C58F017FC165944E339D6293" },
   { name = "ranger", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "ranger", source = "hex", outer_checksum = "B8F3AFF23A3A5B5D9526B8D18E7C43A7DFD3902B151B97EC65397FE29192B695" },
   { name = "shellout", version = "1.6.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "shellout", source = "hex", outer_checksum = "E2FCD18957F0E9F67E1F497FC9FF57393392F8A9BAEAEA4779541DE7A68DD7E0" },
@@ -77,9 +77,9 @@ interfaces = { path = "../../packages/interfaces" }
 mist = { version = ">= 3.0.0 and < 4.0.0" }
 pog = { version = ">= 1.0.1 and < 2.0.0" }
 pprint = { version = ">= 1.0.3 and < 2.0.0" }
-prng = { version = ">= 3.0.3 and < 4.0.0" }
+prng = { version = ">= 4.0.0 and < 5.0.0" }
 radiate = { version = ">= 0.4.0 and < 1.0.0" }
-ranger = { version = ">= 1.2.0 and < 2.0.0" }
+ranger = { version = ">= 1.3.0 and < 2.0.0" }
 simplifile = { version = ">= 2.1.0 and < 3.0.0" }
 tom = { version = ">= 1.1.0 and < 2.0.0" }
 verl = { version = ">= 1.1.1 and < 2.0.0" }

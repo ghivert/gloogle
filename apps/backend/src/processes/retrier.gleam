@@ -2,8 +2,8 @@ import backend/error.{type Error}
 import gleam/bool
 import gleam/erlang/process.{type Subject}
 import gleam/function
-import gleam/iterator.{type Iterator}
 import gleam/otp/actor
+import gleam/yielder.{type Yielder}
 import prng/random
 import wisp
 
@@ -15,7 +15,7 @@ type State(a) {
   State(
     self: Subject(Message),
     work: fn(Int) -> Result(a, Error),
-    random_ints: Iterator(Int),
+    random_ints: Yielder(Int),
     interval: Int,
     iterations: Int,
   )
@@ -24,7 +24,7 @@ type State(a) {
 pub const one_minute: Int = 60_000
 
 fn enqueue_next_rerun(state: State(a)) {
-  let assert iterator.Next(cooldown, acc) = iterator.step(state.random_ints)
+  let assert yielder.Next(cooldown, acc) = yielder.step(state.random_ints)
   process.send_after(state.self, state.interval + cooldown, Rerun)
   State(..state, random_ints: acc)
 }
@@ -47,7 +47,7 @@ fn init(
   do work: fn(Int) -> Result(a, Error),
 ) -> actor.InitResult(State(a), Message) {
   let self = process.new_subject()
-  let random_ints = random.to_random_iterator(random.int(1000, 5000))
+  let random_ints = random.to_random_yielder(random.int(1000, 5000))
   let state = State(self:, work:, interval:, iterations: 10, random_ints:)
   process.new_selector()
   |> process.selecting(self, function.identity)

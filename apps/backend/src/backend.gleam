@@ -1,7 +1,6 @@
 import backend/context.{type Context, Context}
 import backend/gleam/type_search/state as type_search
 import backend/router
-import backend/setup
 import backend/workers
 import envoy
 import gleam/erlang/process
@@ -11,12 +10,12 @@ import gleam/option.{Some}
 import gleam/otp/supervisor
 import gleam/result
 import mist
-import wisp
-import wisp/logger
+import palabre
+import palabre/level
 import wisp/wisp_mist
 
 pub fn main() {
-  configure_logger()
+  let assert Ok(_) = configure_logger()
   let assert Ok(ctx) = context.init()
   let assert Ok(ctx) = start_type_search_worker(ctx)
   let assert Ok(_) = start_http_server(ctx)
@@ -25,10 +24,13 @@ pub fn main() {
 }
 
 fn configure_logger() {
-  let level = logger.read_level()
-  wisp.configure_logger()
-  logger.set_level(level)
-  setup.radiate()
+  let log_level = envoy.get("LOG_LEVEL") |> result.unwrap("INFO")
+  use log_level <- result.map(level.from_string(log_level))
+  palabre.options()
+  |> palabre.json(False)
+  |> palabre.level(log_level)
+  |> palabre.color(True)
+  |> palabre.configure
 }
 
 fn start_type_search_worker(ctx: Context) {

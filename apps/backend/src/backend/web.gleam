@@ -1,13 +1,14 @@
 import backend/context
 import cors_builder as cors_
 import gleam/http
+import palabre
 import wisp.{type Request, type Response}
 
 pub type Handler =
   fn(Request) -> Response
 
 pub fn foundations(req: Request, handler: Handler) -> Response {
-  use <- wisp.log_request(req)
+  use <- palabre.log_request(req)
   use <- wisp.rescue_crashes()
   use req <- wisp.handle_head(req)
   handler(req)

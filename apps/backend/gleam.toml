@@ -21,9 +21,9 @@ gleam_yielder = ">= 1.1.0 and < 2.0.0"
 glexer = ">= 1.0.1 and < 2.0.0"
 interfaces = {path = "../../packages/interfaces"}
 mist = ">= 3.0.0 and < 4.0.0"
+palabre = {path = "../../packages/palabre"}
 pog = ">= 1.0.1 and < 2.0.0"
 prng = ">= 4.0.0 and < 5.0.0"
-radiate = ">= 0.4.0 and < 1.0.0"
 ranger = ">= 1.3.0 and < 2.0.0"
 simplifile = ">= 2.1.0 and < 3.0.0"
 tom = ">= 1.1.0 and < 2.0.0"

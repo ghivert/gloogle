@@ -1,4 +1,5 @@
 import gleam/float
+import gleam/function
 import gleam/http
 import gleam/int
 import gleam/list
@@ -113,7 +114,13 @@ pub fn float(log: Log, key: String, value: Float) {
 }
 
 pub fn dump(log_: Log) -> Nil {
-  let text = option.unwrap(log_.message, "")
+  let text =
+    log_.message
+    |> case utils.is_color() {
+      True -> option.map(_, fn(m) { "\u{1b}[1m" <> m <> "\u{1b}[0m" })
+      False -> function.identity
+    }
+    |> option.unwrap("")
   case log_.level {
     level.Emergency -> log(log_.level, log_.fields, text)
     level.Alert -> log(log_.level, log_.fields, text)
@@ -130,8 +137,7 @@ pub fn dump(log_: Log) -> Nil {
 fn log(level: level.Level, message: a, text: String) -> Nil
 
 fn init(level: level.Level) {
-  [#("when", [utils.iso8601()]), #("id", [utils.uuid()])]
-  |> Log(level:, fields: _, message: None)
+  Log(level:, fields: [], message: None)
 }
 
 fn append_field(

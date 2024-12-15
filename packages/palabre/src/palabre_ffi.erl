@@ -46,31 +46,42 @@ format(#{level := Level, msg := Msg, meta := _Meta}, #{json := Json, color := Co
 
 format_level(Level, #{color := Color}) ->
   case Level of
-    emergency when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31memergency\x1b[0m";
-    alert     when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31malert\x1b[0m";
-    critical  when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31mcritical\x1b[0m";
-    error     when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31merror\x1b[0m";
-    warning   when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;33mwarning\x1b[0m";
-    notice    when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;32mnotice\x1b[0m";
+    emergency when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31memrg\x1b[0m";
+    alert     when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31malrt\x1b[0m";
+    critical  when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31mcrit\x1b[0m";
+    error     when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;31meror\x1b[0m";
+    warning   when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;33mwarn\x1b[0m";
+    notice    when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;32mntce\x1b[0m";
     info      when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;34minfo\x1b[0m";
-    debug     when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;36mdebug\x1b[0m";
-    emergency -> "level=emergency";
-    alert     -> "level=alert";
-    critical  -> "level=critical";
-    error     -> "level=error";
-    warning   -> "level=warning";
-    notice    -> "level=notice";
+    debug     when Color -> "\x1b[32mlevel\x1b[31m=\x1b[1;36mdebg\x1b[0m";
+    emergency -> "level=emrg";
+    alert     -> "level=alrt";
+    critical  -> "level=crit";
+    error     -> "level=eror";
+    warning   -> "level=warn";
+    notice    -> "level=ntce";
     info      -> "level=info";
-    debug     -> "level=debug"
+    debug     -> "level=debg"
   end.
 
 format_msg(Report0, #{json := Json}) ->
   case Report0 of
-    {string, Msg} -> json_wrap([$\s, Msg]);
+    {string, Msg} ->
+      case is_json() of
+        true -> maps:put("id", uuid(), maps:put("when", format_iso8601(), json_wrap([$\s, Msg])));
+        false ->
+          Defaults = [{<<"when"/utf8>>, [format_iso8601()]}, {<<"id"/utf8>>, [uuid()]}],
+          Converted = palabre@internals@converter:format_fields(Defaults),
+          case is_color() of
+            false -> json_wrap([$\s, Converted, $\s, Msg]);
+            true -> json_wrap([$\s, Converted, $\s, "\x1b[1m", Msg, "\x1b[0m"])
+          end
+      end;
     {report, [{palabre, Fields, Text}]} ->
+      Fields1 = [{<<"when"/utf8>>, [format_iso8601()]}, {<<"id"/utf8>>, [uuid()]} | Fields],
       case Json of
-        false -> [$\s, palabre@internals@converter:format_fields(Fields), $\s, Text];
-        true -> palabre@internals@converter:format_json(Fields, Text)
+        false -> [$\s, palabre@internals@converter:format_fields(Fields1), $\s, Text];
+        true -> palabre@internals@converter:format_json(Fields1, Text)
       end;
     {report, Report1} when is_map(Report1) -> json_wrap(format_kv(maps:to_list(Report1)));
     {report, Report1} when is_list(Report1) -> json_wrap(format_kv(Report1));
@@ -114,4 +125,5 @@ is_json() ->
   persistent_term:get(json, false).
 
 is_color() ->
-  persistent_term:get(color, false).
+  not (persistent_term:get(json, false))
+    andalso persistent_term:get(color, false).

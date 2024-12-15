@@ -5,6 +5,7 @@ import backend/workers
 import envoy
 import gleam/erlang/process
 import gleam/function
+import gleam/http
 import gleam/int
 import gleam/option.{Some}
 import gleam/otp/supervisor
@@ -29,7 +30,7 @@ fn configure_logger() {
   palabre.options()
   |> palabre.json(False)
   |> palabre.level(log_level)
-  |> palabre.color(True)
+  |> palabre.color(False)
   |> palabre.configure
 }
 
@@ -45,9 +46,23 @@ fn start_http_server(ctx) {
   router.handle_request(_, ctx)
   |> wisp_mist.handler(secret_key_base)
   |> mist.new
+  |> mist.after_start(palabre_mist_start)
   |> mist.bind("0.0.0.0")
   |> mist.port(port)
   |> mist.start_http_server
+}
+
+fn palabre_mist_start(
+  port: Int,
+  scheme: http.Scheme,
+  _ip_address: mist.IpAddress,
+) -> Nil {
+  palabre.info()
+  |> palabre.int("port", port)
+  |> palabre.string("host", "0.0.0.0")
+  |> palabre.string("scheme", http.scheme_to_string(scheme))
+  |> palabre.message("Server started, listening")
+  |> palabre.dump
 }
 
 fn start_periodic_workers(ctx) {

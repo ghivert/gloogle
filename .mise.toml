@@ -1,9 +1,8 @@
 # Runtimes used by the stack.
 [tools]
-gleam = "1.6.2"
-erlang = "27"
-node = "22"
-deno = "latest"
+gleam = "1.11.1"
+erlang = "28"
+node = "24"
 
 # Environment variables shared by all applications.
 [env]

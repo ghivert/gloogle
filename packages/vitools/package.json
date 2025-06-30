@@ -1,7 +1,7 @@
 {
   "name": "vitools",
-  "packageManager": "yarn@4.3.1",
-  "devDependencies": {
-    "@chouqueth/gleam": "^1.6.2"
+  "packageManager": "yarn@4.9.2",
+  "dependencies": {
+    "@chouquette/gleam": "^1.11.0"
   }
 }

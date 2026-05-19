@@ -9,7 +9,7 @@ description = "🍪 Lexer step + parser combinators + great error messages [nibb
 repository = { type = "github", user = "MystPi", repo = "chomp" }
 
 [dependencies]
-gleam_stdlib = ">= 0.60.0 and < 1.0.0"
+gleam_stdlib = ">= 1.0.0 and < 2.0.0"
 gleam_regexp = ">= 1.0.0 and < 2.0.0"
 
 [dev-dependencies]

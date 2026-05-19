@@ -1,46 +1,77 @@
 import api/github
-import backend/context.{type Context}
-import backend/postgres/queries
 import gleam/bool
-import gleam/dict
-import gleam/function
+import gleam/dict.{type Dict}
 import gleam/list
-import gleam/option
+import gleam/option.{type Option}
 import gleam/result
-import wisp
+import gleam/result_
+import jupiter/context.{type Context}
+import jupiter/context/environment
+import jupiter/error
+import jupiter/postgres/queries
+import palabres
 
-pub fn compute_popularity(ctx: Context) {
+const module = "tasks/popularity"
+
+pub fn compute_popularity(ctx: Context) -> Result(Nil, error.Error) {
   case ctx.env {
-    context.Development -> Ok(Nil)
-    context.Production -> {
-      wisp.log_info("Syncing popularity")
-      do_compute_popularity(ctx, offset: 0)
-      |> function.tap(fn(_) { wisp.log_info("Syncing popularity finished!") })
+    environment.Development -> Ok(Nil)
+    environment.Production -> {
+      palabres.log_info("Syncing popularity")
+      let popularity = do_compute_popularity(ctx, offset: 0)
+      palabres.log_info("Syncing popularity finished!")
+      popularity
     }
   }
 }
 
 fn do_compute_popularity(ctx: Context, offset offset: Int) {
-  let db = ctx.db
-  use repos <- result.try(queries.select_package_repository_address(db, offset))
+  let address = queries.select_package_repository_address(ctx.db, offset)
+  use repos <- result.try(address)
   use <- bool.guard(when: list.is_empty(repos), return: Ok(Nil))
-  list.map(repos, fn(repo) {
-    repo
-    |> option.map(update_repo_popularity(ctx, _))
-    |> option.unwrap(Ok(Nil))
-    |> result.try_recover(fn(_) { Ok(Nil) })
-  })
-  |> result.all()
+  repos
+  |> list.map(update_repo_popularity(ctx, _))
+  |> result.all
   |> result.try(fn(_) { do_compute_popularity(ctx, offset: offset + 100) })
 }
 
-fn update_repo_popularity(ctx: Context, repo: #(Int, String)) {
-  wisp.log_debug("Syncing " <> repo.1)
-  use count <- result.try(github.get_stargazer_count(ctx.github_token, repo.1))
-  let content = dict.from_list([#("github", count)])
-  let _ = queries.insert_analytics(ctx.db, repo.0, "package", content)
-  content
-  |> queries.update_package_popularity(ctx.db, repo.1, _)
+fn update_repo_popularity(ctx: Context, repo: Option(#(Int, String))) {
+  repo
+  |> error.from_option("No repository found")
+  |> result.try(do_update_repo_popularity(ctx, _))
+  |> result.lazy_or(fn() { Ok(Nil) })
+}
+
+fn do_update_repo_popularity(ctx: Context, repo: #(Int, String)) {
+  let #(popularity, repo) = repo
+  palabres.debug("Syncing repository")
+  |> palabres.string("repository", repo)
+  |> palabres.int("popularity", popularity)
+  |> palabres.at(module:, function: "update_repo_popularity")
+  |> palabres.log
+  use github <- result.try(github.get_stargazer_count(ctx.github_token, repo))
+  let data = popularity_data(github:)
+  queries.insert_analytics(ctx.db, popularity, "package", data)
+  |> result.try(fn(_) { update_package_popularity(ctx, repo, data) })
+  |> result_.tap(fn(_) {
+    palabres.debug("Synced repository")
+    |> palabres.string("repository", repo)
+    |> palabres.int("popularity", popularity)
+    |> palabres.at(module:, function: "updated_repo_popularity")
+    |> palabres.log
+  })
+}
+
+fn popularity_data(github github: Int) {
+  dict.from_list([#("github", github)])
+}
+
+fn update_package_popularity(
+  ctx: Context,
+  repo: String,
+  popularity: Dict(String, Int),
+) -> Result(Nil, error.Error) {
+  popularity
+  |> queries.update_package_popularity(ctx.db, repo, _)
   |> result.replace(Nil)
-  |> function.tap(fn(_) { wisp.log_debug("Synced " <> repo.1) })
 }

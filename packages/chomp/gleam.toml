@@ -1,0 +1,16 @@
+name = "chomp"
+version = "0.4.1"
+
+# Fill out these fields if you intend to generate HTML documentation or publish
+# your project to the Hex package manager.
+#
+licences = ["Apache-2.0"]
+description = "🍪 Lexer step + parser combinators + great error messages [nibble fork]"
+repository = { type = "github", user = "MystPi", repo = "chomp" }
+
+[dependencies]
+gleam_stdlib = ">= 0.60.0 and < 1.0.0"
+gleam_regexp = ">= 1.0.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"

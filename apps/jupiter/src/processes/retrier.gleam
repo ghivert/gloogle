@@ -1,9 +1,10 @@
-import backend/error.{type Error}
 import gleam/bool
 import gleam/erlang/process.{type Subject}
-import gleam/function
+import gleam/float
+import gleam/function_
 import gleam/otp/actor
-import gleam/yielder.{type Yielder}
+import gleam/time/timestamp
+import jupiter/error.{type Error}
 import prng/random
 import wisp
 
@@ -15,7 +16,7 @@ type State(a) {
   State(
     self: Subject(Message),
     work: fn(Int) -> Result(a, Error),
-    random_ints: Yielder(Int),
+    random_ints: #(random.Generator(Int), random.Seed),
     interval: Int,
     iterations: Int,
   )
@@ -24,40 +25,44 @@ type State(a) {
 pub const one_minute: Int = 60_000
 
 fn enqueue_next_rerun(state: State(a)) {
-  let assert yielder.Next(cooldown, acc) = yielder.step(state.random_ints)
+  let #(random_ints, seed) = state.random_ints
+  let #(cooldown, seed) = random.step(random_ints, seed)
   process.send_after(state.self, state.interval + cooldown, Rerun)
-  State(..state, random_ints: acc)
+  State(..state, random_ints: #(random_ints, seed))
 }
 
-/// Repeatedly call a function, leaving `interval` milliseconds between each call.
-/// When the `work` function returns an error, it is printed.
+/// Call a function and retry its execution while it returns an error.
+/// When the function returns `Ok`, the actor will stop.
+/// Whenever the function returns an error, the error is printed.
+/// Each call is spaced `interval` milliseconds apart.
 pub fn retry(do work: fn(Int) -> Result(a, Error)) {
-  let _ = start_retrier(work)
-  Nil
-}
-
-fn start_retrier(work: fn(Int) -> Result(a, Error)) {
-  fn() { init(every: one_minute, do: work) }
-  |> actor.Spec(loop:, init_timeout: 100)
-  |> actor.start_spec
+  init(_, every: one_minute, do: work)
+  |> actor.new_with_initialiser(100, _)
+  |> actor.on_message(loop)
+  |> actor.start
 }
 
 fn init(
+  self: Subject(Message),
   every interval: Int,
   do work: fn(Int) -> Result(a, Error),
-) -> actor.InitResult(State(a), Message) {
-  let self = process.new_subject()
-  let random_ints = random.to_random_yielder(random.int(1000, 5000))
+) {
+  let seed =
+    timestamp.system_time()
+    |> timestamp.to_unix_seconds
+    |> float.round
+    |> random.new_seed
+  let random_ints = #(random.int(1000, 5000), seed)
   let state = State(self:, work:, interval:, iterations: 10, random_ints:)
-  process.new_selector()
-  |> process.selecting(self, function.identity)
-  |> actor.Ready(state, _)
-  |> function.tap(fn(_) { process.send(state.self, Rerun) })
+  actor.initialised(state)
+  |> actor.returning(self)
+  |> function_.tap(fn(_) { process.send(state.self, Rerun) })
+  |> Ok
 }
 
-fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {
+fn loop(state: State(a), message: Message) -> actor.Next(State(a), Message) {
   case message, state.work(state.iterations) {
-    Rerun, Ok(_) -> actor.Stop(process.Normal)
+    Rerun, Ok(_) -> actor.stop()
     Rerun, Error(error) -> {
       wisp.log_notice("Process on error")
       error.log_error(error)
@@ -71,5 +76,5 @@ fn loop(message: Message, state: State(a)) -> actor.Next(Message, State(a)) {
 
 fn stop_process() {
   wisp.log_notice("Stopping process after 10 iterations")
-  actor.Stop(process.Normal)
+  actor.stop()
 }

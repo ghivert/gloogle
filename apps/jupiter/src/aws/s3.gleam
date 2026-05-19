@@ -1,14 +1,14 @@
 import aws4_request
-import backend/context
 import gleam/http
-import gleam/http/request
+import gleam/http/request.{type Request}
 import gleam/httpc
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import jupiter/context/environment/variables
 
 fn request(url: String, method: http.Method, body: Option(BitArray)) {
-  use bucket_uri <- result.try(context.bucket_uri())
-  use #(access_key, secret_key) <- result.try(context.scaleway_keys())
+  let bucket_uri = variables.bucket_uri()
+  let #(access_key, secret_key) = variables.scaleway_keys()
   request.new()
   |> request.set_method(method)
   |> request.set_path(url)
@@ -21,17 +21,18 @@ fn request(url: String, method: http.Method, body: Option(BitArray)) {
   |> result.replace_error(Nil)
 }
 
-fn sign(request, access_key_id, secret_access_key) {
-  aws4_request.signer(
-    access_key_id:,
-    secret_access_key:,
-    region: "fr-par",
-    service: "s3",
-  )
+fn sign(
+  request: Request(BitArray),
+  access_key_id: String,
+  secret_access_key: String,
+) -> Request(BitArray) {
+  let region = "fr-par"
+  let service = "s3"
+  aws4_request.signer(access_key_id:, secret_access_key:, region:, service:)
   |> aws4_request.sign_bits(request)
 }
 
-pub fn get(name: String) {
+pub fn get(name: String) -> Result(BitArray, Nil) {
   use res <- result.try(request("/" <> name, http.Get, None))
   case res.status {
     200 -> Ok(res.body)
@@ -39,7 +40,7 @@ pub fn get(name: String) {
   }
 }
 
-pub fn put(name: String, content: BitArray) {
+pub fn put(name: String, content: BitArray) -> Result(BitArray, Nil) {
   use res <- result.try(request("/" <> name, http.Put, Some(content)))
   case res.status {
     200 -> Ok(res.body)

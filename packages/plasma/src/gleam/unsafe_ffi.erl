@@ -2,5 +2,4 @@
 
 -export([coerce/1]).
 
-coerce(A) ->
-  A.
+coerce(A) -> A.

@@ -1,37 +1,37 @@
 import api/hex as api
 import api/hex_repo
 import api/signatures
-import backend/context.{type Context}
-import backend/data/hex_read.{type HexRead}
-import backend/error.{type Error}
-import backend/gleam/context as gcontext
-import backend/gleam/type_search/msg as type_search
-import backend/postgres/queries
-import birl.{type Time}
-import birl/duration
+import function
 import gleam/bool
-import gleam/erlang/process.{type Subject}
-import gleam/function
 import gleam/hexpm.{type Package}
-import gleam/int
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{None, Some}
 import gleam/order
 import gleam/result
-import gleam/string
+import gleam/result_
+import gleam/time/calendar
+import gleam/time/duration
+import gleam/time/timestamp.{type Timestamp}
+import jupiter/context.{type Context, Context}
+import jupiter/data/hex_read.{type HexRead}
+import jupiter/data/interfaces.{type Interfaces, Interfaces}
+import jupiter/error.{type Error}
+import jupiter/gleam/context as gcontext
+import jupiter/postgres/queries
+import palabres
 import pog
 import processes/retrier
-import wisp
+
+const module = "tasks/hex"
 
 type State {
   State(
     page: Int,
-    limit: Time,
-    newest: Time,
+    limit: Timestamp,
+    newest: Timestamp,
     hex_api_key: String,
-    last_logged: Time,
+    last_logged: Timestamp,
     db: pog.Connection,
-    type_search_subject: Option(Subject(type_search.Msg)),
   )
 }
 
@@ -41,49 +41,46 @@ type WorkMode {
 }
 
 pub fn sync_new_gleam_releases(ctx: Context) -> Result(HexRead, Error) {
-  wisp.log_info("Syncing new releases from Hex")
+  palabres.info("Syncing new releases from Hex")
+  |> palabres.at(module:, function: "sync_new_gleam_releases")
+  |> palabres.log
   use limit <- result.try(queries.get_last_hex_date(ctx.db))
-  use latest <- result.try({
-    sync_packages(State(
-      page: 1,
-      limit:,
-      newest: limit,
-      hex_api_key: ctx.hex_api_key,
-      last_logged: birl.now(),
-      db: ctx.db,
-      type_search_subject: ctx.type_search_subject,
-    ))
-  })
-  let latest = queries.upsert_most_recent_hex_timestamp(ctx.db, latest)
-  wisp.log_info("")
-  wisp.log_info("Up to date!")
-  latest
+  use latest <- result.try(sync_packages(init_state(ctx, limit)))
+  use _ <- function.tap(queries.upsert_most_recent_hex_timestamp(ctx.db, latest))
+  palabres.info("Up to date!")
+  |> palabres.at(module:, function: "sync_new_gleam_releases")
+  |> palabres.log
+}
+
+fn init_state(ctx, limit) {
+  let Context(hex_api_key:, db:, ..) = ctx
+  let last_logged = timestamp.system_time()
+  State(page: 1, limit:, newest: limit, hex_api_key:, last_logged:, db:)
 }
 
 fn keep_newest_date(package: hexpm.Package, state: State) {
-  case birl.compare(package.updated_at, state.newest) {
+  case timestamp.compare(package.updated_at, state.newest) {
     order.Gt -> package.updated_at
-    _ -> state.newest
+    order.Lt -> state.newest
+    order.Eq -> state.newest
   }
 }
 
-fn first_timestamp(packages: List(hexpm.Package), state: State) -> Time {
+fn first_timestamp(packages: List(hexpm.Package), state: State) -> Timestamp {
   packages
-  |> list.first()
+  |> list.first
   |> result.map(keep_newest_date(_, state))
   |> result.unwrap(state.newest)
 }
 
-fn sync_packages(state: State) -> Result(Time, Error) {
-  let page = state.page
-  let api_key = state.hex_api_key
-  use all_packages <- result.try(api.get_api_packages_page(page, api_key))
+fn sync_packages(state: State) -> Result(Timestamp, Error) {
+  let State(page:, hex_api_key:, ..) = state
+  use all_packages <- result.try(api.get_api_packages_page(page, hex_api_key))
   let state = State(..state, newest: first_timestamp(all_packages, state))
   let new_packages = take_fresh_packages(all_packages, state.limit)
   use state <- result.try({
-    list.try_fold(new_packages, state, {
-      do_sync_package(WorkAsync, force: False)
-    })
+    use state, package <- list.try_fold(new_packages, state)
+    do_sync_package(state, WorkAsync, force: False, package:)
   })
   case list.length(all_packages) == list.length(new_packages) {
     _ if all_packages == [] -> Ok(state.newest)
@@ -95,77 +92,78 @@ fn sync_packages(state: State) -> Result(Time, Error) {
 pub fn sync_package(ctx: Context, package: hexpm.Package) {
   State(
     page: -1,
-    limit: birl.now(),
-    newest: birl.now(),
+    limit: timestamp.system_time(),
+    newest: timestamp.system_time(),
     hex_api_key: ctx.hex_api_key,
-    last_logged: birl.now(),
+    last_logged: timestamp.system_time(),
     db: ctx.db,
-    type_search_subject: ctx.type_search_subject,
   )
-  |> do_sync_package(WorkSync, force: True)(package)
+  |> do_sync_package(WorkSync, force: True, package:)
   |> result.replace_error(error.EmptyError)
   |> result.replace(Nil)
 }
 
 fn do_sync_package(
+  state: State,
   work_mode work_mode: WorkMode,
   force force_old_release_update: Bool,
-) {
-  fn(state: State, package: hexpm.Package) -> Result(State, Error) {
-    let secret = state.hex_api_key
-    use releases <- result.try(lookup_gleam_releases(package, secret:))
-    use <- bool.lazy_guard(when: list.is_empty(releases), return: fn() {
-      Ok(log_if_needed(state, package.updated_at))
-    })
-    use _ <- result.map(insert_package_and_releases(
+  package package: hexpm.Package,
+) -> Result(State, Error) {
+  let secret = state.hex_api_key
+  use releases <- result.try(lookup_gleam_releases(package, secret:))
+  use <- bool.lazy_guard(when: list.is_empty(releases), return: fn() {
+    let print_deadline = timestamp.add(state.last_logged, duration.seconds(5))
+    case timestamp.compare(print_deadline, timestamp.system_time()) {
+      order.Eq -> Ok(state)
+      order.Gt -> Ok(state)
+      order.Lt -> {
+        let date = timestamp.to_rfc3339(package.updated_at, calendar.utc_offset)
+        palabres.info("Still syncing")
+        |> palabres.string("up_to", date)
+        |> palabres.at(module:, function: "log_if_needed")
+        |> palabres.log
+        Ok(State(..state, last_logged: timestamp.system_time()))
+      }
+    }
+  })
+  use _ <- result.map({
+    insert_package_and_releases(
       package,
       releases,
       state,
       work_mode,
       force_old_release_update,
-    ))
-    State(..state, last_logged: birl.now())
-  }
+    )
+  })
+  State(..state, last_logged: timestamp.system_time())
 }
 
-fn log_retirement_data(release: String, retirement: hexpm.ReleaseRetirement) {
-  wisp.log_info("Release " <> release <> " is retired.")
-  case retirement.message {
-    option.Some(m) -> wisp.log_debug("  Retired because " <> m)
-    option.None -> Nil
-  }
-  case retirement.reason {
-    hexpm.OtherReason -> wisp.log_debug("  Retired for an other reason")
-    hexpm.Invalid -> wisp.log_debug("  Retired because it was invalid")
-    hexpm.Security -> wisp.log_debug("  Retired for security reasons")
-    hexpm.Deprecated -> wisp.log_debug("  Retired because it's deprecated")
-    hexpm.Renamed -> wisp.log_debug("  Retired because it's renamed")
-  }
-}
-
-fn extract_release_interfaces_from_db(
-  state: State,
-  id: Int,
-  release: hexpm.Release,
-) {
+fn extract_interfaces_from_db(state: State, id: Int, release: hexpm.Release) {
   use r <- result.try(queries.upsert_release(state.db, id, release, None, None))
-  r.rows
-  |> list.first()
-  |> result.replace_error(error.UnknownError(""))
+  case list.first(r.rows) {
+    Ok(row) -> Ok(row)
+    Error(_) -> {
+      palabres.debug("No interfaces in DB")
+      |> palabres.string("package_release", release.version)
+      |> palabres.at(module:, function: "extract_interfaces_from_db")
+      |> palabres.log
+      error.new("No interfaces in DB")
+    }
+  }
 }
 
-fn extract_release_interfaces_from_hex(
+fn extract_interfaces_from_hex(
   state: State,
   id: Int,
   package: hexpm.Package,
   release: hexpm.Release,
 ) {
-  use data <- result.map({
-    hex_repo.get_package_infos(package.name, release.version)
-  })
-  let _ =
-    queries.upsert_release(state.db, id, release, Some(data.2), Some(data.3))
-  #(data.0, data.1)
+  let content = hex_repo.get_package_infos(package.name, release.version)
+  use content <- result.map(content)
+  let interface = Some(content.package_interface)
+  let gleam_toml = Some(content.gleam_toml)
+  let _ = queries.upsert_release(state.db, id, release, interface, gleam_toml)
+  #(content.package, content.toml)
 }
 
 fn extract_release_interfaces(
@@ -173,33 +171,49 @@ fn extract_release_interfaces(
   id: Int,
   package: hexpm.Package,
   release: hexpm.Release,
-  interfaces: #(Int, Option(String), Option(String)),
+  interfaces: Interfaces,
 ) {
-  use _ <- result.try_recover(case interfaces {
-    #(_, Some(interface), Some(toml)) -> {
-      use content <- result.map(hex_repo.parse_files(interface, toml))
-      wisp.log_debug("Using interfaces from database")
-      content
+  use <- result.lazy_or(case interfaces {
+    Interfaces(_, Some(interface), Some(toml)) -> {
+      use _ <- result_.tap(hex_repo.parse_files(interface, toml))
+      palabres.debug("Using interfaces from database")
+      |> palabres.string("package_name", package.name)
+      |> palabres.string("package_release", release.version)
+      |> palabres.at(module:, function: "extract_release_interfaces")
     }
-    _ -> Error(error.UnknownError("No release data"))
+    _ -> error.new("No release data")
   })
-  extract_release_interfaces_from_hex(state, id, package, release)
+  extract_interfaces_from_hex(state, id, package, release)
 }
 
 fn save_retirement_data(
   state: State,
-  release_id: Int,
+  interfaces: Interfaces,
   package: hexpm.Package,
   release: hexpm.Release,
-) {
+) -> Result(Nil, Error) {
   case release.retirement {
-    option.None -> Nil
-    option.Some(retirement) -> {
+    None -> Ok(Nil)
+    Some(retirement) -> {
       let release = package.name <> " v" <> release.version
-      log_retirement_data(release, retirement)
-      let _ = queries.add_package_retirement(state.db, retirement, release_id)
-      Nil
+      palabres.info("Release is retired.")
+      |> palabres.string("release", release)
+      |> palabres.nullable("message", retirement.message, palabres.string)
+      |> palabres.string("reason", reason_to_string(retirement.reason))
+      |> palabres.at(module:, function: "log_retirement_data")
+      |> palabres.log
+      queries.add_package_retirement(state.db, retirement, interfaces.id)
     }
+  }
+}
+
+fn reason_to_string(reason: hexpm.RetirementReason) {
+  case reason {
+    hexpm.OtherReason -> "other"
+    hexpm.Invalid -> "invalid"
+    hexpm.Security -> "security"
+    hexpm.Deprecated -> "deprecated"
+    hexpm.Renamed -> "renamed"
   }
 }
 
@@ -209,57 +223,76 @@ fn insert_package_and_releases(
   state: State,
   work_async: WorkMode,
   force_old_release_update: Bool,
-) {
-  let secret = state.hex_api_key
-  let versions =
-    releases
-    |> list.map(fn(release) { release.version })
-    |> string.join(", v")
-  wisp.log_info("Saving " <> package.name <> " v" <> versions)
+) -> Result(Nil, Error) {
+  let State(hex_api_key: secret, ..) = state
+  let versions = list.map(releases, fn(release) { release.version })
+  palabres.info("Saving package versions")
+  |> palabres.string("package_name", package.name)
+  |> palabres.list("package_versions", versions, palabres.string)
+  |> palabres.at(module:, function: "insert_package_and_releases")
+  |> palabres.log
   use id <- result.try(queries.upsert_package(state.db, package))
 
-  wisp.log_debug("Saving owners for " <> package.name)
-  use owners <- result.try(api.get_package_owners(package.name, secret: secret))
+  use owners <- result.try(api.get_package_owners(package.name, secret:))
+  let owners_ = list.map(owners, fn(owner) { owner.username })
+  palabres.debug("Saving owners for package")
+  |> palabres.string("package_name", package.name)
+  |> palabres.list("package_owners", owners_, palabres.string)
+  |> palabres.at(module:, function: "insert_package_and_releases")
+  |> palabres.log
   use _ <- result.try(queries.sync_package_owners(state.db, id, owners))
 
-  wisp.log_debug("Saving releases for " <> package.name)
-  use r <- list.try_each(releases)
-  let release = package.name <> " v" <> r.version
+  palabres.debug("Saving releases for package")
+  |> palabres.string("package_name", package.name)
+  |> palabres.at(module:, function: "insert_package_and_releases")
+  |> palabres.log
+  use release <- list.try_each(releases)
   // When release does not exists, il will continue.
   // Forcing the update will send an error no matter what to continue.
-  use _ <- result.try_recover({
-    queries.lookup_release(state.db, id, r)
-    |> result.replace(Nil)
-    |> case force_old_release_update {
-      True -> result.try(_, fn(_) { Error(error.EmptyError) })
-      False -> function.identity
+  use <- result.lazy_or({
+    let lookup = queries.lookup_release(state.db, id, release)
+    case lookup, force_old_release_update {
+      Ok(_), True -> error.empty()
+      Ok(_), False -> Ok(Nil)
+      Error(error), True -> Error(error)
+      Error(error), False -> Error(error)
     }
   })
-  wisp.log_debug("Handling release " <> r.version)
-  use interfaces <- result.map(extract_release_interfaces_from_db(state, id, r))
-  save_retirement_data(state, interfaces.0, package, r)
+
+  palabres.debug("Handling package release")
+  |> palabres.string("package_name", package.name)
+  |> palabres.string("package_release", release.version)
+  |> palabres.at(module:, function: "insert_package_and_releases")
+  |> palabres.log
+  use interfaces <- result.try(extract_interfaces_from_db(state, id, release))
+  use _ <- result.try(save_retirement_data(state, interfaces, package, release))
   case work_async {
-    WorkSync -> {
-      let _ = do_extract_package(state, id, r, package, interfaces, False)
-      Nil
-    }
+    WorkSync -> extract_package(state, id, release, package, interfaces, False)
     WorkAsync -> {
-      use iterations <- retrier.retry
-      let it = int.to_string(iterations)
-      wisp.log_notice("Trying iteration " <> it <> " for " <> release)
-      do_extract_package(state, id, r, package, interfaces, iterations == 0)
+      let slug = package.name <> " v" <> release.version
+      retrier.retry(fn(iterations) {
+        let ignore = iterations == 0
+        palabres.notice("Trying extracting package")
+        |> palabres.int("iterations", iterations)
+        |> palabres.string("slug", slug)
+        |> palabres.at(module:, function: "insert_package_and_releases")
+        |> palabres.log
+        extract_package(state, id, release, package, interfaces, ignore)
+      })
+      |> result.replace(Nil)
+      |> result.map_error(error.ActorError)
     }
   }
 }
 
-fn do_extract_package(
+fn extract_package(
   state: State,
   id: Int,
   release: hexpm.Release,
   package: hexpm.Package,
-  interfaces: #(Int, Option(String), Option(String)),
+  interfaces: Interfaces,
   ignore_parameters_errors: Bool,
-) {
+) -> Result(Nil, Error) {
   use #(package_interface, gleam_toml) <- result.try({
     extract_release_interfaces(state, id, package, release, interfaces)
   })
@@ -268,13 +301,15 @@ fn do_extract_package(
     package_interface:,
     gleam_toml:,
     ignore_parameters_errors:,
-    type_search_subject: state.type_search_subject,
   )
-  |> signatures.extract_signatures()
-  |> result.map(fn(content) {
+  |> signatures.extract_signatures
+  |> result.replace(Nil)
+  |> result_.tap(fn(_content) {
     let release = package.name <> " v" <> release.version
-    wisp.log_notice("Finished extracting " <> release <> "!")
-    content
+    palabres.notice("Finished extracting release!")
+    |> palabres.string("release", release)
+    |> palabres.at(module:, function: "extract_package")
+    |> palabres.log
   })
 }
 
@@ -290,16 +325,7 @@ fn lookup_gleam_releases(
   })
 }
 
-fn log_if_needed(state: State, time: Time) -> State {
-  let interval = duration.new([#(5, duration.Second)])
-  let print_deadline = birl.add(state.last_logged, interval)
-  let should_log = birl.compare(print_deadline, birl.now()) == order.Lt
-  use <- bool.guard(when: !should_log, return: state)
-  wisp.log_info("Still syncing, up to " <> birl.to_iso8601(time))
-  State(..state, last_logged: birl.now())
-}
-
-pub fn take_fresh_packages(packages: List(Package), limit: Time) {
+pub fn take_fresh_packages(packages: List(Package), limit: Timestamp) {
   use package <- list.take_while(packages)
-  birl.compare(limit, package.updated_at) == order.Lt
+  timestamp.compare(limit, package.updated_at) == order.Lt
 }

@@ -1,24 +1,15 @@
-import backend/gleam/context.{type Context}
-import backend/gleam/generate/metadata
-import backend/gleam/generate/sources.{
-  constant_to_string, function_to_string, type_alias_to_string,
-  type_definition_to_string,
-}
-import backend/gleam/generate/types.{
-  constant_to_json, function_to_json, type_alias_to_json,
-  type_definition_to_json,
-}
-import backend/gleam/type_search/msg as type_search
-import backend/postgres/queries
-import gleam/bool
 import gleam/dict
-import gleam/erlang/process
-import gleam/function
 import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/package_interface
 import gleam/result
+import jupiter/gleam/context.{type Context}
+import jupiter/gleam/generate/metadata
+import jupiter/gleam/generate/sources
+import jupiter/gleam/generate/types
+import jupiter/gleam/type_search
+import jupiter/postgres/queries
 import wisp
 
 fn add_gleam_constraint(ctx: Context, release_id: Int) {
@@ -33,13 +24,14 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
   wisp.log_debug("Extracting " <> name <> " type definitions")
   let all_types = dict.to_list(module.module.types)
   result.all({
-    use #(type_name, type_def) <- list.map(all_types)
+    let kind = queries.TypeDefinition
+    use #(name, def) <- list.map(all_types)
     // Insert type upfront to achieve recursive types.
     let _ =
       queries.upsert_package_type_fun_signature(
         db: ctx.db,
-        kind: queries.TypeDefinition,
-        name: type_name,
+        kind:,
+        name:,
         documentation: option.None,
         metadata: json.null(),
         signature: "",
@@ -49,18 +41,20 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         deprecation: option.None,
         implementations: None,
       )
-    use gen <- result.try(type_definition_to_json(ctx, type_name, type_def))
+    use #(json_signature, parameters) <- result.try({
+      types.type_definition_to_json(ctx, name, def)
+    })
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
-      kind: queries.TypeDefinition,
-      name: type_name,
-      documentation: type_def.documentation,
-      metadata: metadata.generate(type_def.deprecation, None),
-      signature: type_definition_to_string(type_name, type_def),
-      json_signature: gen.0,
-      parameters: gen.1,
+      kind:,
+      name:,
+      documentation: def.documentation,
+      metadata: metadata.generate(def.deprecation, None),
+      signature: sources.type_definition_to_string(name, def),
+      json_signature:,
+      parameters:,
       module_id: module.id,
-      deprecation: type_def.deprecation,
+      deprecation: def.deprecation,
       implementations: None,
     )
   })
@@ -71,13 +65,14 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
   wisp.log_debug("Extracting " <> name <> " type aliases")
   let all_types = dict.to_list(module.module.type_aliases)
   result.all({
-    use #(type_name, type_alias) <- list.map(all_types)
+    let kind = queries.TypeAlias
+    use #(name, alias) <- list.map(all_types)
     // Insert type upfront to achieve recursive types.
     let _ =
       queries.upsert_package_type_fun_signature(
         db: ctx.db,
-        kind: queries.TypeAlias,
-        name: type_name,
+        kind:,
+        name:,
         documentation: option.None,
         metadata: json.null(),
         signature: "",
@@ -87,18 +82,20 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         deprecation: option.None,
         implementations: None,
       )
-    use gen <- result.try(type_alias_to_json(ctx, type_name, type_alias))
+    use #(json_signature, parameters) <- result.try({
+      types.type_alias_to_json(ctx, name, alias)
+    })
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
-      name: type_name,
-      kind: queries.TypeAlias,
-      documentation: type_alias.documentation,
-      metadata: metadata.generate(type_alias.deprecation, None),
-      signature: type_alias_to_string(type_name, type_alias),
-      json_signature: gen.0,
-      parameters: gen.1,
+      name:,
+      kind:,
+      documentation: alias.documentation,
+      metadata: metadata.generate(alias.deprecation, None),
+      signature: sources.type_alias_to_string(name, alias),
+      json_signature:,
+      parameters:,
       module_id: module.id,
-      deprecation: type_alias.deprecation,
+      deprecation: alias.deprecation,
       implementations: None,
     )
   })
@@ -109,18 +106,20 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   wisp.log_debug("Extracting " <> name <> " constants")
   let all_constants = dict.to_list(module.module.constants)
   result.all({
-    use #(constant_name, constant) <- list.map(all_constants)
-    use gen <- result.try(constant_to_json(ctx, constant_name, constant))
+    use #(name, constant) <- list.map(all_constants)
+    use #(json_signature, parameters) <- result.try({
+      types.constant_to_json(ctx, name, constant)
+    })
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
-      name: constant_name,
+      name:,
       kind: queries.Constant,
       documentation: constant.documentation,
       metadata: Some(constant.implementations)
         |> metadata.generate(constant.deprecation, _),
-      signature: constant_to_string(constant_name, constant),
-      json_signature: gen.0,
-      parameters: gen.1,
+      signature: sources.constant_to_string(name, constant),
+      json_signature:,
+      parameters:,
       module_id: module.id,
       deprecation: constant.deprecation,
       implementations: Some(constant.implementations),
@@ -133,32 +132,33 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   wisp.log_debug("Extracting " <> name <> " functions")
   let all_functions = dict.to_list(module.module.functions)
   result.all({
-    use #(function_name, function) <- list.map(all_functions)
-    use gen <- result.try(function_to_json(ctx, function_name, function))
-    let signature = function_to_string(function_name, function)
-    queries.upsert_package_type_fun_signature(
-      db: ctx.db,
-      name: function_name,
-      kind: queries.Function,
-      documentation: function.documentation,
-      metadata: Some(function.implementations)
-        |> metadata.generate(function.deprecation, _),
-      signature: signature,
-      json_signature: gen.0,
-      parameters: gen.1,
-      module_id: module.id,
-      deprecation: function.deprecation,
-      implementations: Some(function.implementations),
-    )
-    |> function.tap(fn(content) {
-      case ctx.type_search_subject, content {
-        option.Some(subject), Ok([id]) -> {
-          process.send(subject, type_search.Add(signature, id))
-          content
-        }
-        _, _ -> content
-      }
+    use #(name, function) <- list.map(all_functions)
+    use #(json_signature, parameters) <- result.try({
+      types.function_to_json(ctx, name, function)
     })
+    let signature = sources.function_to_string(name, function)
+    let content =
+      queries.upsert_package_type_fun_signature(
+        db: ctx.db,
+        name:,
+        kind: queries.Function,
+        documentation: function.documentation,
+        metadata: Some(function.implementations)
+          |> metadata.generate(function.deprecation, _),
+        signature:,
+        json_signature:,
+        parameters:,
+        module_id: module.id,
+        deprecation: function.deprecation,
+        implementations: Some(function.implementations),
+      )
+    case content {
+      Ok([id]) -> {
+        type_search.add(signature:, id:)
+        content
+      }
+      _ -> content
+    }
   })
 }
 
@@ -175,10 +175,13 @@ fn extract_module_signatures(
   use _ <- result.try(upsert_type_definitions(ctx, module))
   use _ <- result.try(upsert_type_aliases(ctx, module))
   use _ <- result.try(upsert_constants(ctx, module))
-  let res = upsert_functions(ctx, module)
-  use <- bool.guard(when: result.is_error(res), return: res)
-  wisp.log_debug("Extracting " <> name <> " finished")
-  res
+  case upsert_functions(ctx, module) {
+    Error(err) -> Error(err)
+    Ok(content) -> {
+      wisp.log_debug("Extracting " <> name <> " finished")
+      Ok(content)
+    }
+  }
 }
 
 pub fn extract_signatures(ctx: Context) {

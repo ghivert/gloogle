@@ -1,5 +1,4 @@
-import decipher
-import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/json
 import gleam/option.{Some}
 
@@ -10,8 +9,8 @@ query getStargazers($name: String!, $owner: String!) {
   }
 }"
 
-pub fn decoder(dyn) {
-  decipher.at(["data", "repository", "stargazerCount"], dynamic.int)(dyn)
+pub fn decoder() {
+  decode.at(["data", "repository", "stargazerCount"], decode.int)
 }
 
 pub fn variables(name: String, owner: String) {

@@ -1,3 +1,1 @@
-export function coerce(a) {
-  return a
-}
+export const coerce = a => a

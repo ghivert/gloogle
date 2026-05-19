@@ -12,9 +12,10 @@ pub type Metadata {
 }
 
 pub fn decoder() {
-  use deprecation <- decrypt.optional("deprecation", decode.string)
-  let implementations = implementations.decoder()
-  use implementations <- decrypt.optional("implementations", implementations)
+  use deprecation <- decrypt.optional_field("deprecation", decode.string)
+  use implementations <- decrypt.optional_field("implementations", {
+    implementations.decoder()
+  })
   decode.success(Metadata(deprecation:, implementations:))
 }
 

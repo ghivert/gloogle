@@ -1,4 +1,5 @@
 import decrypt
+import gleam/bool
 import gleam/dynamic/decode
 import gleam/int
 import gleam/json
@@ -94,21 +95,26 @@ fn type_decoder() {
     "fn" -> fn_decoder()
     "tuple" -> tuple_decoder()
     "named" -> named_decoder()
-    _ -> decode.failure(Variable(0, 0), "Type")
+    _ -> decode.failure(Variable(width: 0, id: 0), "Type")
   }
 }
 
 fn encode_type(type_: Type) {
   case type_ {
-    Variable(id:, ..) ->
-      json.object([#("kind", json.string("variable")), #("id", json.int(id))])
-    Fn(parameters:, return:, ..) ->
+    Variable(id:, ..) -> {
+      json.object([
+        #("kind", json.string("variable")),
+        #("id", json.int(id)),
+      ])
+    }
+    Fn(parameters:, return:, ..) -> {
       json.object([
         #("kind", json.string("fn")),
         #("params", json.array(parameters, encode_type)),
         #("return", encode_type(return)),
       ])
-    Named(name:, package:, module:, parameters:, ref:, ..) ->
+    }
+    Named(name:, package:, module:, parameters:, ref:, ..) -> {
       json.object([
         #("kind", json.string("named")),
         #("name", json.string(name)),
@@ -117,36 +123,42 @@ fn encode_type(type_: Type) {
         #("parameters", json.array(parameters, encode_type)),
         #("ref", json.nullable(ref, json.string)),
       ])
-    Tuple(elements:, ..) ->
+    }
+    Tuple(elements:, ..) -> {
       json.object([
         #("kind", json.string("tuple")),
         #("elements", json.array(elements, encode_type)),
       ])
+    }
   }
 }
 
 fn variable_decoder() {
   use id <- decode.field("id", decode.int)
-  decode.success(Variable(1, id))
+  decode.success(Variable(width: 1, id:))
 }
 
 fn fn_decoder() {
-  use params <- decode.field("params", decode.list(type_decoder()))
+  use parameters <- decode.field("params", decode.list(type_decoder()))
   use return <- decode.field("return", type_decoder())
-  let width = {
-    [return, ..params]
-    |> list.fold(0, fn(acc, val: Type) { val.width + acc })
-    |> int.add({ { int.max(list.length(params) - 1, 0) } * 2 } + 8)
-  }
-  decode.success(Fn(width, params, return))
+  decode.success({
+    Fn(parameters:, return:, width: {
+      [return, ..parameters]
+      |> list.fold(0, fn(acc, val: Type) { val.width + acc })
+      |> int.add({ { int.max(list.length(parameters) - 1, 0) } * 2 } + 8)
+    })
+  })
 }
 
 fn tuple_decoder() {
   use elements <- decode.field("elements", decode.list(type_decoder()))
-  let width =
-    list.fold(elements, 0, fn(acc, val: Type) { val.width + acc })
-    |> int.add({ { int.max(list.length(elements) - 1, 0) } * 2 } + 3)
-  decode.success(Tuple(width, elements))
+  decode.success({
+    Tuple(elements:, width: {
+      elements
+      |> list.fold(0, fn(acc, type_) { type_.width + acc })
+      |> int.add({ { int.max(list.length(elements) - 1, 0) } * 2 } + 3)
+    })
+  })
 }
 
 fn named_decoder() {
@@ -156,26 +168,27 @@ fn named_decoder() {
   use parameters <- decode.field("parameters", decode.list(type_decoder()))
   use ref <- decode.field("ref", decode.optional(decode.string))
   let params_width =
-    list.fold(parameters, 0, fn(acc, val: Type) { val.width + acc })
-  let width =
-    string.length(name)
-    + case params_width {
-      0 -> 0
-      value -> value + { { int.max(list.length(parameters) - 1, 0) } * 2 } + 8
-    }
-  decode.success(Named(width:, name:, package:, module:, parameters:, ref:))
+    list.fold(parameters, 0, fn(acc, type_) { type_.width + acc })
+  decode.success({
+    Named(name:, package:, module:, parameters:, ref:, width: {
+      let parameters = list.length(parameters) - 1
+      let parameters = int.max(parameters, 0)
+      let width = increment(params_width, by: { parameters * 2 } + 8)
+      width + string.length(name)
+    })
+  })
 }
 
 fn parameter_decoder() {
-  use label <- decode.field("label", decode.optional(decode.string))
+  use label <- decrypt.optional_field("label", decode.string)
   use type_ <- decode.field("type", type_decoder())
-  let width =
-    case string.length(option.unwrap(label, "")) {
-      0 -> 0
-      value -> value + 2
-    }
-    + type_.width
-  decode.success(Parameter(width:, label:, type_:))
+  decode.success({
+    Parameter(label:, type_:, width: {
+      let label = option.unwrap(label, "")
+      let length = string.length(label)
+      increment(length, by: 2) + type_.width
+    })
+  })
 }
 
 pub fn encode_parameter(parameter: Parameter) {
@@ -197,7 +210,7 @@ fn function_decoder() {
   use parameters <- decode.field("parameters", decode.list(parameter_decoder()))
   let params_width =
     parameters
-    |> list.fold(0, fn(acc, val: Parameter) { val.width + acc })
+    |> list.fold(0, fn(acc, parameter) { parameter.width + acc })
     |> int.add({ { int.max(list.length(parameters) - 1, 0) } * 2 } + 2)
   let width = int.add(params_width, return.width + string.length(name) + 6)
   decode.success(Function(width, params_width, name, return, parameters))
@@ -214,13 +227,15 @@ fn type_definition_decoder() {
   use parameters <- decode.field("parameters", decode.int)
   use constructors <- decode.field("constructors", {
     decode.list({
-      use documentation <- decrypt.optional("documentation", decode.string)
+      use documentation <- decrypt.optional_field("documentation", {
+        decode.string
+      })
       use name <- decode.field("name", decode.string)
       let parameters = decode.list(parameter_decoder())
       use parameters <- decode.field("parameters", parameters)
       let params_width =
         parameters
-        |> list.fold(0, fn(acc, val: Parameter) { val.width + acc })
+        |> list.fold(0, fn(acc, parameter) { parameter.width + acc })
         |> int.add({ { int.max(list.length(parameters) - 1, 0) } * 2 } + 2)
       let width = int.add(params_width, string.length(name) + 1)
       decode.success({
@@ -243,4 +258,9 @@ fn encode_constructors(constructor: TypeConstructor) {
     #("name", json.string(constructor.name)),
     #("parameters", json.array(constructor.parameters, encode_parameter)),
   ])
+}
+
+fn increment(value: Int, by by: Int) -> Int {
+  use <- bool.guard(when: value == 0, return: 0)
+  value + by
 }

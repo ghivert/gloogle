@@ -1,30 +1,23 @@
+import cell
 import gleam/bool
 import gleam/dynamic/decode
 import gleam/erlang/atom
 import gleam/erlang/process
 import gleam/list
+import gleam/option
 import gleam/otp/actor
 import gleam/otp/supervision
 import gleam/result
 import gleam/unsafe
+import jupiter/context.{type Context}
 import jupiter/gleam/parse
-import jupiter/gleam/type_search/search.{type TypeSearch}
+import jupiter/gleam/type_search/search
 import pog
 
 const name = "jupiter_type_search"
 
-pub type State {
-  State(db: pog.Connection, search: TypeSearch)
-}
-
 pub type Msg {
   Add(signature: String, id: Int)
-}
-
-pub fn subject() -> process.Subject(Msg) {
-  atom.create(name)
-  |> unsafe.coerce
-  |> process.named_subject
 }
 
 pub fn add(signature signature: String, id id: Int) {
@@ -33,12 +26,21 @@ pub fn add(signature signature: String, id id: Int) {
   process.send(subject, msg)
 }
 
-pub fn worker(db: pog.Connection) {
+pub fn find(ctx: Context, signature) {
+  signature
+  |> parse.parse_function
+  |> result.replace_error(Nil)
+  |> result.try(permutation_search(ctx, _))
+  |> option.from_result
+}
+
+pub fn worker(ctx: Context) {
   use <- supervision.worker()
   let name = atom.create(name) |> unsafe.coerce
   actor.new_with_initialiser(120_000, fn(subject) {
-    let #(_, search) = initialise_type_search(db)
-    actor.initialised(State(db, search))
+    let #(_, search) = initialise_type_search(ctx.db)
+    let assert Ok(_) = cell.write(ctx.search, search)
+    actor.initialised(ctx)
     |> actor.returning(subject)
     |> Ok
   })
@@ -56,51 +58,15 @@ fn initialise_type_search(db: pog.Connection) {
   |> result.unwrap(search)
 }
 
-fn loop(state: State, msg: Msg) -> actor.Next(State, Msg) {
-  // msg.Find(subject, signature) -> {
-  //   signature
-  //   |> parse.parse_function
-  //   |> result.replace_error(Nil)
-  //   |> result.try(permutation_search(state, _))
-  //   |> option.from_result
-  //   |> function_.tap(fn(res) { process.send(subject, res) })
-  //   actor.continue(state)
-  // }
-  actor.continue({
-    State(..state, search: {
-      msg.signature
-      |> parse.parse_function
-      |> result.map(search.add(state.search, _, msg.id))
-      |> result.unwrap(state.search)
-    })
-  })
-}
-
-fn is_permutable(list: List(a), len: Int) {
-  case list {
-    _ if len > 4 -> False
-    [_, ..rest] -> is_permutable(rest, len + 1)
-    [] -> True
-  }
-}
-
-fn permutation_search(state: State, kind: parse.Kind) {
-  case kind {
-    parse.Function(params, return) -> {
-      let permutable = is_permutable(params, 0)
-      use <- bool.lazy_guard(when: !permutable, return: fn() {
-        search.find(state.search, kind, state.db)
-      })
-      Ok({
-        let permutations = list.permutations(params)
-        use permutation <- list.flat_map(permutations)
-        parse.Function(permutation, return)
-        |> search.find(state.search, _, state.db)
-        |> result.unwrap([])
-      })
-    }
-    _ -> Error(Nil)
-  }
+fn loop(ctx: Context, msg: Msg) -> actor.Next(Context, Msg) {
+  let assert Ok(search) = cell.read(ctx.search)
+  let assert Ok(_) =
+    msg.signature
+    |> parse.parse_function
+    |> result.map(search.add(search, _, msg.id))
+    |> result.unwrap(search)
+    |> cell.write(ctx.search, _)
+  actor.continue(ctx)
 }
 
 fn compute_rows(
@@ -129,4 +95,42 @@ fn compute_rows(
   use <- bool.guard(when: list.is_empty(rows), return: default)
   list.fold(rows, default, next)
   |> compute_rows(offset + 1000, db, _, next)
+}
+
+fn subject() -> process.Subject(Msg) {
+  atom.create(name)
+  |> unsafe.coerce
+  |> process.named_subject
+}
+
+fn is_permutable(list: List(a), len: Int) {
+  use <- bool.guard(when: len > 4, return: False)
+  case list {
+    [_, ..rest] -> is_permutable(rest, len + 1)
+    [] -> True
+  }
+}
+
+fn permutation_search(ctx: Context, kind: parse.Kind) -> Result(List(Int), Nil) {
+  use search <- result.try(cell.read(ctx.search))
+  case kind {
+    parse.DiscardName -> Error(Nil)
+    parse.Index(_, _) -> Error(Nil)
+    parse.Custom(_, _) -> Error(Nil)
+    parse.Tuple(_) -> Error(Nil)
+    parse.Function(params, return) -> {
+      case is_permutable(params, 0) {
+        False -> search.find(search, kind, ctx.db)
+        True -> {
+          Ok({
+            let permutations = list.permutations(params)
+            use permutation <- list.flat_map(permutations)
+            parse.Function(permutation, return)
+            |> search.find(search, _, ctx.db)
+            |> result.unwrap([])
+          })
+        }
+      }
+    }
+  }
 }

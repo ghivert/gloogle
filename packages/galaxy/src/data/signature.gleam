@@ -168,7 +168,7 @@ fn named_decoder() {
   use parameters <- decode.field("parameters", decode.list(type_decoder()))
   use ref <- decode.field("ref", decode.optional(decode.string))
   let params_width =
-    list.fold(parameters, 0, fn(acc, type_) { type_.width + acc })
+    list.fold(parameters, 0, fn(acc, type_: Type) { type_.width + acc })
   decode.success({
     Named(name:, package:, module:, parameters:, ref:, width: {
       let parameters = list.length(parameters) - 1

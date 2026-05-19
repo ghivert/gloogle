@@ -1,6 +1,12 @@
+\restrict ERWmtho6H5LjpAi7D2AkNlAaR753fypecF8p2at75KiQm1aTtFZXuQs0mNvAWlJ
+
+-- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
+-- Dumped by pg_dump version 18.0
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -72,27 +78,13 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.analytics (
-    id integer NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     foreign_id integer NOT NULL,
     table_name text NOT NULL,
     content jsonb NOT NULL,
     day timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
--- Name: analytics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.analytics ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.analytics_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
 );
 
 
@@ -112,22 +104,8 @@ CREATE TABLE public.analytics_timeseries (
 --
 
 CREATE TABLE public.hex_read (
-    id integer NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     last_check timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: hex_read_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.hex_read ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.hex_read_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
 );
 
 
@@ -136,7 +114,7 @@ ALTER TABLE public.hex_read ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 --
 
 CREATE TABLE public.hex_user (
-    id integer NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     username text NOT NULL,
     email text,
     url text NOT NULL,
@@ -146,25 +124,11 @@ CREATE TABLE public.hex_user (
 
 
 --
--- Name: hex_user_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.hex_user ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.hex_user_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
 -- Name: package; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.package (
-    id integer NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     name text NOT NULL,
     repository text,
     documentation text,
@@ -180,44 +144,16 @@ CREATE TABLE public.package (
 
 
 --
--- Name: package_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.package ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.package_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
 -- Name: package_module; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.package_module (
-    id integer NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     name text NOT NULL,
     documentation text NOT NULL,
-    package_release_id integer,
+    package_release_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
--- Name: package_module_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.package_module ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.package_module_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
 );
 
 
@@ -226,8 +162,8 @@ ALTER TABLE public.package_module ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTI
 --
 
 CREATE TABLE public.package_owner (
-    hex_user_id integer NOT NULL,
-    package_id integer NOT NULL,
+    hex_user_id uuid NOT NULL,
+    package_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -238,8 +174,8 @@ CREATE TABLE public.package_owner (
 --
 
 CREATE TABLE public.package_release (
-    id integer NOT NULL,
-    package_id integer,
+    id uuid DEFAULT uuidv7() NOT NULL,
+    package_id uuid,
     version text NOT NULL,
     url text NOT NULL,
     gleam_constraint text,
@@ -253,51 +189,23 @@ CREATE TABLE public.package_release (
 
 
 --
--- Name: package_release_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.package_release ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.package_release_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
 -- Name: package_type_fun_signature; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.package_type_fun_signature (
-    id integer NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     name text NOT NULL,
     documentation text NOT NULL,
     signature_ text NOT NULL,
     json_signature jsonb NOT NULL,
-    kind public.type_nature NOT NULL,
+    kind public.type_nature CONSTRAINT package_type_fun_signature_nature_not_null NOT NULL,
     parameters integer[] NOT NULL,
     deprecation text,
     implementations text,
     metadata jsonb NOT NULL,
-    package_module_id integer,
+    package_module_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
--- Name: package_type_fun_signature_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.package_type_fun_signature ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.package_type_fun_signature_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
 );
 
 
@@ -306,7 +214,7 @@ ALTER TABLE public.package_type_fun_signature ALTER COLUMN id ADD GENERATED ALWA
 --
 
 CREATE TABLE public.schema_migrations (
-    version character varying(128) NOT NULL
+    version character varying NOT NULL
 );
 
 
@@ -585,6 +493,8 @@ ALTER TABLE ONLY public.package_type_fun_signature
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict ERWmtho6H5LjpAi7D2AkNlAaR753fypecF8p2at75KiQm1aTtFZXuQs0mNvAWlJ
 
 
 --

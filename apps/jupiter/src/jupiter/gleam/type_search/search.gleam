@@ -10,7 +10,7 @@ import jupiter/postgres/queries
 import pog
 
 pub type TypeSearch {
-  TypeSearch(keys: Keys, rows: List(Int))
+  TypeSearch(keys: Keys, rows: List(String))
 }
 
 pub type Keys {
@@ -70,7 +70,7 @@ fn update_empty_keys(keys: Keys, updater: fn(TypeSearch) -> TypeSearch) -> Keys 
   })
 }
 
-fn do_add(searches: TypeSearch, kinds: List(Kind), id: Int) -> TypeSearch {
+fn do_add(searches: TypeSearch, kinds: List(Kind), id: String) -> TypeSearch {
   case kinds {
     [] -> TypeSearch(..searches, rows: [id, ..searches.rows])
     [kind, ..rest] -> {
@@ -82,7 +82,7 @@ fn do_add(searches: TypeSearch, kinds: List(Kind), id: Int) -> TypeSearch {
   }
 }
 
-pub fn add(searches: TypeSearch, kind: Kind, id: Int) {
+pub fn add(searches: TypeSearch, kind: Kind, id: String) {
   case kind {
     parse.DiscardName -> searches
     parse.Index(_, _) -> searches
@@ -174,7 +174,7 @@ fn find_next_tree(
   kinds: List(Kind),
   env: Dict(Int, String),
   db: pog.Connection,
-) -> List(Int) {
+) -> List(String) {
   case kind {
     parse.DiscardName -> {
       let values = get_next_tree(keys, kind, env, db)
@@ -237,7 +237,7 @@ fn do_find(
   kinds: List(Kind),
   env: Dict(Int, String),
   db: pog.Connection,
-) -> List(Int) {
+) -> List(String) {
   case kinds {
     [kind, ..rest] -> find_next_tree(searches.keys, kind, rest, env, db)
     [] -> searches.rows

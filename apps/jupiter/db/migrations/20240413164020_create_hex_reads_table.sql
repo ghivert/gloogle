@@ -1,6 +1,6 @@
 -- migrate:up
 create table hex_read (
-  id integer primary key generated always as identity,
+  id uuid primary key default uuidv7(),
   last_check timestamptz default now() not null
 );
 

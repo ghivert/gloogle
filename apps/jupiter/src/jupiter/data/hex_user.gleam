@@ -5,7 +5,7 @@ import gleam/time/timestamp.{type Timestamp}
 
 pub type HexUser {
   HexUser(
-    id: Int,
+    id: String,
     username: String,
     email: Option(String),
     url: String,
@@ -15,7 +15,7 @@ pub type HexUser {
 }
 
 pub fn decoder() {
-  use id <- decode.field("id", decode.int)
+  use id <- decode.field("id", decode.string)
   use username <- decode.field("username", decode.string)
   use email <- decode.field("email", decode.optional(decode.string))
   use url <- decode.field("url", decode.string)

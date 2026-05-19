@@ -1,5 +1,4 @@
 import envoy
-import gleam/int
 import gleam/option.{Some}
 import gleam/result
 import gleeunit
@@ -33,7 +32,7 @@ fn postgres_connect() {
 // gleeunit test functions end in `_test`
 pub fn type_search_test() {
   let db = postgres_connect()
-  let index = int.random(1000)
+  let index = "1000"
   let assert Ok(kind) = parse.parse_function(signature)
   let assert Ok(skind) = parse.parse_function(search_test)
   let init = search.empty()

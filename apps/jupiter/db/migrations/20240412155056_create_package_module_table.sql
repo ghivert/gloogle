@@ -1,9 +1,9 @@
 -- migrate:up
 create table package_module (
-  id integer primary key generated always as identity,
+  id uuid primary key default uuidv7(),
   name text not null,
   documentation text not null,
-  package_release_id int references package_release(id),
+  package_release_id uuid references package_release(id),
   created_at timestamptz default current_timestamp not null,
   updated_at timestamptz default current_timestamp not null,
   unique (package_release_id, name)

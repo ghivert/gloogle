@@ -17,10 +17,10 @@ import pog
 const name = "jupiter_type_search"
 
 pub type Msg {
-  Add(signature: String, id: Int)
+  Add(signature: String, id: String)
 }
 
-pub fn add(signature signature: String, id id: Int) {
+pub fn add(signature signature: String, id id: String) {
   let subject = subject()
   let msg = Add(signature:, id:)
   process.send(subject, msg)
@@ -73,7 +73,7 @@ fn compute_rows(
   offset: Int,
   db: pog.Connection,
   default: a,
-  next: fn(a, #(String, Int)) -> a,
+  next: fn(a, #(String, String)) -> a,
 ) -> a {
   let rows =
     "SELECT signature_, id
@@ -86,7 +86,7 @@ fn compute_rows(
     |> pog.parameter(pog.int(offset))
     |> pog.returning({
       use signature <- decode.field("signature_", decode.string)
-      use id <- decode.field("id", decode.int)
+      use id <- decode.field("id", decode.string)
       decode.success(#(signature, id))
     })
     |> pog.execute(db)
@@ -111,7 +111,10 @@ fn is_permutable(list: List(a), len: Int) {
   }
 }
 
-fn permutation_search(ctx: Context, kind: parse.Kind) -> Result(List(Int), Nil) {
+fn permutation_search(
+  ctx: Context,
+  kind: parse.Kind,
+) -> Result(List(String), Nil) {
   use search <- result.try(cell.read(ctx.search))
   case kind {
     parse.DiscardName -> Error(Nil)

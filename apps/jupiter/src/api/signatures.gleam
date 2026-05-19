@@ -12,7 +12,7 @@ import jupiter/gleam/type_search
 import jupiter/postgres/queries
 import wisp
 
-fn add_gleam_constraint(ctx: Context, release_id: Int) {
+fn add_gleam_constraint(ctx: Context, release_id: String) {
   case ctx.package_interface.gleam_version_constraint {
     Some(c) -> queries.add_package_gleam_constraint(ctx.db, c, release_id)
     None -> Ok(Nil)
@@ -164,10 +164,10 @@ fn upsert_functions(ctx: Context, module: context.Module) {
 
 fn extract_module_signatures(
   ctx: Context,
-  release_id: Int,
+  release_id: String,
   module: #(String, package_interface.Module),
 ) {
-  let module = context.Module(module.1, -1, module.0, release_id)
+  let module = context.Module(module.1, "-1", module.0, release_id)
   let name = context.qualified_name(ctx, module)
   wisp.log_debug("Extracting " <> name <> " signatures")
   use module_id <- result.try(queries.upsert_package_module(ctx.db, module))

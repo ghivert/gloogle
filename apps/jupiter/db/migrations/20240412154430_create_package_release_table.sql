@@ -1,7 +1,7 @@
 -- migrate:up
 create table package_release (
-  id integer primary key generated always as identity,
-  package_id int references package(id),
+  id uuid primary key default uuidv7(),
+  package_id uuid references package(id),
   version text not null, -- Semver version
   url text not null,     -- Direct URL of the release.
   gleam_constraint text,

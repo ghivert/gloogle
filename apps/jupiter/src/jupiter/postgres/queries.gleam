@@ -4,6 +4,7 @@ import data/type_search
 import decrypt
 import gleam/bool
 import gleam/dict.{type Dict}
+import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/hexpm
 import gleam/int
@@ -32,7 +33,7 @@ pub type SignatureKind {
 }
 
 pub fn get_last_hex_date(db: pog.Connection) {
-  "SELECT id, last_check FROM hex_read ORDER BY last_check DESC LIMIT 1"
+  "SELECT id::text, last_check FROM hex_read ORDER BY last_check DESC LIMIT 1"
   |> pog.query
   |> pog.returning(hex_read.decoder())
   |> pog.execute(db)
@@ -51,7 +52,7 @@ pub fn upsert_most_recent_hex_timestamp(db: pog.Connection, latest: Timestamp) {
    VALUES (1, $1)
    ON CONFLICT (id) DO UPDATE
      SET last_check = $1
-   RETURNING id, last_check"
+   RETURNING id::text, last_check"
   |> pog.query
   |> pog.parameter(pog.timestamp(latest))
   |> pog.returning(hex_read.decoder())
@@ -60,7 +61,7 @@ pub fn upsert_most_recent_hex_timestamp(db: pog.Connection, latest: Timestamp) {
   |> result.try(fn(response) {
     let err = "Upsert most recent hex timestamp failed"
     response.rows
-    |> list.first()
+    |> list.first
     |> result.replace_error(error.UnknownError(err))
   })
 }
@@ -140,7 +141,7 @@ pub fn select_last_day_search_analytics(db: pog.Connection) {
 pub fn upsert_search_analytics_timeseries(
   db: pog.Connection,
   analytic: #(String, Int),
-) {
+) -> Result(pog.Returned(Nil), error.Error) {
   let now = start_day()
   let #(query, occurences) = analytic
   "INSERT INTO analytics_timeseries (query, occurences, date)
@@ -187,7 +188,7 @@ pub fn upsert_hex_user(db: pog.Connection, owner: hexpm.PackageOwner) {
    VALUES ($1, $2, $3)
    ON CONFLICT (username) DO UPDATE
      SET email = $2, url = $3
-   RETURNING id, username, email, url, created_at, updated_at"
+   RETURNING id::text, username, email, url, created_at, updated_at"
   |> pog.query
   |> pog.parameter(pog.text(owner.username))
   |> pog.parameter(pog.nullable(pog.text, owner.email))
@@ -201,17 +202,17 @@ pub fn upsert_hex_user(db: pog.Connection, owner: hexpm.PackageOwner) {
 fn upsert_package_owners(db: pog.Connection, owners: List(hexpm.PackageOwner)) {
   owners
   |> list.map(upsert_hex_user(db, _))
-  |> result.all()
+  |> result.all
   |> result.map(list.flatten)
 }
 
-fn get_current_package_owners(db: pog.Connection, package_id: Int) {
-  "SELECT package_owner.hex_user_id AS user_id
+fn get_current_package_owners(db: pog.Connection, package_id: String) {
+  "SELECT package_owner.hex_user_id::text AS user_id
    FROM package_owner
    WHERE package_owner.package_id = $1"
   |> pog.query
-  |> pog.parameter(pog.int(package_id))
-  |> pog.returning(decode.at(["user_id"], decode.int))
+  |> pog.parameter(pog.text(package_id))
+  |> pog.returning(decode.at(["user_id"], decode.string))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
   |> result.map_error(error.DatabaseError)
@@ -247,17 +248,17 @@ pub fn get_total_packages(db: pog.Connection) {
 fn add_new_package_owners(
   db: pog.Connection,
   owners: List(HexUser),
-  current_owners: List(Int),
-  package_id: Int,
-) {
+  current_owners: List(String),
+  package_id: String,
+) -> Result(List(pog.Returned(Dynamic)), error.Error) {
   owners
   |> list.filter(fn(o) { bool.negate(list.contains(current_owners, o.id)) })
   |> list.map(fn(u) {
     "INSERT INTO package_owner (hex_user_id, package_id)
      VALUES ($1, $2)"
     |> pog.query
-    |> pog.parameter(pog.int(u.id))
-    |> pog.parameter(pog.int(package_id))
+    |> pog.parameter(pog.text(u.id))
+    |> pog.parameter(pog.text(package_id))
     |> pog.returning(decode.dynamic)
     |> pog.execute(db)
   })
@@ -268,9 +269,9 @@ fn add_new_package_owners(
 fn remove_old_package_owners(
   db: pog.Connection,
   owners: List(HexUser),
-  current_owners: List(Int),
-  package_id: Int,
-) {
+  current_owners: List(String),
+  package_id: String,
+) -> Result(List(pog.Returned(Nil)), error.Error) {
   let curr = list.map(owners, fn(o) { o.id })
   current_owners
   |> list.filter(fn(id) { list.contains(curr, id) })
@@ -279,8 +280,8 @@ fn remove_old_package_owners(
      WHERE package_owner.hex_user_id = $1
        AND package_owner.package_id = $2"
     |> pog.query
-    |> pog.parameter(pog.int(u))
-    |> pog.parameter(pog.int(package_id))
+    |> pog.parameter(pog.text(u))
+    |> pog.parameter(pog.text(package_id))
     |> pog.execute(db)
   })
   |> result.all()
@@ -289,9 +290,9 @@ fn remove_old_package_owners(
 
 pub fn sync_package_owners(
   db: pog.Connection,
-  package_id: Int,
+  package_id: String,
   owners: List(hexpm.PackageOwner),
-) {
+) -> Result(Nil, error.Error) {
   use news <- result.try(upsert_package_owners(db, owners))
   use curr <- result.try(get_current_package_owners(db, package_id))
   use _ <- result.try(add_new_package_owners(db, news, curr, package_id))
@@ -311,7 +312,7 @@ pub fn upsert_package(db: pog.Connection, package: hexpm.Package) {
        links = $5,
        licenses = $6,
        description = $7
-   RETURNING id"
+   RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(package.name))
   |> pog.parameter(pog.nullable(pog.text, package.html_url))
@@ -325,7 +326,7 @@ pub fn upsert_package(db: pog.Connection, package: hexpm.Package) {
   |> pog.parameter(package.meta.links |> helpers.json_dict() |> pog.text())
   |> pog.parameter(package.meta.licenses |> helpers.json_list() |> pog.text())
   |> pog.parameter(pog.nullable(pog.text, package.meta.description))
-  |> pog.returning(decode.at(["id"], decode.int))
+  |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
@@ -337,7 +338,7 @@ pub fn upsert_package(db: pog.Connection, package: hexpm.Package) {
 
 pub fn upsert_release(
   db: pog.Connection,
-  package_id: Int,
+  package_id: String,
   release: hexpm.Release,
   package_interface: Option(String),
   gleam_toml: Option(String),
@@ -356,16 +357,16 @@ pub fn upsert_release(
        package_interface = $4,
        gleam_toml = $5,
        inserted_at = $6
-   RETURNING id, package_interface, gleam_toml"
+   RETURNING id::text, package_interface, gleam_toml"
   |> pog.query
-  |> pog.parameter(pog.int(package_id))
+  |> pog.parameter(pog.text(package_id))
   |> pog.parameter(pog.text(release.version))
   |> pog.parameter(pog.text(release.url))
   |> pog.parameter(pog.nullable(pog.text, package_interface))
   |> pog.parameter(pog.nullable(pog.text, gleam_toml))
   |> pog.parameter(pog.timestamp(release.inserted_at))
   |> pog.returning({
-    use id <- decode.field("id", decode.int)
+    use id <- decode.field("id", decode.string)
     use it <- decode.field("package_interface", decode.optional(decode.string))
     use gl <- decode.field("gleam_toml", decode.optional(decode.string))
     decode.success(Interfaces(id, it, gl))
@@ -376,20 +377,20 @@ pub fn upsert_release(
 
 pub fn lookup_release(
   db: pog.Connection,
-  package_id: Int,
+  package_id: String,
   release: hexpm.Release,
-) {
-  "SELECT id, package_interface, gleam_toml
+) -> Result(Interfaces, error.Error) {
+  "SELECT id::text, package_interface, gleam_toml
   FROM package_release
   WHERE package_id = $1 AND version = $2"
   |> pog.query
-  |> pog.parameter(pog.int(package_id))
+  |> pog.parameter(pog.text(package_id))
   |> pog.parameter(pog.text(release.version))
   |> pog.returning({
-    use id <- decode.field("id", decode.int)
+    use id <- decode.field("id", decode.string)
     use it <- decode.field("package_interface", decode.optional(decode.string))
     use gl <- decode.field("gleam_toml", decode.optional(decode.string))
-    decode.success(#(id, it, gl))
+    decode.success(Interfaces(id, it, gl))
   })
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
@@ -403,12 +404,12 @@ pub fn lookup_release(
 pub fn add_package_gleam_constraint(
   db: pog.Connection,
   constraint: String,
-  release_id: Int,
-) {
+  release_id: String,
+) -> Result(Nil, error.Error) {
   "UPDATE package_release SET gleam_constraint = $1 WHERE id = $2"
   |> pog.query
   |> pog.parameter(pog.text(constraint))
-  |> pog.parameter(pog.int(release_id))
+  |> pog.parameter(pog.text(release_id))
   |> pog.execute(db)
   |> result.replace(Nil)
   |> result.map_error(error.DatabaseError)
@@ -417,12 +418,12 @@ pub fn add_package_gleam_constraint(
 pub fn add_package_retirement(
   db: pog.Connection,
   retirement: hexpm.ReleaseRetirement,
-  release_id: Int,
-) {
+  release_id: String,
+) -> Result(Nil, error.Error) {
   "UPDATE package_release SET retirement = $1 WHERE id = $2"
   |> pog.query
   |> pog.parameter(pog.text(encode_retirement(retirement)))
-  |> pog.parameter(pog.int(release_id))
+  |> pog.parameter(pog.text(release_id))
   |> pog.execute(db)
   |> result.replace(Nil)
   |> result.map_error(error.DatabaseError)
@@ -447,10 +448,10 @@ fn encode_retirement(retirement: hexpm.ReleaseRetirement) {
 pub fn get_package_release_ids(
   db: pog.Connection,
   package: package_interface.Package,
-) {
+) -> Result(#(String, String), error.Error) {
   "SELECT
-    package.id package_id,
-    package_release.id package_release_id
+    package.id::text package_id,
+    package_release.id::text package_release_id
   FROM package
   JOIN package_release
     ON package_release.package_id = package.id
@@ -460,8 +461,8 @@ pub fn get_package_release_ids(
   |> pog.parameter(pog.text(package.name))
   |> pog.parameter(pog.text(package.version))
   |> pog.returning({
-    use package_id <- decode.field("package_id", decode.int)
-    use package_release_id <- decode.field("package_release_id", decode.int)
+    use package_id <- decode.field("package_id", decode.string)
+    use package_release_id <- decode.field("package_release_id", decode.string)
     decode.success(#(package_id, package_release_id))
   })
   |> pog.execute(db)
@@ -480,7 +481,7 @@ pub fn upsert_package_module(db: pog.Connection, module: context.Module) {
      VALUES ($1, $2, $3)
      ON CONFLICT (name, package_release_id) DO UPDATE
        SET documentation = $2
-     RETURNING id"
+     RETURNING id::text"
     |> pog.query
     |> pog.parameter(pog.text(module.name))
     |> pog.parameter({
@@ -488,8 +489,8 @@ pub fn upsert_package_module(db: pog.Connection, module: context.Module) {
       |> string.join("\n")
       |> pog.text()
     })
-    |> pog.parameter(pog.int(module.release_id))
-    |> pog.returning(decode.at(["id"], decode.int))
+    |> pog.parameter(pog.text(module.release_id))
+    |> pog.returning(decode.at(["id"], decode.string))
     |> pog.execute(db)
     |> result.map_error(error.DatabaseError)
   })
@@ -520,10 +521,10 @@ pub fn upsert_package_type_fun_signature(
   signature signature: String,
   json_signature json_signature: json.Json,
   parameters parameters: List(Int),
-  module_id module_id: Int,
+  module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
-) {
+) -> Result(List(String), error.Error) {
   "INSERT INTO package_type_fun_signature (
      name,
      documentation,
@@ -546,7 +547,7 @@ pub fn upsert_package_type_fun_signature(
        metadata = $7,
        deprecation = $9,
        implementations = $10
-   RETURNING id"
+   RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
   |> pog.parameter({
@@ -560,7 +561,7 @@ pub fn upsert_package_type_fun_signature(
   |> pog.parameter(pog.text(kind_to_string(kind)))
   |> pog.parameter(pog.array(pog.int, parameters))
   |> pog.parameter(metadata |> json.to_string() |> pog.text())
-  |> pog.parameter(pog.int(module_id))
+  |> pog.parameter(pog.text(module_id))
   |> pog.parameter({
     deprecation
     |> option.map(fn(d) { d.message })
@@ -572,7 +573,7 @@ pub fn upsert_package_type_fun_signature(
     |> option.map(pog.text)
     |> option.unwrap(pog.null())
   })
-  |> pog.returning(decode.at(["id"], decode.int))
+  |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -824,7 +825,7 @@ pub fn module_search(db: pog.Connection, q: String) {
   |> result.map(fn(r) { r.rows })
 }
 
-pub fn exact_type_search(db: pog.Connection, q: List(Int)) {
+pub fn exact_type_search(db: pog.Connection, q: List(String)) {
   use <- bool.guard(when: list.is_empty(q), return: Ok([]))
   let ids =
     list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
@@ -854,7 +855,7 @@ pub fn exact_type_search(db: pog.Connection, q: List(Int)) {
    ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
   }
   |> pog.query
-  |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.int(q)) })
+  |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.text(q)) })
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
@@ -886,11 +887,11 @@ pub fn update_package_rank(db: pog.Connection, package: String, rank: Int) {
 }
 
 pub fn select_package_repository_address(db: pog.Connection, offset: Int) {
-  "SELECT id, repository FROM package LIMIT 100 OFFSET $1"
+  "SELECT id::text, repository FROM package LIMIT 100 OFFSET $1"
   |> pog.query
   |> pog.parameter(pog.int(offset))
   |> pog.returning({
-    use id <- decode.field("id", decode.int)
+    use id <- decode.field("id", decode.string)
     use repo <- decode.field("repository", decode.optional(decode.string))
     decode.success({
       case repo {
@@ -908,16 +909,16 @@ pub fn update_package_popularity(
   db: pog.Connection,
   url: String,
   popularity: Dict(String, Int),
-) {
+) -> Result(pog.Returned(Nil), error.Error) {
   "UPDATE package SET popularity = $2 WHERE repository = $1"
   |> pog.query
   |> pog.parameter(pog.text(url))
   |> pog.parameter({
     dict.to_list(popularity)
     |> list.map(pair.map_second(_, json.int))
-    |> json.object()
-    |> json.to_string()
-    |> pog.text()
+    |> json.object
+    |> json.to_string
+    |> pog.text
   })
   |> pog.execute(db)
   |> result.map_error(error.DatabaseError)
@@ -968,24 +969,24 @@ pub fn select_package_by_updated_at(db: pog.Connection) {
 
 pub fn insert_analytics(
   db: pog.Connection,
-  id: Int,
+  id: String,
   table_name: String,
   content: Dict(String, Int),
-) {
+) -> Result(pog.Returned(Nil), error.Error) {
   "INSERT INTO analytics (foreign_id, table_name, content, day)
    VALUES ($1, $2, $3, $4)
    ON CONFLICT (foreign_id, table_name, day) DO UPDATE
      SET content = $3"
   |> pog.query
-  |> pog.parameter(pog.int(id))
+  |> pog.parameter(pog.text(id))
   |> pog.parameter(pog.text(table_name))
   |> pog.parameter({
     content
-    |> dict.to_list()
+    |> dict.to_list
     |> list.map(pair.map_second(_, json.int))
-    |> json.object()
-    |> json.to_string()
-    |> pog.text()
+    |> json.object
+    |> json.to_string
+    |> pog.text
   })
   |> pog.parameter(pog.timestamp(start_day()))
   |> pog.execute(db)

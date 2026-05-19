@@ -138,7 +138,7 @@ fn do_sync_package(
   State(..state, last_logged: timestamp.system_time())
 }
 
-fn extract_interfaces_from_db(state: State, id: Int, release: hexpm.Release) {
+fn extract_interfaces_from_db(state: State, id: String, release: hexpm.Release) {
   use r <- result.try(queries.upsert_release(state.db, id, release, None, None))
   case list.first(r.rows) {
     Ok(row) -> Ok(row)
@@ -154,7 +154,7 @@ fn extract_interfaces_from_db(state: State, id: Int, release: hexpm.Release) {
 
 fn extract_interfaces_from_hex(
   state: State,
-  id: Int,
+  id: String,
   package: hexpm.Package,
   release: hexpm.Release,
 ) {
@@ -168,7 +168,7 @@ fn extract_interfaces_from_hex(
 
 fn extract_release_interfaces(
   state: State,
-  id: Int,
+  id: String,
   package: hexpm.Package,
   release: hexpm.Release,
   interfaces: Interfaces,
@@ -287,7 +287,7 @@ fn insert_package_and_releases(
 
 fn extract_package(
   state: State,
-  id: Int,
+  id: String,
   release: hexpm.Release,
   package: hexpm.Package,
   interfaces: Interfaces,

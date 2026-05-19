@@ -9,7 +9,7 @@ create type type_nature
 
 create table package_type_fun_signature (
   -- Primary key
-  id integer primary key generated always as identity,
+  id uuid primary key default uuidv7(),
 
   -- Data, used in search and display mostly.
   -- Keeping the source code signature, reconstructed from the package interface
@@ -28,7 +28,7 @@ create table package_type_fun_signature (
   -- Where is located the signature.
   -- Module is simply the module name from the package.
   -- Package can be retrieved through the package release.
-  package_module_id int references package_module(id),
+  package_module_id uuid references package_module(id),
 
   -- Metadata on the row itself.
   created_at timestamptz default current_timestamp not null,

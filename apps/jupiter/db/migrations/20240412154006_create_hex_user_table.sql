@@ -1,6 +1,6 @@
 -- migrate:up
 create table hex_user (
-  id integer primary key generated always as identity,
+  id uuid primary key default uuidv7(),
   username text unique not null,
   email text,
   url text not null,

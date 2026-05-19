@@ -17,9 +17,9 @@ pub type Context {
 pub type Module {
   Module(
     module: package_interface.Module,
-    id: Int,
+    id: String,
     name: String,
-    release_id: Int,
+    release_id: String,
   )
 }
 

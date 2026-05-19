@@ -1,6 +1,6 @@
 -- migrate:up
 create table package (
-  id integer primary key generated always as identity,
+  id uuid primary key default uuidv7(),
   name text unique not null,
   repository text,    -- Extracted from gleam.toml metadata, pushed on hex fortunately.
   documentation text, -- URL to documentation, something like https://hexdocs.pm/package.

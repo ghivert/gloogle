@@ -1,12 +1,13 @@
 {
-  "name": "backend",
+  "name": "@gloogle/jupiter",
   "packageManager": "yarn@4.9.2",
   "scripts": {
-    "backend:dev": "gleam run",
-    "backend:db:create": "docker run --name gloogle-postgres -it -e POSTGRES_PASSWORD=gloogle -e POSTGRES_USER=gloogle -d -p 5432:5432 postgres",
-    "backend:db:init": "yarn backend:db:create && sleep 5 && PGPASSWORD=gloogle psql -h localhost -U gloogle < db/seeds.sql",
-    "backend:db:drop": "docker stop gloogle-postgres && docker rm gloogle-postgres",
-    "backend:db:reset": "yarn backend:db:drop && yarn backend:db:init"
+    "jupiter:dev": "gleam run",
+    "jupiter:db:create": "docker run --name gloogle-postgres -it -e POSTGRES_PASSWORD=gloogle -e POSTGRES_USER=gloogle -d -p 5432:5432 postgres",
+    "jupiter:db:init": "yarn jupiter:db:create && sleep 5 && PGPASSWORD=gloogle psql -h localhost -U gloogle < db/seeds.sql",
+    "jupiter:db:migrate": "dbmate up",
+    "jupiter:db:drop": "docker stop gloogle-postgres && docker rm gloogle-postgres",
+    "jupiter:db:reset": "yarn jupiter:db:drop && yarn jupiter:db:init"
   },
   "devDependencies": {
     "@chouquette/gleam": "^1.11.0"

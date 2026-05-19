@@ -35,18 +35,18 @@ fn do_compute_popularity(ctx: Context, offset offset: Int) {
   |> result.try(fn(_) { do_compute_popularity(ctx, offset: offset + 100) })
 }
 
-fn update_repo_popularity(ctx: Context, repo: Option(#(Int, String))) {
+fn update_repo_popularity(ctx: Context, repo: Option(#(String, String))) {
   repo
   |> error.from_option("No repository found")
   |> result.try(do_update_repo_popularity(ctx, _))
   |> result.lazy_or(fn() { Ok(Nil) })
 }
 
-fn do_update_repo_popularity(ctx: Context, repo: #(Int, String)) {
+fn do_update_repo_popularity(ctx: Context, repo: #(String, String)) {
   let #(popularity, repo) = repo
   palabres.debug("Syncing repository")
   |> palabres.string("repository", repo)
-  |> palabres.int("popularity", popularity)
+  |> palabres.string("popularity", popularity)
   |> palabres.at(module:, function: "update_repo_popularity")
   |> palabres.log
   use github <- result.try(github.get_stargazer_count(ctx.github_token, repo))
@@ -56,7 +56,7 @@ fn do_update_repo_popularity(ctx: Context, repo: #(Int, String)) {
   |> result_.tap(fn(_) {
     palabres.debug("Synced repository")
     |> palabres.string("repository", repo)
-    |> palabres.int("popularity", popularity)
+    |> palabres.string("popularity", popularity)
     |> palabres.at(module:, function: "updated_repo_popularity")
     |> palabres.log
   })

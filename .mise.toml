@@ -1,8 +1,9 @@
 # Runtimes used by the stack.
 [tools]
-gleam = "1.14.0"
+gleam = "1.16.0"
 erlang = "28"
 node = "24"
+elixir = "1.19"
 
 # Environment variables shared by all applications.
 [env]

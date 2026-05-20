@@ -1,8 +1,8 @@
 import api/hex as api
 import api/hex_repo
 import api/signatures
-import function
 import gleam/bool
+import gleam/function_
 import gleam/hexpm.{type Package}
 import gleam/list
 import gleam/option.{None, Some}
@@ -46,7 +46,10 @@ pub fn sync_new_gleam_releases(ctx: Context) -> Result(HexRead, Error) {
   |> palabres.log
   use limit <- result.try(queries.get_last_hex_date(ctx.db))
   use latest <- result.try(sync_packages(init_state(ctx, limit)))
-  use _ <- function.tap(queries.upsert_most_recent_hex_timestamp(ctx.db, latest))
+  use _ <- function_.tap(queries.upsert_most_recent_hex_timestamp(
+    ctx.db,
+    latest,
+  ))
   palabres.info("Up to date!")
   |> palabres.at(module:, function: "sync_new_gleam_releases")
   |> palabres.log
@@ -120,7 +123,7 @@ fn do_sync_package(
         let date = timestamp.to_rfc3339(package.updated_at, calendar.utc_offset)
         palabres.info("Still syncing")
         |> palabres.string("up_to", date)
-        |> palabres.at(module:, function: "log_if_needed")
+        |> palabres.at(module:, function: "do_sync_package")
         |> palabres.log
         Ok(State(..state, last_logged: timestamp.system_time()))
       }
@@ -200,7 +203,7 @@ fn save_retirement_data(
       |> palabres.string("release", release)
       |> palabres.nullable("message", retirement.message, palabres.string)
       |> palabres.string("reason", reason_to_string(retirement.reason))
-      |> palabres.at(module:, function: "log_retirement_data")
+      |> palabres.at(module:, function: "save_retirement_data")
       |> palabres.log
       queries.add_package_retirement(state.db, retirement, interfaces.id)
     }

@@ -1,6 +1,7 @@
 import api/github
 import gleam/bool
 import gleam/dict.{type Dict}
+import gleam/function_
 import gleam/list
 import gleam/option.{type Option}
 import gleam/result
@@ -17,10 +18,13 @@ pub fn compute_popularity(ctx: Context) -> Result(Nil, error.Error) {
   case ctx.env {
     environment.Development -> Ok(Nil)
     environment.Production -> {
-      palabres.log_info("Syncing popularity")
-      let popularity = do_compute_popularity(ctx, offset: 0)
-      palabres.log_info("Syncing popularity finished!")
-      popularity
+      palabres.info("Syncing popularity")
+      |> palabres.at(module:, function: "compute_popularity")
+      |> palabres.log
+      use _ <- function_.tap(do_compute_popularity(ctx, offset: 0))
+      palabres.info("Syncing popularity finished!")
+      |> palabres.at(module:, function: "compute_popularity")
+      |> palabres.log
     }
   }
 }

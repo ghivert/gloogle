@@ -3,10 +3,13 @@ import gleam/erlang/process.{type Subject}
 import gleam/float
 import gleam/function_
 import gleam/otp/actor
+import gleam/string
 import gleam/time/timestamp
 import jupiter/error.{type Error}
+import palabres
 import prng/random
-import wisp
+
+const module = "processes/retrier"
 
 pub opaque type Message {
   Rerun
@@ -64,17 +67,25 @@ fn loop(state: State(a), message: Message) -> actor.Next(State(a), Message) {
   case message, state.work(state.iterations) {
     Rerun, Ok(_) -> actor.stop()
     Rerun, Error(error) -> {
-      wisp.log_notice("Process on error")
+      let pid = process.self()
+      palabres.warning("Process on error")
+      |> palabres.string("pid", string.inspect(pid))
+      |> palabres.at(module:, function: "loop")
+      |> palabres.log
       error.log_error(error)
       use <- bool.lazy_guard(when: state.iterations == 0, return: stop_process)
       State(..state, iterations: state.iterations - 1)
-      |> enqueue_next_rerun()
-      |> actor.continue()
+      |> enqueue_next_rerun
+      |> actor.continue
     }
   }
 }
 
 fn stop_process() {
-  wisp.log_notice("Stopping process after 10 iterations")
+  let pid = process.self()
+  palabres.notice("Stopping process after 10 iterations")
+  |> palabres.string("pid", string.inspect(pid))
+  |> palabres.at(module:, function: "stop_process")
+  |> palabres.log
   actor.stop()
 }

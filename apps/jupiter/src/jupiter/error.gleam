@@ -7,10 +7,10 @@ import gleam/option.{type Option, None, Some}
 import gleam/otp/actor
 import gleam/result
 import gleam/string
+import palabres
 import pog
 import simplifile
 import tom
-import wisp
 
 pub type Error {
   DatabaseError(pog.QueryError)
@@ -44,25 +44,25 @@ pub fn replace_nil(res, message: String) {
 }
 
 pub fn log_dynamic_error(error: decode.DecodeError) {
-  wisp.log_warning("Dynamic Decode Error")
-  wisp.log_warning("  expected: " <> error.expected)
-  wisp.log_warning("  found: " <> error.found)
-  wisp.log_warning("  path: " <> string.join(error.path, " / "))
+  palabres.log_warning("Dynamic Decode Error")
+  palabres.log_warning("  expected: " <> error.expected)
+  palabres.log_warning("  found: " <> error.found)
+  palabres.log_warning("  path: " <> string.join(error.path, " / "))
 }
 
 pub fn log_decode_error(error: json.DecodeError) {
   case error {
-    json.UnexpectedEndOfInput -> wisp.log_warning("Unexpected end of input")
+    json.UnexpectedEndOfInput -> palabres.log_warning("Unexpected end of input")
     json.UnexpectedByte(byte) -> {
-      wisp.log_warning("Unexpected byte")
-      wisp.log_warning("  byte: " <> byte)
+      palabres.log_warning("Unexpected byte")
+      palabres.log_warning("  byte: " <> byte)
     }
     json.UnexpectedSequence(byte) -> {
-      wisp.log_warning("Unexpected sequence")
-      wisp.log_warning("  byte: " <> byte)
+      palabres.log_warning("Unexpected sequence")
+      palabres.log_warning("  byte: " <> byte)
     }
     json.UnableToDecode(errors) -> {
-      wisp.log_warning("Unexpected format")
+      palabres.log_warning("Unexpected format")
       list.map(errors, log_dynamic_error)
       Nil
     }
@@ -72,31 +72,31 @@ pub fn log_decode_error(error: json.DecodeError) {
 pub fn log_error(error: Error) {
   case error {
     EmptyError -> Nil
-    ActorError(error) -> wisp.log_warning(string.inspect(error))
-    HttpcError(_dyn) -> wisp.log_warning("Fetch error")
+    ActorError(error) -> palabres.log_warning(string.inspect(error))
+    HttpcError(_dyn) -> palabres.log_warning("Fetch error")
     DatabaseError(error) -> {
-      wisp.log_warning("Query error")
+      palabres.log_warning("Query error")
       log_pog_error(error)
     }
     JsonError(error) -> {
-      wisp.log_warning("JSON error")
+      palabres.log_warning("JSON error")
       log_decode_error(error)
     }
     SimplifileError(error, filepath) -> {
-      wisp.log_warning("Simplifile error")
-      wisp.log_warning("  filepath: " <> filepath)
+      palabres.log_warning("Simplifile error")
+      palabres.log_warning("  filepath: " <> filepath)
       log_simplifile(error)
     }
     UnknownError(error) -> {
-      wisp.log_warning("Unknown error")
-      wisp.log_warning("  error: " <> error)
+      palabres.log_warning("Unknown error")
+      palabres.log_warning("  error: " <> error)
     }
     ParseTomlError(error) -> {
-      wisp.log_warning("Parse Toml Error")
+      palabres.log_warning("Parse Toml Error")
       log_parse_tom_error(error)
     }
     GetTomlError(error) -> {
-      wisp.log_warning("Get Toml Error")
+      palabres.log_warning("Get Toml Error")
       log_get_tom_error(error)
     }
   }
@@ -110,13 +110,13 @@ pub fn debug_log(error: Error) {
 pub fn log_parse_tom_error(error: tom.ParseError) {
   case error {
     tom.Unexpected(got, expected) -> {
-      wisp.log_warning("Unexpected TOML error")
-      wisp.log_warning("  got: " <> got)
-      wisp.log_warning("  expected: " <> expected)
+      palabres.log_warning("Unexpected TOML error")
+      palabres.log_warning("  got: " <> got)
+      palabres.log_warning("  expected: " <> expected)
     }
     tom.KeyAlreadyInUse(key) -> {
-      wisp.log_warning("Key already in use")
-      wisp.log_warning("  key: " <> string.join(key, "/"))
+      palabres.log_warning("Key already in use")
+      palabres.log_warning("  key: " <> string.join(key, "/"))
     }
   }
 }
@@ -124,105 +124,105 @@ pub fn log_parse_tom_error(error: tom.ParseError) {
 pub fn log_get_tom_error(error: tom.GetError) {
   case error {
     tom.NotFound(key) -> {
-      wisp.log_warning("Key not found")
-      wisp.log_warning("  key: " <> string.join(key, "/"))
+      palabres.log_warning("Key not found")
+      palabres.log_warning("  key: " <> string.join(key, "/"))
     }
     tom.WrongType(key, expected, got) -> {
-      wisp.log_warning("Wrong type")
-      wisp.log_warning("  key: " <> string.join(key, "/"))
-      wisp.log_warning("  got: " <> got)
-      wisp.log_warning("  expected: " <> expected)
+      palabres.log_warning("Wrong type")
+      palabres.log_warning("  key: " <> string.join(key, "/"))
+      palabres.log_warning("  got: " <> got)
+      palabres.log_warning("  expected: " <> expected)
     }
   }
 }
 
 pub fn log_simplifile(error: simplifile.FileError) {
   case error {
-    simplifile.Eacces -> wisp.log_warning("Eacces")
-    simplifile.Eagain -> wisp.log_warning("Eagain")
-    simplifile.Ebadf -> wisp.log_warning("Ebadf")
-    simplifile.Ebadmsg -> wisp.log_warning("Ebadmsg")
-    simplifile.Ebusy -> wisp.log_warning("Ebusy")
-    simplifile.Edeadlk -> wisp.log_warning("Edeadlk")
-    simplifile.Edeadlock -> wisp.log_warning("Edeadlock")
-    simplifile.Edquot -> wisp.log_warning("Edquot")
-    simplifile.Eexist -> wisp.log_warning("Eexist")
-    simplifile.Efault -> wisp.log_warning("Efault")
-    simplifile.Efbig -> wisp.log_warning("Efbig")
-    simplifile.Eftype -> wisp.log_warning("Eftype")
-    simplifile.Eintr -> wisp.log_warning("Eintr")
-    simplifile.Einval -> wisp.log_warning("Einval")
-    simplifile.Eio -> wisp.log_warning("Eio")
-    simplifile.Eisdir -> wisp.log_warning("Eisdir")
-    simplifile.Eloop -> wisp.log_warning("Eloop")
-    simplifile.Emfile -> wisp.log_warning("Emfile")
-    simplifile.Emlink -> wisp.log_warning("Emlink")
-    simplifile.Emultihop -> wisp.log_warning("Emultihop")
-    simplifile.Enametoolong -> wisp.log_warning("Enametoolong")
-    simplifile.Enfile -> wisp.log_warning("Enfile")
-    simplifile.Enobufs -> wisp.log_warning("Enobufs")
-    simplifile.Enodev -> wisp.log_warning("Enodev")
-    simplifile.Enolck -> wisp.log_warning("Enolck")
-    simplifile.Enolink -> wisp.log_warning("Enolink")
-    simplifile.Enoent -> wisp.log_warning("Enoent")
-    simplifile.Enomem -> wisp.log_warning("Enomem")
-    simplifile.Enospc -> wisp.log_warning("Enospc")
-    simplifile.Enosr -> wisp.log_warning("Enosr")
-    simplifile.Enostr -> wisp.log_warning("Enostr")
-    simplifile.Enosys -> wisp.log_warning("Enosys")
-    simplifile.Enotblk -> wisp.log_warning("Enotblk")
-    simplifile.Enotdir -> wisp.log_warning("Enotdir")
-    simplifile.Enotsup -> wisp.log_warning("Enotsup")
-    simplifile.Enxio -> wisp.log_warning("Enxio")
-    simplifile.Eopnotsupp -> wisp.log_warning("Eopnotsupp")
-    simplifile.Eoverflow -> wisp.log_warning("Eoverflow")
-    simplifile.Eperm -> wisp.log_warning("Eperm")
-    simplifile.Epipe -> wisp.log_warning("Epipe")
-    simplifile.Erange -> wisp.log_warning("Erange")
-    simplifile.Erofs -> wisp.log_warning("Erofs")
-    simplifile.Espipe -> wisp.log_warning("Espipe")
-    simplifile.Esrch -> wisp.log_warning("Esrch")
-    simplifile.Estale -> wisp.log_warning("Estale")
-    simplifile.Etxtbsy -> wisp.log_warning("Etxtbsy")
-    simplifile.Exdev -> wisp.log_warning("Exdev")
-    simplifile.NotUtf8 -> wisp.log_warning("NotUtf8")
-    simplifile.Unknown(_) -> wisp.log_warning("Unknown")
+    simplifile.Eacces -> palabres.log_warning("Eacces")
+    simplifile.Eagain -> palabres.log_warning("Eagain")
+    simplifile.Ebadf -> palabres.log_warning("Ebadf")
+    simplifile.Ebadmsg -> palabres.log_warning("Ebadmsg")
+    simplifile.Ebusy -> palabres.log_warning("Ebusy")
+    simplifile.Edeadlk -> palabres.log_warning("Edeadlk")
+    simplifile.Edeadlock -> palabres.log_warning("Edeadlock")
+    simplifile.Edquot -> palabres.log_warning("Edquot")
+    simplifile.Eexist -> palabres.log_warning("Eexist")
+    simplifile.Efault -> palabres.log_warning("Efault")
+    simplifile.Efbig -> palabres.log_warning("Efbig")
+    simplifile.Eftype -> palabres.log_warning("Eftype")
+    simplifile.Eintr -> palabres.log_warning("Eintr")
+    simplifile.Einval -> palabres.log_warning("Einval")
+    simplifile.Eio -> palabres.log_warning("Eio")
+    simplifile.Eisdir -> palabres.log_warning("Eisdir")
+    simplifile.Eloop -> palabres.log_warning("Eloop")
+    simplifile.Emfile -> palabres.log_warning("Emfile")
+    simplifile.Emlink -> palabres.log_warning("Emlink")
+    simplifile.Emultihop -> palabres.log_warning("Emultihop")
+    simplifile.Enametoolong -> palabres.log_warning("Enametoolong")
+    simplifile.Enfile -> palabres.log_warning("Enfile")
+    simplifile.Enobufs -> palabres.log_warning("Enobufs")
+    simplifile.Enodev -> palabres.log_warning("Enodev")
+    simplifile.Enolck -> palabres.log_warning("Enolck")
+    simplifile.Enolink -> palabres.log_warning("Enolink")
+    simplifile.Enoent -> palabres.log_warning("Enoent")
+    simplifile.Enomem -> palabres.log_warning("Enomem")
+    simplifile.Enospc -> palabres.log_warning("Enospc")
+    simplifile.Enosr -> palabres.log_warning("Enosr")
+    simplifile.Enostr -> palabres.log_warning("Enostr")
+    simplifile.Enosys -> palabres.log_warning("Enosys")
+    simplifile.Enotblk -> palabres.log_warning("Enotblk")
+    simplifile.Enotdir -> palabres.log_warning("Enotdir")
+    simplifile.Enotsup -> palabres.log_warning("Enotsup")
+    simplifile.Enxio -> palabres.log_warning("Enxio")
+    simplifile.Eopnotsupp -> palabres.log_warning("Eopnotsupp")
+    simplifile.Eoverflow -> palabres.log_warning("Eoverflow")
+    simplifile.Eperm -> palabres.log_warning("Eperm")
+    simplifile.Epipe -> palabres.log_warning("Epipe")
+    simplifile.Erange -> palabres.log_warning("Erange")
+    simplifile.Erofs -> palabres.log_warning("Erofs")
+    simplifile.Espipe -> palabres.log_warning("Espipe")
+    simplifile.Esrch -> palabres.log_warning("Esrch")
+    simplifile.Estale -> palabres.log_warning("Estale")
+    simplifile.Etxtbsy -> palabres.log_warning("Etxtbsy")
+    simplifile.Exdev -> palabres.log_warning("Exdev")
+    simplifile.NotUtf8 -> palabres.log_warning("NotUtf8")
+    simplifile.Unknown(_) -> palabres.log_warning("Unknown")
   }
 }
 
 pub fn log_pog_error(error: pog.QueryError) {
   case error {
     pog.ConstraintViolated(message, constraint, details) -> {
-      wisp.log_warning("Constraint violated")
-      wisp.log_warning("  message: " <> message)
-      wisp.log_warning("  constraint: " <> constraint)
-      wisp.log_warning("  details: " <> details)
+      palabres.log_warning("Constraint violated")
+      palabres.log_warning("  message: " <> message)
+      palabres.log_warning("  constraint: " <> constraint)
+      palabres.log_warning("  details: " <> details)
     }
     pog.PostgresqlError(code, name, message) -> {
       let code = result.unwrap(pog.error_code_name(code), code)
-      wisp.log_warning("PostgreSQL error")
-      wisp.log_warning("  error: " <> code)
-      wisp.log_warning("  name: " <> name)
-      wisp.log_warning("  message: " <> message)
+      palabres.log_warning("PostgreSQL error")
+      palabres.log_warning("  error: " <> code)
+      palabres.log_warning("  name: " <> name)
+      palabres.log_warning("  message: " <> message)
     }
     pog.UnexpectedArgumentCount(expected, got) -> {
-      wisp.log_warning("Unexpected argument count")
-      wisp.log_warning("  expected: " <> int.to_string(expected))
-      wisp.log_warning("  got: " <> int.to_string(got))
+      palabres.log_warning("Unexpected argument count")
+      palabres.log_warning("  expected: " <> int.to_string(expected))
+      palabres.log_warning("  got: " <> int.to_string(got))
     }
     pog.UnexpectedArgumentType(expected, got) -> {
-      wisp.log_warning("Unexpected argument type")
-      wisp.log_warning("  expected: " <> expected)
-      wisp.log_warning("  got: " <> got)
+      palabres.log_warning("Unexpected argument type")
+      palabres.log_warning("  expected: " <> expected)
+      palabres.log_warning("  got: " <> got)
     }
     pog.UnexpectedResultType(error) -> {
-      wisp.log_warning("Unexpected result type")
+      palabres.log_warning("Unexpected result type")
       list.map(error, log_dynamic_error)
       Nil
     }
     pog.QueryTimeout -> {
-      wisp.log_warning("Query timeout")
+      palabres.log_warning("Query timeout")
     }
-    pog.ConnectionUnavailable -> wisp.log_warning("Connection unavailable")
+    pog.ConnectionUnavailable -> palabres.log_warning("Connection unavailable")
   }
 }

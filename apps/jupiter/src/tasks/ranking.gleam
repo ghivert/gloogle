@@ -1,6 +1,6 @@
-import function
 import gleam/bool
 import gleam/dict.{type Dict}
+import gleam/function_
 import gleam/list
 import gleam/option
 import gleam/result
@@ -19,7 +19,7 @@ pub fn compute_ranking(ctx: Context) -> Result(Nil, Error) {
   palabres.info("Syncing package ranks")
   |> palabres.at(module:, function: "compute_ranking")
   |> palabres.log
-  use _ <- function.tap(compute_and_save_rankings(ctx))
+  use _ <- function_.tap(compute_and_save_rankings(ctx))
   palabres.info("Syncing package ranks finished!")
   |> palabres.at(module:, function: "compute_ranking")
   |> palabres.log

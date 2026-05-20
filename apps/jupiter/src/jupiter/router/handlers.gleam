@@ -9,9 +9,12 @@ import gleam/result
 import jupiter/context.{type Context}
 import jupiter/error
 import jupiter/postgres/queries
+import palabres
 import pog
 import tasks/hex as syncing
 import wisp.{type Request}
+
+const module = "jupiter/router/handlers"
 
 pub fn analytics(_req: Request, ctx: Context) {
   select_all_analytics(ctx)
@@ -92,7 +95,10 @@ fn select_all_analytics(ctx: Context) {
 }
 
 fn do_search(query: String, ctx: Context) {
-  wisp.log_notice("Searching for " <> query)
+  palabres.notice("Search")
+  |> palabres.string("query", query)
+  |> palabres.at(module:, function: "do_search")
+  |> palabres.log
   let _ = queries.upsert_search_analytics(ctx.db, query)
 
   // let exact_type_searches = exec_type_search(ctx, query)

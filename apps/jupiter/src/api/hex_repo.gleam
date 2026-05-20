@@ -1,10 +1,10 @@
 import aws/s3
 import fs
-import function
 import gleam/bit_array
 import gleam/dict.{type Dict}
 import gleam/erlang/os
 import gleam/erlang/process
+import gleam/function_
 import gleam/http
 import gleam/http/request
 import gleam/http/response.{Response}
@@ -98,7 +98,7 @@ fn create_archive(
   version: String,
   archive: BitArray,
 ) -> BitArray {
-  use _ <- function.tap(archive)
+  use _ <- function_.tap(archive)
   let slug = package_slug(name, version) <> ".tar"
   let package_path = string.join([archives_path, name], with: "/")
   let _ = simplifile.create_directory_all(package_path)
@@ -241,6 +241,6 @@ pub type PackageContent {
 pub fn get_package_infos(name: String, version: String) {
   let slug = package_slug(name, version)
   let file_path = "/tmp/" <> slug
-  use _ <- function.tap(extract_package_infos(name, version))
+  use _ <- function_.tap(extract_package_infos(name, version))
   tar.remove(file_path)
 }

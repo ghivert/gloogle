@@ -10,7 +10,9 @@ import jupiter/gleam/generate/sources
 import jupiter/gleam/generate/types
 import jupiter/gleam/type_search
 import jupiter/postgres/queries
-import wisp
+import palabres
+
+const module_name = "api/signatures"
 
 fn add_gleam_constraint(ctx: Context, release_id: String) {
   case ctx.package_interface.gleam_version_constraint {
@@ -21,7 +23,12 @@ fn add_gleam_constraint(ctx: Context, release_id: String) {
 
 fn upsert_type_definitions(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_debug("Extracting " <> name <> " type definitions")
+  palabres.debug("Extracting type definitions")
+  |> palabres.string("name", name)
+  |> palabres.string("module_id", module.id)
+  |> palabres.string("release_id", module.release_id)
+  |> palabres.at(module: module_name, function: "upsert_type_definitions")
+  |> palabres.log
   let all_types = dict.to_list(module.module.types)
   result.all({
     let kind = queries.TypeDefinition
@@ -62,7 +69,12 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
 
 fn upsert_type_aliases(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_debug("Extracting " <> name <> " type aliases")
+  palabres.debug("Extracting type aliases")
+  |> palabres.string("name", name)
+  |> palabres.string("module_id", module.id)
+  |> palabres.string("release_id", module.release_id)
+  |> palabres.at(module: module_name, function: "upsert_type_aliases")
+  |> palabres.log
   let all_types = dict.to_list(module.module.type_aliases)
   result.all({
     let kind = queries.TypeAlias
@@ -103,7 +115,12 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
 
 fn upsert_constants(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_debug("Extracting " <> name <> " constants")
+  palabres.debug("Extracting constants")
+  |> palabres.string("name", name)
+  |> palabres.string("module_id", module.id)
+  |> palabres.string("release_id", module.release_id)
+  |> palabres.at(module: module_name, function: "upsert_constants")
+  |> palabres.log
   let all_constants = dict.to_list(module.module.constants)
   result.all({
     use #(name, constant) <- list.map(all_constants)
@@ -129,7 +146,12 @@ fn upsert_constants(ctx: Context, module: context.Module) {
 
 fn upsert_functions(ctx: Context, module: context.Module) {
   let name = context.qualified_name(ctx, module)
-  wisp.log_debug("Extracting " <> name <> " functions")
+  palabres.debug("Extracting functions")
+  |> palabres.string("name", name)
+  |> palabres.string("module_id", module.id)
+  |> palabres.string("release_id", module.release_id)
+  |> palabres.at(module: module_name, function: "upsert_functions")
+  |> palabres.log
   let all_functions = dict.to_list(module.module.functions)
   result.all({
     use #(name, function) <- list.map(all_functions)
@@ -169,7 +191,12 @@ fn extract_module_signatures(
 ) {
   let module = context.Module(module.1, "-1", module.0, release_id)
   let name = context.qualified_name(ctx, module)
-  wisp.log_debug("Extracting " <> name <> " signatures")
+  palabres.debug("Extracting signatures")
+  |> palabres.string("name", name)
+  |> palabres.string("module_id", module.id)
+  |> palabres.string("release_id", module.release_id)
+  |> palabres.at(module: module_name, function: "extract_module_signatures")
+  |> palabres.log
   use module_id <- result.try(queries.upsert_package_module(ctx.db, module))
   let module = context.Module(..module, id: module_id)
   use _ <- result.try(upsert_type_definitions(ctx, module))
@@ -178,7 +205,12 @@ fn extract_module_signatures(
   case upsert_functions(ctx, module) {
     Error(err) -> Error(err)
     Ok(content) -> {
-      wisp.log_debug("Extracting " <> name <> " finished")
+      palabres.debug("Extracting signatures finished")
+      |> palabres.string("name", name)
+      |> palabres.string("module_id", module.id)
+      |> palabres.string("release_id", module.release_id)
+      |> palabres.at(module: module_name, function: "extract_module_signatures")
+      |> palabres.log
       Ok(content)
     }
   }
@@ -187,7 +219,10 @@ fn extract_module_signatures(
 pub fn extract_signatures(ctx: Context) {
   let package = ctx.package_interface
   let package_slug = package.name <> "@" <> package.version
-  wisp.log_debug("Extracting signatures for " <> package_slug)
+  palabres.debug("Extracting signatures")
+  |> palabres.string("package_slug", package_slug)
+  |> palabres.at(module: module_name, function: "extract_signatures")
+  |> palabres.log
   let res = queries.get_package_release_ids(ctx.db, ctx.package_interface)
   use #(_pid, release_id) <- result.try(res)
   use _ <- result.try(add_gleam_constraint(ctx, release_id))

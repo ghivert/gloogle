@@ -1,4 +1,4 @@
-import function
+import gleam/function_
 import gleam/list
 import gleam/result
 import jupiter/context.{type Context}
@@ -13,7 +13,7 @@ pub fn store_timeseries(ctx: Context) {
   |> palabres.at(module:, function: "store_timeseries")
   |> palabres.log
   use analytics <- result.try(queries.select_last_day_search_analytics(ctx.db))
-  use _ <- function.tap(do_store_timeseries(ctx, analytics))
+  use _ <- function_.tap(do_store_timeseries(ctx, analytics))
   palabres.info("Storing analytics finished!")
   |> palabres.at(module:, function: "store_timeseries")
   |> palabres.log

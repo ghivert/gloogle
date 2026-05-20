@@ -73,7 +73,7 @@ fn package_slug(name: String, version: String) {
 
 fn create_archives_directory() {
   fs.home()
-  |> result.replace_error(error.UnknownError("home not found"))
+  |> result.replace_error(error.CustomError("home not found"))
   |> result.map(fn(home) {
     let archives_path = string.join([home, "archives/gleam"], with: "/")
     let _ = simplifile.create_directory_all(archives_path)
@@ -197,7 +197,7 @@ fn parse_toml(toml: String) {
     |> palabres.string("toml", toml)
     |> palabres.at(module:, function: "parse_toml")
     |> palabres.log
-    error.ParseTomlError(error)
+    error.TomlParseError(error)
   })
 }
 
@@ -214,7 +214,7 @@ fn extract_package_infos(name: String, version: String) {
       |> palabres.string("package_name", package_name)
       |> palabres.at(module:, function: "extract_package_infos")
       |> palabres.log
-      error.UnknownError("Impossible to extract tar for " <> package_name)
+      error.CustomError("Impossible to extract tar for " <> package_name)
     })
   })
   use interface <- result.try(read_interface(package_interface, build_output))

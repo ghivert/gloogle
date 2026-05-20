@@ -1,4 +1,5 @@
 import gleam/dynamic/decode
+import gleam/erlang/process
 import gleam/httpc
 import gleam/int
 import gleam/json
@@ -13,216 +14,199 @@ import simplifile
 import tom
 
 pub type Error {
+  ActorError(actor.StartError)
+  CustomError(String)
   DatabaseError(pog.QueryError)
+  EmptyError
   HttpcError(httpc.HttpError)
   JsonError(json.DecodeError)
   SimplifileError(simplifile.FileError, String)
-  UnknownError(String)
-  ParseTomlError(tom.ParseError)
-  GetTomlError(tom.GetError)
-  EmptyError
-  ActorError(actor.StartError)
+  TomlGetError(tom.GetError)
+  TomlParseError(tom.ParseError)
 }
 
 pub fn empty() {
-  Error(EmptyError)
+  EmptyError
+  |> Error
 }
 
 pub fn new(message: String) {
-  Error(UnknownError(message))
+  message
+  |> CustomError
+  |> Error
 }
 
 pub fn from_option(value: Option(a), message: String) -> Result(a, Error) {
   case value {
     Some(value) -> Ok(value)
-    None -> Error(UnknownError(message))
+    None -> Error(CustomError(message))
   }
 }
 
-pub fn replace_nil(res, message: String) {
-  result.replace_error(res, UnknownError(message))
-}
-
-pub fn log_dynamic_error(error: decode.DecodeError) {
-  palabres.log_warning("Dynamic Decode Error")
-  palabres.log_warning("  expected: " <> error.expected)
-  palabres.log_warning("  found: " <> error.found)
-  palabres.log_warning("  path: " <> string.join(error.path, " / "))
-}
-
-pub fn log_decode_error(error: json.DecodeError) {
-  case error {
-    json.UnexpectedEndOfInput -> palabres.log_warning("Unexpected end of input")
-    json.UnexpectedByte(byte) -> {
-      palabres.log_warning("Unexpected byte")
-      palabres.log_warning("  byte: " <> byte)
-    }
-    json.UnexpectedSequence(byte) -> {
-      palabres.log_warning("Unexpected sequence")
-      palabres.log_warning("  byte: " <> byte)
-    }
-    json.UnableToDecode(errors) -> {
-      palabres.log_warning("Unexpected format")
-      list.map(errors, log_dynamic_error)
-      Nil
-    }
-  }
-}
-
-pub fn log_error(error: Error) {
+pub fn log(error: Error) {
   case error {
     EmptyError -> Nil
-    ActorError(error) -> palabres.log_warning(string.inspect(error))
-    HttpcError(_dyn) -> palabres.log_warning("Fetch error")
+    ActorError(error) -> {
+      palabres.warning("Actor error")
+      |> palabres.string("error", "actor.StartError")
+      |> palabres.string("type", {
+        case error {
+          actor.InitTimeout -> "Init timeout"
+          actor.InitFailed(failure) -> "Init failed: " <> failure
+          actor.InitExited(process.Normal) -> "Exit Normal"
+          actor.InitExited(process.Killed) -> "Exit Killed"
+          actor.InitExited(process.Abnormal(reason:)) ->
+            "Exit Abnormal: " <> string.inspect(reason)
+        }
+      })
+      |> palabres.log
+    }
+    HttpcError(dyn) -> {
+      palabres.warning("Fetch error")
+      |> palabres.string("error", "httpc.HttpError")
+      |> palabres.string("type", {
+        case dyn {
+          httpc.InvalidUtf8Response -> "Invalid UTF-8 Response"
+          httpc.FailedToConnect(..) -> "Failed to connect"
+          httpc.ResponseTimeout -> "Response timeout"
+        }
+      })
+      |> palabres.log
+    }
     DatabaseError(error) -> {
-      palabres.log_warning("Query error")
-      log_pog_error(error)
+      palabres.warning("Query error")
+      |> palabres.string("error", "pog.QueryError")
+      |> log_pog_error(error)
+      |> palabres.log
     }
     JsonError(error) -> {
-      palabres.log_warning("JSON error")
-      log_decode_error(error)
+      palabres.warning("JSON error")
+      |> palabres.string("error", "json.DecodeError")
+      |> log_decode_error(error)
+      |> palabres.log
     }
     SimplifileError(error, filepath) -> {
-      palabres.log_warning("Simplifile error")
-      palabres.log_warning("  filepath: " <> filepath)
-      log_simplifile(error)
+      palabres.warning("Simplifile error")
+      |> palabres.string("error", "simplifile.FileError")
+      |> palabres.string("filepath", filepath)
+      |> palabres.string("code", string.lowercase(string.inspect(error)))
+      |> palabres.log
     }
-    UnknownError(error) -> {
-      palabres.log_warning("Unknown error")
-      palabres.log_warning("  error: " <> error)
+    CustomError(error) -> {
+      palabres.warning("Unknown error")
+      |> palabres.string("error", "CustomError")
+      |> palabres.string("content", error)
+      |> palabres.log
     }
-    ParseTomlError(error) -> {
-      palabres.log_warning("Parse Toml Error")
-      log_parse_tom_error(error)
+    TomlParseError(error) -> {
+      palabres.warning("Parse Toml Error")
+      |> palabres.string("error", "tom.ParseError")
+      |> log_parse_tom_error(error)
+      |> palabres.log
     }
-    GetTomlError(error) -> {
-      palabres.log_warning("Get Toml Error")
-      log_get_tom_error(error)
-    }
-  }
-}
-
-pub fn debug_log(error: Error) {
-  log_error(error)
-  error
-}
-
-pub fn log_parse_tom_error(error: tom.ParseError) {
-  case error {
-    tom.Unexpected(got, expected) -> {
-      palabres.log_warning("Unexpected TOML error")
-      palabres.log_warning("  got: " <> got)
-      palabres.log_warning("  expected: " <> expected)
-    }
-    tom.KeyAlreadyInUse(key) -> {
-      palabres.log_warning("Key already in use")
-      palabres.log_warning("  key: " <> string.join(key, "/"))
+    TomlGetError(error) -> {
+      palabres.warning("Get Toml Error")
+      |> palabres.string("error", "tom.GetError")
+      |> log_get_tom_error(error)
+      |> palabres.log
     }
   }
 }
 
-pub fn log_get_tom_error(error: tom.GetError) {
+fn log_dynamic_error(log: palabres.Log, errors: List(decode.DecodeError)) {
+  use log, error, index <- list.index_fold(errors, log)
+  let index = int.to_string(index)
+  palabres.string(log, "error_" <> index, {
+    json.to_string({
+      json.object([
+        #("expected", json.string(error.expected)),
+        #("found", json.string(error.found)),
+        #("path", json.array(error.path, json.string)),
+      ])
+    })
+  })
+}
+
+fn log_decode_error(log: palabres.Log, error: json.DecodeError) {
   case error {
-    tom.NotFound(key) -> {
-      palabres.log_warning("Key not found")
-      palabres.log_warning("  key: " <> string.join(key, "/"))
-    }
-    tom.WrongType(key, expected, got) -> {
-      palabres.log_warning("Wrong type")
-      palabres.log_warning("  key: " <> string.join(key, "/"))
-      palabres.log_warning("  got: " <> got)
-      palabres.log_warning("  expected: " <> expected)
-    }
+    json.UnexpectedEndOfInput ->
+      palabres.string(log, "type", "Unexpected end of input")
+    json.UnexpectedByte(byte) ->
+      log
+      |> palabres.string("type", "Unexpected byte")
+      |> palabres.string("byte", byte)
+    json.UnexpectedSequence(byte) ->
+      log
+      |> palabres.string("type", "Unexpected sequence")
+      |> palabres.string("byte", byte)
+    json.UnableToDecode(errors) ->
+      log
+      |> palabres.string("type", "Unable to decode")
+      |> log_dynamic_error(errors)
   }
 }
 
-pub fn log_simplifile(error: simplifile.FileError) {
+fn log_parse_tom_error(log: palabres.Log, error: tom.ParseError) {
   case error {
-    simplifile.Eacces -> palabres.log_warning("Eacces")
-    simplifile.Eagain -> palabres.log_warning("Eagain")
-    simplifile.Ebadf -> palabres.log_warning("Ebadf")
-    simplifile.Ebadmsg -> palabres.log_warning("Ebadmsg")
-    simplifile.Ebusy -> palabres.log_warning("Ebusy")
-    simplifile.Edeadlk -> palabres.log_warning("Edeadlk")
-    simplifile.Edeadlock -> palabres.log_warning("Edeadlock")
-    simplifile.Edquot -> palabres.log_warning("Edquot")
-    simplifile.Eexist -> palabres.log_warning("Eexist")
-    simplifile.Efault -> palabres.log_warning("Efault")
-    simplifile.Efbig -> palabres.log_warning("Efbig")
-    simplifile.Eftype -> palabres.log_warning("Eftype")
-    simplifile.Eintr -> palabres.log_warning("Eintr")
-    simplifile.Einval -> palabres.log_warning("Einval")
-    simplifile.Eio -> palabres.log_warning("Eio")
-    simplifile.Eisdir -> palabres.log_warning("Eisdir")
-    simplifile.Eloop -> palabres.log_warning("Eloop")
-    simplifile.Emfile -> palabres.log_warning("Emfile")
-    simplifile.Emlink -> palabres.log_warning("Emlink")
-    simplifile.Emultihop -> palabres.log_warning("Emultihop")
-    simplifile.Enametoolong -> palabres.log_warning("Enametoolong")
-    simplifile.Enfile -> palabres.log_warning("Enfile")
-    simplifile.Enobufs -> palabres.log_warning("Enobufs")
-    simplifile.Enodev -> palabres.log_warning("Enodev")
-    simplifile.Enolck -> palabres.log_warning("Enolck")
-    simplifile.Enolink -> palabres.log_warning("Enolink")
-    simplifile.Enoent -> palabres.log_warning("Enoent")
-    simplifile.Enomem -> palabres.log_warning("Enomem")
-    simplifile.Enospc -> palabres.log_warning("Enospc")
-    simplifile.Enosr -> palabres.log_warning("Enosr")
-    simplifile.Enostr -> palabres.log_warning("Enostr")
-    simplifile.Enosys -> palabres.log_warning("Enosys")
-    simplifile.Enotblk -> palabres.log_warning("Enotblk")
-    simplifile.Enotdir -> palabres.log_warning("Enotdir")
-    simplifile.Enotsup -> palabres.log_warning("Enotsup")
-    simplifile.Enxio -> palabres.log_warning("Enxio")
-    simplifile.Eopnotsupp -> palabres.log_warning("Eopnotsupp")
-    simplifile.Eoverflow -> palabres.log_warning("Eoverflow")
-    simplifile.Eperm -> palabres.log_warning("Eperm")
-    simplifile.Epipe -> palabres.log_warning("Epipe")
-    simplifile.Erange -> palabres.log_warning("Erange")
-    simplifile.Erofs -> palabres.log_warning("Erofs")
-    simplifile.Espipe -> palabres.log_warning("Espipe")
-    simplifile.Esrch -> palabres.log_warning("Esrch")
-    simplifile.Estale -> palabres.log_warning("Estale")
-    simplifile.Etxtbsy -> palabres.log_warning("Etxtbsy")
-    simplifile.Exdev -> palabres.log_warning("Exdev")
-    simplifile.NotUtf8 -> palabres.log_warning("NotUtf8")
-    simplifile.Unknown(_) -> palabres.log_warning("Unknown")
+    tom.Unexpected(got, expected) ->
+      log
+      |> palabres.string("type", "Unexpected TOML error")
+      |> palabres.string("got", got)
+      |> palabres.string("expected", expected)
+    tom.KeyAlreadyInUse(key) ->
+      log
+      |> palabres.string("type", "Key already in use")
+      |> palabres.string("key", string.join(key, "/"))
   }
 }
 
-pub fn log_pog_error(error: pog.QueryError) {
+fn log_get_tom_error(log: palabres.Log, error: tom.GetError) {
   case error {
-    pog.ConstraintViolated(message, constraint, details) -> {
-      palabres.log_warning("Constraint violated")
-      palabres.log_warning("  message: " <> message)
-      palabres.log_warning("  constraint: " <> constraint)
-      palabres.log_warning("  details: " <> details)
-    }
-    pog.PostgresqlError(code, name, message) -> {
-      let code = result.unwrap(pog.error_code_name(code), code)
-      palabres.log_warning("PostgreSQL error")
-      palabres.log_warning("  error: " <> code)
-      palabres.log_warning("  name: " <> name)
-      palabres.log_warning("  message: " <> message)
-    }
-    pog.UnexpectedArgumentCount(expected, got) -> {
-      palabres.log_warning("Unexpected argument count")
-      palabres.log_warning("  expected: " <> int.to_string(expected))
-      palabres.log_warning("  got: " <> int.to_string(got))
-    }
-    pog.UnexpectedArgumentType(expected, got) -> {
-      palabres.log_warning("Unexpected argument type")
-      palabres.log_warning("  expected: " <> expected)
-      palabres.log_warning("  got: " <> got)
-    }
-    pog.UnexpectedResultType(error) -> {
-      palabres.log_warning("Unexpected result type")
-      list.map(error, log_dynamic_error)
-      Nil
-    }
-    pog.QueryTimeout -> {
-      palabres.log_warning("Query timeout")
-    }
-    pog.ConnectionUnavailable -> palabres.log_warning("Connection unavailable")
+    tom.NotFound(key) ->
+      log
+      |> palabres.string("type", "Key not found")
+      |> palabres.string("key", string.join(key, "/"))
+    tom.WrongType(key, expected, got) ->
+      log
+      |> palabres.string("type", "Wrong type")
+      |> palabres.string("key", string.join(key, "/"))
+      |> palabres.string("got", got)
+      |> palabres.string("expected", expected)
+  }
+}
+
+fn log_pog_error(log: palabres.Log, error: pog.QueryError) {
+  case error {
+    pog.QueryTimeout -> palabres.string(log, "type", "Query timeout")
+    pog.ConstraintViolated(message, constraint, details) ->
+      log
+      |> palabres.string("type", "Constraint violated")
+      |> palabres.string("message", message)
+      |> palabres.string("constraint", constraint)
+      |> palabres.string("details", details)
+    pog.PostgresqlError(code, name, message) ->
+      log
+      |> palabres.string("type", "PostgreSQL error")
+      |> palabres.string("name", name)
+      |> palabres.string("message", message)
+      |> palabres.string("error", {
+        result.unwrap(pog.error_code_name(code), code)
+      })
+    pog.UnexpectedArgumentCount(expected, got) ->
+      log
+      |> palabres.string("type", "Unexpected argument count")
+      |> palabres.int("expected", expected)
+      |> palabres.int("got", got)
+    pog.UnexpectedArgumentType(expected, got) ->
+      log
+      |> palabres.string("type", "Unexpected argument type")
+      |> palabres.string("expected", expected)
+      |> palabres.string("got", got)
+    pog.UnexpectedResultType(errors) ->
+      log
+      |> palabres.string("type", "Unexpected result type")
+      |> log_dynamic_error(errors)
+    pog.ConnectionUnavailable ->
+      palabres.string(log, "type", "Connection unavailable")
   }
 }

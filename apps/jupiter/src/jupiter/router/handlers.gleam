@@ -2,6 +2,7 @@ import api/hex
 import data/analytics
 import data/package
 import data/type_search
+import gleam/function_
 import gleam/int
 import gleam/json
 import gleam/list
@@ -24,7 +25,7 @@ pub fn analytics(_req: Request, ctx: Context) {
     |> json.to_string
     |> wisp.json_response(200)
   })
-  |> result.map_error(error.debug_log)
+  |> result.map_error(function_.tap(_, error.log))
   |> result.unwrap(wisp.internal_server_error())
 }
 
@@ -172,7 +173,7 @@ fn exec_search(
   previous: List(type_search.TypeSearch),
 ) -> List(type_search.TypeSearch) {
   run(ctx.db, query)
-  |> result.map_error(error.debug_log)
+  |> result.map_error(function_.tap(_, error.log))
   |> result.unwrap([])
   |> list.filter(fn(i) { !list.contains(previous, i) })
 }

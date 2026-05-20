@@ -5,7 +5,7 @@ import gleam/dynamic/decode
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/order
+import gleam/order.{type Order}
 import gleam/package_interface as pi
 import gleam/pair
 import gleam/result
@@ -160,7 +160,7 @@ fn keep_matching_requirement(release: #(Int, String), requirement: String) {
 fn by_decreasing_version(
   release_1: #(Int, String),
   release_2: #(Int, String),
-) -> order.Order {
+) -> Order {
   let #(_, release_1_version) = release_1
   let #(_, release_2_version) = release_2
   let release_1_version = bit_array.from_string(release_1_version)
@@ -200,8 +200,9 @@ fn find_signature_from_release(
   |> pog.execute(ctx.db)
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
+    let error = error.CustomError("[find_signature_from_release] No row")
     list.first(response.rows)
-    |> error.replace_nil("[find_signature_from_release] No row")
+    |> result.replace_error(error)
   })
 }
 
@@ -224,7 +225,7 @@ fn find_type_signature(
       False -> {
         { package_name <> ", needs to access " <> slug }
         |> fn(content) { "Inside " <> content <> ". Not found." }
-        |> error.UnknownError
+        |> error.CustomError
         |> Error
       }
       True -> {
@@ -239,7 +240,7 @@ fn find_type_signature(
               Ok(_) -> {
                 { package_name <> ", looking for " <> slug }
                 |> fn(id) { "Inside type aliases " <> id <> ". Not found." }
-                |> error.UnknownError
+                |> error.CustomError
                 |> Error
               }
               // Type is hidden, should check if type defed.
@@ -251,7 +252,7 @@ fn find_type_signature(
                   Ok(_) -> {
                     { package_name <> ", looking for " <> slug }
                     |> fn(id) { "Inside types " <> id <> ". Not found." }
-                    |> error.UnknownError
+                    |> error.CustomError
                     |> Error
                   }
                 }
@@ -334,9 +335,9 @@ pub fn function_to_json(
 ) -> Result(#(Json, List(Int)), error.Error) {
   let mapper = parameters_to_json(ctx, _)
   use gen <- result.try(reduce_components(function.parameters, mapper))
-  use ret <- result.map(type_to_json(ctx, function.return))
+  use #(return, parameters) <- result.map(type_to_json(ctx, function.return))
   gen
-  |> pair.map_second(fn(s) { set.to_list(set.union(s, ret.1)) })
+  |> pair.map_second(fn(s) { set.to_list(set.union(s, parameters)) })
   |> pair.map_first(fn(parameters) {
     json.object([
       #("kind", json.string("function")),
@@ -345,7 +346,7 @@ pub fn function_to_json(
       #("deprecation", json.nullable(function.documentation, json.string)),
       #("implementations", implementations_to_json(function.implementations)),
       #("parameters", json.preprocessed_array(parameters)),
-      #("return", ret.0),
+      #("return", return),
     ])
   })
 }

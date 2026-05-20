@@ -27,5 +27,5 @@ pub fn find_package_requirement(ctx: Context, package_name: String) {
   extract_package_version(ctx, package_name)
   |> result.try_recover(fn(_) { extract_dep_version(ctx, package_name) })
   |> result.try_recover(fn(_) { extract_dev_dep_version(ctx, package_name) })
-  |> result.map_error(error.GetTomlError)
+  |> result.map_error(error.TomlGetError)
 }

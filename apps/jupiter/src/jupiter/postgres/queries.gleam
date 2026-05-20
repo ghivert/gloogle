@@ -62,7 +62,7 @@ pub fn upsert_most_recent_hex_timestamp(db: pog.Connection, latest: Timestamp) {
     let err = "Upsert most recent hex timestamp failed"
     response.rows
     |> list.first
-    |> result.replace_error(error.UnknownError(err))
+    |> result.replace_error(error.CustomError(err))
   })
 }
 
@@ -81,7 +81,7 @@ pub fn upsert_search_analytics(db: pog.Connection, query: String) {
     let err = "Upsert search analytics failed"
     response.rows
     |> list.first()
-    |> result.replace_error(error.UnknownError(err))
+    |> result.replace_error(error.CustomError(err))
   })
 }
 
@@ -332,7 +332,7 @@ pub fn upsert_package(db: pog.Connection, package: hexpm.Package) {
   |> result.try(fn(response) {
     response.rows
     |> list.first()
-    |> result.replace_error(error.UnknownError("Upsert package error"))
+    |> result.replace_error(error.CustomError("Upsert package error"))
   })
 }
 
@@ -397,7 +397,7 @@ pub fn lookup_release(
   |> result.try(fn(res) {
     res.rows
     |> list.first()
-    |> result.replace_error(error.UnknownError(""))
+    |> result.replace_error(error.CustomError(""))
   })
 }
 
@@ -469,7 +469,7 @@ pub fn get_package_release_ids(
   |> result.map_error(error.DatabaseError)
   |> result.try(fn(response) {
     list.first(response.rows)
-    |> result.replace_error(error.UnknownError(
+    |> result.replace_error(error.CustomError(
       "No release found for " <> package.name <> "@" <> package.version,
     ))
   })
@@ -496,7 +496,7 @@ pub fn upsert_package_module(db: pog.Connection, module: context.Module) {
   })
   response.rows
   |> list.first()
-  |> result.replace_error(error.UnknownError(
+  |> result.replace_error(error.CustomError(
     "No module found for " <> module.name,
   ))
 }

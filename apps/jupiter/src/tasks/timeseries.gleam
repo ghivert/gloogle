@@ -23,5 +23,5 @@ fn do_store_timeseries(ctx: Context, analytics: List(#(String, Int))) {
   analytics
   |> list.map(queries.upsert_search_analytics_timeseries(ctx.db, _))
   |> result.all
-  |> result.map_error(error.debug_log)
+  |> result.map_error(function_.tap(_, error.log))
 }

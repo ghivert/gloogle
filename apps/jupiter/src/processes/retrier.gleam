@@ -72,7 +72,7 @@ fn loop(state: State(a), message: Message) -> actor.Next(State(a), Message) {
       |> palabres.string("pid", string.inspect(pid))
       |> palabres.at(module:, function: "loop")
       |> palabres.log
-      error.log_error(error)
+      error.log(error)
       use <- bool.lazy_guard(when: state.iterations == 0, return: stop_process)
       State(..state, iterations: state.iterations - 1)
       |> enqueue_next_rerun

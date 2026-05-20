@@ -28,14 +28,14 @@ pub fn compute_ranking(ctx: Context) -> Result(Nil, Error) {
 fn compute_and_save_rankings(ctx: Context) {
   compute_packages_ranking(ctx)
   |> result.try(save_packages_rank(ctx, _))
-  |> result.map_error(error.debug_log)
+  |> result.map_error(function_.tap(_, error.log))
   |> result.replace(Nil)
 }
 
 fn compute_packages_ranking(ctx: Context) {
   use usages, gleam_toml <- do_compute_packages_ranking(ctx, 0, dict.new())
   tom.parse(gleam_toml)
-  |> result.map_error(error.ParseTomlError)
+  |> result.map_error(error.TomlParseError)
   |> result.map(add_dependencies(from: _, in: usages))
   |> result.unwrap(usages)
 }

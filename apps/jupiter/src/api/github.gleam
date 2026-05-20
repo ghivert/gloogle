@@ -19,7 +19,7 @@ pub fn get_stargazer_count(token: String, repo_url: String) {
       let returning = stargazer_count.decoder()
       query(token:, query: stargazer_count.query, variables:, returning:)
     }
-    _ -> Error(error.UnknownError(""))
+    _ -> Error(error.CustomError(""))
   }
 }
 
@@ -61,5 +61,5 @@ fn match_repository_name(repo_url: String) {
   let err = "No repository match for " <> repo_url
   regexp.scan(with: owner_name, content: repo_url)
   |> list.first
-  |> result.replace_error(error.UnknownError(err))
+  |> result.replace_error(error.CustomError(err))
 }

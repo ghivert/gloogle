@@ -23,7 +23,7 @@ pub fn main() {
     |> supervisor.auto_shutdown(supervisor.AnySignificant)
     |> supervisor.add(postgres)
     |> supervisor.add(http_server(ctx))
-    |> supervisor.add(periodic_workers(ctx))
+    // |> supervisor.add(periodic_workers(ctx))
     |> supervisor.add(type_search.worker(ctx))
     |> supervisor.start
   process.sleep_forever()

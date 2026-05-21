@@ -19,8 +19,8 @@ import pog
 
 fn reduce_components(
   components: List(a),
-  mapper: fn(a) -> Result(#(Json, Set(Int)), error.Error),
-) -> Result(#(List(Json), Set(Int)), error.Error) {
+  mapper: fn(a) -> Result(#(Json, Set(String)), error.Error),
+) -> Result(#(List(Json), Set(String)), error.Error) {
   let init = Ok(#([], set.new()))
   use acc, val <- list.fold_right(components, init)
   use #(constructors, old_ids) <- result.try(acc)
@@ -33,7 +33,7 @@ pub fn type_definition_to_json(
   ctx: Context,
   type_name: String,
   type_def: pi.TypeDefinition,
-) -> Result(#(Json, List(Int)), error.Error) {
+) -> Result(#(Json, List(String)), error.Error) {
   let mapper = type_constructor_to_json(ctx, _)
   use gen <- result.map(reduce_components(type_def.constructors, mapper))
   use constructors <- pair.map_first(pair.map_second(gen, set.to_list))
@@ -123,7 +123,7 @@ fn type_to_json(ctx: Context, type_: pi.Type) {
 }
 
 fn find_package_release(ctx: Context, package: String, requirement: String) {
-  "SELECT package_release.id id, package_release.version version
+  "SELECT package_release.id::text id, package_release.version version
   FROM package
   JOIN package_release
     ON package.id = package_release.package_id
@@ -131,7 +131,7 @@ fn find_package_release(ctx: Context, package: String, requirement: String) {
   |> pog.query
   |> pog.parameter(pog.text(package))
   |> pog.returning({
-    use id <- decode.field("id", decode.int)
+    use id <- decode.field("id", decode.string)
     use version <- decode.field("version", decode.string)
     decode.success(#(id, version))
   })
@@ -141,7 +141,7 @@ fn find_package_release(ctx: Context, package: String, requirement: String) {
   |> result.map(keep_matching_releases(_, requirement))
 }
 
-fn keep_matching_releases(rows: List(#(Int, String)), requirement: String) {
+fn keep_matching_releases(rows: List(#(String, String)), requirement: String) {
   let by_matching_requirement = keep_matching_requirement(_, requirement)
   rows
   |> list.filter(by_matching_requirement)
@@ -149,7 +149,7 @@ fn keep_matching_releases(rows: List(#(Int, String)), requirement: String) {
   |> list.map(pair.first)
 }
 
-fn keep_matching_requirement(release: #(Int, String), requirement: String) {
+fn keep_matching_requirement(release: #(String, String), requirement: String) {
   let #(_release_id, release_version) = release
   let requirement = bit_array.from_string(requirement)
   let version = bit_array.from_string(release_version)
@@ -158,8 +158,8 @@ fn keep_matching_requirement(release: #(Int, String), requirement: String) {
 }
 
 fn by_decreasing_version(
-  release_1: #(Int, String),
-  release_2: #(Int, String),
+  release_1: #(String, String),
+  release_2: #(String, String),
 ) -> Order {
   let #(_, release_1_version) = release_1
   let #(_, release_2_version) = release_2
@@ -175,11 +175,11 @@ fn find_signature_from_release(
   ctx: Context,
   name: String,
   module: String,
-  releases: List(Int),
-) -> Result(#(String, Int), error.Error) {
+  releases: List(String),
+) -> Result(#(String, String), error.Error) {
   use acc, release <- list.fold(releases, error.empty())
   use <- bool.guard(when: result.is_ok(acc), return: acc)
-  "SELECT release.version version, signature.id id
+  "SELECT release.version version, signature.id::text id
   FROM package_release release
   JOIN package_module module
     ON module.package_release_id = release.id
@@ -191,10 +191,10 @@ fn find_signature_from_release(
   |> pog.query
   |> pog.parameter(pog.text(name))
   |> pog.parameter(pog.text(module))
-  |> pog.parameter(pog.int(release))
+  |> pog.parameter(pog.text(release))
   |> pog.returning({
     use version <- decode.field("version", decode.string)
-    use id <- decode.field("id", decode.int)
+    use id <- decode.field("id", decode.string)
     decode.success(#(version, id))
   })
   |> pog.execute(ctx.db)
@@ -211,8 +211,8 @@ fn find_type_signature(
   name: String,
   package: String,
   module: String,
-  releases: List(Int),
-) -> Result(Option(#(String, Int)), error.Error) {
+  releases: List(String),
+) -> Result(Option(#(String, String)), error.Error) {
   find_signature_from_release(ctx, name, module, releases)
   |> result.map(Some)
   |> result.lazy_or(fn() {
@@ -270,7 +270,7 @@ fn extract_parameters_relation(
   name: String,
   package: String,
   module: String,
-) -> Result(Option(#(String, Int)), error.Error) {
+) -> Result(Option(#(String, String)), error.Error) {
   use <- bool.guard(when: is_prelude(package, module), return: Ok(None))
   use requirement <- result.try(toml.find_package_requirement(ctx, package))
   use releases <- result.try(find_package_release(ctx, package, requirement))
@@ -315,7 +315,7 @@ pub fn constant_to_json(
   ctx: Context,
   constant_name: String,
   constant: pi.Constant,
-) -> Result(#(Json, List(Int)), error.Error) {
+) -> Result(#(Json, List(String)), error.Error) {
   use gen <- result.map(type_to_json(ctx, constant.type_))
   use type_ <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
@@ -332,7 +332,7 @@ pub fn function_to_json(
   ctx: Context,
   function_name: String,
   function: pi.Function,
-) -> Result(#(Json, List(Int)), error.Error) {
+) -> Result(#(Json, List(String)), error.Error) {
   let mapper = parameters_to_json(ctx, _)
   use gen <- result.try(reduce_components(function.parameters, mapper))
   use #(return, parameters) <- result.map(type_to_json(ctx, function.return))

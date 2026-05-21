@@ -227,7 +227,7 @@ pub fn extract_signatures(ctx: Context) {
   use #(_pid, release_id) <- result.try(res)
   use _ <- result.try(add_gleam_constraint(ctx, release_id))
   package.modules
-  |> dict.to_list()
+  |> dict.to_list
   |> list.map(extract_module_signatures(ctx, release_id, _))
-  |> result.all()
+  |> result.all
 }

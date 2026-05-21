@@ -3,12 +3,14 @@ import gleam/http
 import gleam/http/request
 import gleam/option.{type Option, None, Some}
 import jupiter/context/environment
+import palabres_wisp
 import wisp.{type Request, type Response}
 
 pub type Handler =
   fn(Request) -> Response
 
 pub fn foundations(req: Request, handler: Handler) -> Response {
+  use <- palabres_wisp.log_request(req)
   use <- wisp.rescue_crashes()
   use req <- wisp.handle_head(req)
   handler(req)

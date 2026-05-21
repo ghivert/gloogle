@@ -35,6 +35,7 @@ packages = [
   { name = "mist", version = "6.0.3", build_tools = ["gleam"], requirements = ["exception", "gleam_erlang", "gleam_http", "gleam_otp", "gleam_stdlib", "glisten", "gramps", "hpack_erl", "logging"], otp_app = "mist", source = "hex", outer_checksum = "1B07F321D5FA0CB162D81496F2DE96AEB6EF8980F4F38230A4CC3F849497E020" },
   { name = "opentelemetry_api", version = "1.5.0", build_tools = ["rebar3", "mix"], requirements = [], otp_app = "opentelemetry_api", source = "hex", outer_checksum = "F53EC8A1337AE4A487D43AC89DA4BD3A3C99DDF576655D071DEED8B56A2D5DDA" },
   { name = "palabres", version = "1.0.4", build_tools = ["gleam"], requirements = ["envoy", "gleam_stdlib"], otp_app = "palabres", source = "hex", outer_checksum = "2809B7C10AE929E82454B4A6A0FB7D02073C5A509F9A63EE9F7B268A75D98965" },
+  { name = "palabres_wisp", version = "1.0.2", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_stdlib", "palabres", "wisp"], otp_app = "palabres_wisp", source = "hex", outer_checksum = "B7CE0DB665C4676B337AF12104E296FA4F6EB7FE4C4AAADF68DCFA009DB0C110" },
   { name = "pg_types", version = "0.6.0", build_tools = ["rebar3"], requirements = [], otp_app = "pg_types", source = "hex", outer_checksum = "9949A4849DD13408FA249AB7B745E0D2DFDB9532AEE2B9722326E33CD082A778" },
   { name = "pgo", version = "0.20.0", build_tools = ["rebar3"], requirements = ["backoff", "opentelemetry_api", "pg_types"], otp_app = "pgo", source = "hex", outer_checksum = "2F11E6649CEB38E569EF56B16BE1D04874AE5B11A02867080A2817CE423C683B" },
   { name = "plasma", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "gleam_time", "verl", "youid"], source = "local", path = "../../packages/plasma" },
@@ -73,6 +74,7 @@ gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
 glexer = { version = ">= 2.0.0 and < 3.0.0" }
 mist = { version = ">= 6.0.0 and < 7.0.0" }
 palabres = { version = ">= 1.0.0 and < 2.0.0" }
+palabres_wisp = { version = ">= 1.0.2 and < 2.0.0" }
 plasma = { path = "../../packages/plasma" }
 pog = { version = ">= 4.0.0 and < 5.0.0" }
 prng = { version = ">= 5.0.0 and < 6.0.0" }

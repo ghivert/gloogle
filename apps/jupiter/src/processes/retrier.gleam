@@ -25,7 +25,7 @@ type State(a) {
   )
 }
 
-pub const one_minute: Int = 3_600_000
+pub const one_minute: Int = 900_000
 
 fn enqueue_next_rerun(state: State(a)) {
   let #(random_ints, seed) = state.random_ints

@@ -30,6 +30,7 @@ ranger = ">= 1.4.0 and < 2.0.0"
 simplifile = ">= 2.1.0 and < 3.0.0"
 tom = ">= 2.0.0 and < 3.0.0"
 wisp = ">= 2.0.0 and < 3.0.0"
+palabres_wisp = ">= 1.0.2 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

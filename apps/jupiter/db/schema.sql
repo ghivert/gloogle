@@ -1,5 +1,3 @@
-\restrict ERWmtho6H5LjpAi7D2AkNlAaR753fypecF8p2at75KiQm1aTtFZXuQs0mNvAWlJ
-
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
 -- Dumped by pg_dump version 18.0
 
@@ -199,7 +197,7 @@ CREATE TABLE public.package_type_fun_signature (
     signature_ text NOT NULL,
     json_signature jsonb NOT NULL,
     kind public.type_nature CONSTRAINT package_type_fun_signature_nature_not_null NOT NULL,
-    parameters integer[] NOT NULL,
+    parameters uuid[] NOT NULL,
     deprecation text,
     implementations text,
     metadata jsonb NOT NULL,
@@ -493,9 +491,6 @@ ALTER TABLE ONLY public.package_type_fun_signature
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict ERWmtho6H5LjpAi7D2AkNlAaR753fypecF8p2at75KiQm1aTtFZXuQs0mNvAWlJ
-
 
 --
 -- Dbmate schema migrations

@@ -20,7 +20,7 @@ create table package_type_fun_signature (
   signature_ text not null,
   json_signature jsonb not null,
   nature type_nature not null,
-  parameters int[] not null,
+  parameters uuid[] not null,
   deprecation text,
   implementations text,
   metadata jsonb not null,

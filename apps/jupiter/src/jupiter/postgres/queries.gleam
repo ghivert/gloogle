@@ -520,7 +520,7 @@ pub fn upsert_package_type_fun_signature(
   metadata metadata: json.Json,
   signature signature: String,
   json_signature json_signature: json.Json,
-  parameters parameters: List(Int),
+  parameters parameters: List(String),
   module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
@@ -553,13 +553,13 @@ pub fn upsert_package_type_fun_signature(
   |> pog.parameter({
     documentation
     |> option.unwrap("")
-    |> string.trim()
-    |> pog.text()
+    |> string.trim
+    |> pog.text
   })
   |> pog.parameter(pog.text(signature))
   |> pog.parameter(json_signature |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(kind_to_string(kind)))
-  |> pog.parameter(pog.array(pog.int, parameters))
+  |> pog.parameter(pog.array(pog.text, parameters))
   |> pog.parameter(metadata |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(module_id))
   |> pog.parameter({

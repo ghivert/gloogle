@@ -1,6 +1,6 @@
-import frontend/colors/palette
 import lustre/attribute as a
 import lustre/element/html as h
+import venus/colors/palette
 
 fn span(text: String, color: String) {
   h.span([a.style("color", color)], [h.text(text)])

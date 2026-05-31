@@ -1,6 +1,6 @@
 import data/type_search.{type TypeSearch}
-import frontend/view/helpers
 import gleam/dynamic/decode
+import venus/view/helpers
 
 pub type SearchResults {
   Start

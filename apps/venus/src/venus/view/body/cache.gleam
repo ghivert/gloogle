@@ -1,12 +1,12 @@
 import data/msg
 import data/type_search
-import frontend/view/body/search_result as sr
-import frontend/view/types as t
 import gleam/list
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
+import venus/view/body/search_result as sr
+import venus/view/types as t
 
 fn view_search_results(search_results: List(type_search.TypeSearch)) {
   list.map(search_results, sr.view)

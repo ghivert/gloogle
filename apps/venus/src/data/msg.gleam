@@ -1,9 +1,9 @@
 import data/analytics
 import data/package
 import data/search_result.{type SearchResults}
-import frontend/discuss
-import frontend/router
 import gleam/dynamic.{type Dynamic}
+import venus/discuss
+import venus/router
 
 pub type Filter {
   Functions

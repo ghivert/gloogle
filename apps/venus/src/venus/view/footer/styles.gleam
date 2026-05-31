@@ -1,7 +1,7 @@
-import frontend/colors/palette
 import sketch/css
 import sketch/css/length.{px}
 import sketch/lustre/element/html as h
+import venus/colors/palette
 
 pub fn footer(attributes, children) {
   css.class([

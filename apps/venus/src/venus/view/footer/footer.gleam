@@ -1,15 +1,15 @@
 import bright
 import data/model.{type Model}
 import data/msg
-import frontend/view/footer/links.{links}
-import frontend/view/footer/styles as s
-import frontend/view/search_input/search_input
 import gleam/bool
 import gleam/list
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
+import venus/view/footer/links.{links}
+import venus/view/footer/styles as s
+import venus/view/search_input/search_input
 
 pub fn view() {
   s.footer([], [

@@ -1,7 +1,7 @@
 import gleam/bool
 import gleam/result
-import jupiter/error
 import jupiter/gleam/context.{type Context}
+import jupiter/loss
 import tom
 
 fn is_dependency(ctx: Context, package_name: String) {
@@ -27,5 +27,5 @@ pub fn find_package_requirement(ctx: Context, package_name: String) {
   extract_package_version(ctx, package_name)
   |> result.try_recover(fn(_) { extract_dep_version(ctx, package_name) })
   |> result.try_recover(fn(_) { extract_dev_dep_version(ctx, package_name) })
-  |> result.map_error(error.TomlGetError)
+  |> result.map_error(loss.TomlGetError)
 }

@@ -5,8 +5,6 @@ import data/msg.{type Msg}
 import data/package.{type Package}
 import data/search_result.{type SearchResults, SearchResults}
 import data/type_search.{type TypeSearch}
-import frontend/router
-import frontend/view/body/cache
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
@@ -17,6 +15,8 @@ import gleam/result
 import gleam/string
 import gleam/time/timestamp
 import lustre/element.{type Element}
+import venus/router
+import venus/view/body/cache
 
 pub type Index =
   List(#(#(String, String), List(#(String, String))))

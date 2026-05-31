@@ -7,7 +7,7 @@ import gleam/int
 import gleam/json
 import gleam/result
 import gleam/uri
-import jupiter/error
+import jupiter/loss.{type Loss}
 
 pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
   use response <- result.try({
@@ -17,12 +17,12 @@ pub fn get_package_owners(package_name: String, secret hex_api_key: String) {
     |> request.prepend_header("authorization", hex_api_key)
     |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.HttpcError)
+    |> result.map_error(loss.HttpcError)
   })
 
   response.body
   |> json.parse(using: decode.list(hex_owner_decoder()))
-  |> result.map_error(error.JsonError)
+  |> result.map_error(loss.JsonError)
 }
 
 pub fn get_package(package_name: String, secret hex_api_key: String) {
@@ -33,12 +33,12 @@ pub fn get_package(package_name: String, secret hex_api_key: String) {
     |> request.prepend_header("authorization", hex_api_key)
     |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.HttpcError)
+    |> result.map_error(loss.HttpcError)
   })
 
   response.body
   |> json.parse(using: hexpm.package_decoder())
-  |> result.map_error(error.JsonError)
+  |> result.map_error(loss.JsonError)
 }
 
 fn hex_owner_decoder() {
@@ -48,7 +48,10 @@ fn hex_owner_decoder() {
   decode.success(hexpm.PackageOwner(username:, email:, url:))
 }
 
-pub fn lookup_release(release: hexpm.PackageRelease, secret hex_api_key: String) {
+pub fn lookup_release(
+  release: hexpm.PackageRelease,
+  secret hex_api_key: String,
+) -> Loss(hexpm.Release) {
   let assert Ok(url) = uri.parse(release.url)
   use response <- result.try({
     request.new()
@@ -57,12 +60,12 @@ pub fn lookup_release(release: hexpm.PackageRelease, secret hex_api_key: String)
     |> request.prepend_header("authorization", hex_api_key)
     |> request.prepend_header("user-agent", "gloogle / 1.0.0")
     |> httpc.send()
-    |> result.map_error(error.HttpcError)
+    |> result.map_error(loss.HttpcError)
   })
 
   response.body
   |> json.parse(using: hexpm.release_decoder())
-  |> result.map_error(error.JsonError)
+  |> result.map_error(loss.JsonError)
 }
 
 pub fn get_api_packages_page(page: Int, hex_api_key: String) {
@@ -78,11 +81,11 @@ pub fn get_api_packages_page(page: Int, hex_api_key: String) {
       #("page", page),
       #("search", "build_tool:gleam"),
     ])
-    |> httpc.send()
-    |> result.map_error(error.HttpcError)
+    |> httpc.send
+    |> result.map_error(loss.HttpcError)
   })
 
   response.body
   |> json.parse(using: decode.list(of: hexpm.package_decoder()))
-  |> result.map_error(error.JsonError)
+  |> result.map_error(loss.JsonError)
 }

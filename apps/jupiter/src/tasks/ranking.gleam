@@ -5,7 +5,7 @@ import gleam/list
 import gleam/option
 import gleam/result
 import jupiter/context.{type Context}
-import jupiter/error.{type Error}
+import jupiter/loss.{type Loss}
 import jupiter/postgres/queries
 import palabres
 import tom
@@ -15,7 +15,7 @@ const module = "tasks/ranking"
 type Usages =
   Dict(String, Int)
 
-pub fn compute_ranking(ctx: Context) -> Result(Nil, Error) {
+pub fn compute_ranking(ctx: Context) -> Loss(Nil) {
   palabres.info("Syncing package ranks")
   |> palabres.at(module:, function: "compute_ranking")
   |> palabres.log
@@ -28,14 +28,14 @@ pub fn compute_ranking(ctx: Context) -> Result(Nil, Error) {
 fn compute_and_save_rankings(ctx: Context) {
   compute_packages_ranking(ctx)
   |> result.try(save_packages_rank(ctx, _))
-  |> result.map_error(function_.tap(_, error.log))
+  |> result.map_error(function_.tap(_, loss.log))
   |> result.replace(Nil)
 }
 
 fn compute_packages_ranking(ctx: Context) {
   use usages, gleam_toml <- do_compute_packages_ranking(ctx, 0, dict.new())
   tom.parse(gleam_toml)
-  |> result.map_error(error.TomlParseError)
+  |> result.map_error(loss.TomlParseError)
   |> result.map(add_dependencies(from: _, in: usages))
   |> result.unwrap(usages)
 }
@@ -45,7 +45,7 @@ fn do_compute_packages_ranking(
   offset: Int,
   usages: Usages,
   do work: fn(Usages, String) -> Usages,
-) -> Result(Usages, Error) {
+) -> Loss(Usages) {
   use tomls <- result.try(queries.select_gleam_toml(ctx.db, offset))
   use <- bool.guard(when: list.is_empty(tomls), return: Ok(usages))
   tomls

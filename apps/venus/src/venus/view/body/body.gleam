@@ -3,11 +3,6 @@ import chart.{Dataset}
 import data/model.{type Model}
 import data/msg
 import data/search_result
-import frontend/icons
-import frontend/images
-import frontend/router
-import frontend/strings as frontend_strings
-import frontend/view/search_input/search_input
 import gleam/bool
 import gleam/dict
 import gleam/float
@@ -23,6 +18,11 @@ import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
 import lustre/lazy
+import venus/icons
+import venus/images
+import venus/router
+import venus/strings as frontend_strings
+import venus/view/search_input/search_input
 
 fn view_search_input(model: Model) {
   let state = bright.state(model)

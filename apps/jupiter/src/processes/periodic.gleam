@@ -1,9 +1,8 @@
 import gleam/erlang/process.{type Subject}
 import gleam/function_
 import gleam/otp/actor
-import gleam/result
 import gleam/time/duration.{type Duration}
-import jupiter/error.{type Error}
+import jupiter/loss.{type Error}
 
 pub opaque type Message {
   Rerun
@@ -45,7 +44,8 @@ fn init(interval: Duration, work: fn() -> Result(a, Error), subject) {
 fn loop(state: State(a), message: Message) -> actor.Next(State(a), Message) {
   case message {
     Rerun -> {
-      let _ = result.map_error(state.work(), fn(a) { echo a })
+      state.work()
+      |> loss.dismiss
       enqueue_next_rerun(state)
       actor.continue(state)
     }

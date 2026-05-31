@@ -3,11 +3,6 @@ import data/model.{type State}
 import data/msg
 import data/package
 import data/search_result
-import frontend/discuss
-import frontend/effects/api
-import frontend/effects/window
-import frontend/errors
-import frontend/router
 import gleam/bool
 import gleam/dict
 import gleam/dynamic.{type Dynamic}
@@ -17,6 +12,11 @@ import gleam/pair
 import grille_pain/lustre/toast
 import lustre/effect
 import toast/error as toast_error
+import venus/discuss
+import venus/effects/api
+import venus/effects/window
+import venus/errors
+import venus/router
 
 pub fn handle_analytics(state: State, analytics: analytics.Analytics) {
   state

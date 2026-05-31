@@ -12,15 +12,15 @@ import gleam/result
 import gleam/semver
 import gleam/set.{type Set}
 import gleam/string
-import jupiter/error
 import jupiter/gleam/context.{type Context}
 import jupiter/gleam/toml
+import jupiter/loss.{type Loss}
 import pog
 
 fn reduce_components(
   components: List(a),
-  mapper: fn(a) -> Result(#(Json, Set(String)), error.Error),
-) -> Result(#(List(Json), Set(String)), error.Error) {
+  mapper: fn(a) -> Loss(#(Json, Set(String))),
+) -> Loss(#(List(Json), Set(String))) {
   let init = Ok(#([], set.new()))
   use acc, val <- list.fold_right(components, init)
   use #(constructors, old_ids) <- result.try(acc)
@@ -33,7 +33,7 @@ pub fn type_definition_to_json(
   ctx: Context,
   type_name: String,
   type_def: pi.TypeDefinition,
-) -> Result(#(Json, List(String)), error.Error) {
+) -> Loss(#(Json, List(String))) {
   let mapper = type_constructor_to_json(ctx, _)
   use gen <- result.map(reduce_components(type_def.constructors, mapper))
   use constructors <- pair.map_first(pair.map_second(gen, set.to_list))
@@ -136,7 +136,7 @@ fn find_package_release(ctx: Context, package: String, requirement: String) {
     decode.success(#(id, version))
   })
   |> pog.execute(ctx.db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(response) { response.rows })
   |> result.map(keep_matching_releases(_, requirement))
 }
@@ -176,8 +176,8 @@ fn find_signature_from_release(
   name: String,
   module: String,
   releases: List(String),
-) -> Result(#(String, String), error.Error) {
-  use acc, release <- list.fold(releases, error.empty())
+) -> Loss(#(String, String)) {
+  use acc, release <- list.fold(releases, loss.empty())
   use <- bool.guard(when: result.is_ok(acc), return: acc)
   "SELECT release.version version, signature.id::text id
   FROM package_release release
@@ -198,9 +198,9 @@ fn find_signature_from_release(
     decode.success(#(version, id))
   })
   |> pog.execute(ctx.db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.try(fn(response) {
-    let error = error.CustomError("[find_signature_from_release] No row")
+    let error = loss.CustomError("[find_signature_from_release] No row")
     list.first(response.rows)
     |> result.replace_error(error)
   })
@@ -212,7 +212,7 @@ fn find_type_signature(
   package: String,
   module: String,
   releases: List(String),
-) -> Result(Option(#(String, String)), error.Error) {
+) -> Loss(Option(#(String, String))) {
   find_signature_from_release(ctx, name, module, releases)
   |> result.map(Some)
   |> result.lazy_or(fn() {
@@ -225,7 +225,7 @@ fn find_type_signature(
       False -> {
         { package_name <> ", needs to access " <> slug }
         |> fn(content) { "Inside " <> content <> ". Not found." }
-        |> error.CustomError
+        |> loss.CustomError
         |> Error
       }
       True -> {
@@ -240,7 +240,7 @@ fn find_type_signature(
               Ok(_) -> {
                 { package_name <> ", looking for " <> slug }
                 |> fn(id) { "Inside type aliases " <> id <> ". Not found." }
-                |> error.CustomError
+                |> loss.CustomError
                 |> Error
               }
               // Type is hidden, should check if type defed.
@@ -252,7 +252,7 @@ fn find_type_signature(
                   Ok(_) -> {
                     { package_name <> ", looking for " <> slug }
                     |> fn(id) { "Inside types " <> id <> ". Not found." }
-                    |> error.CustomError
+                    |> loss.CustomError
                     |> Error
                   }
                 }
@@ -270,7 +270,7 @@ fn extract_parameters_relation(
   name: String,
   package: String,
   module: String,
-) -> Result(Option(#(String, String)), error.Error) {
+) -> Loss(Option(#(String, String))) {
   use <- bool.guard(when: is_prelude(package, module), return: Ok(None))
   use requirement <- result.try(toml.find_package_requirement(ctx, package))
   use releases <- result.try(find_package_release(ctx, package, requirement))
@@ -289,7 +289,7 @@ pub fn type_alias_to_json(
   ctx: Context,
   type_name: String,
   type_alias: pi.TypeAlias,
-) {
+) -> Loss(#(Json, List(String))) {
   use gen <- result.map(type_to_json(ctx, type_alias.alias))
   use alias <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
@@ -315,7 +315,7 @@ pub fn constant_to_json(
   ctx: Context,
   constant_name: String,
   constant: pi.Constant,
-) -> Result(#(Json, List(String)), error.Error) {
+) -> Loss(#(Json, List(String))) {
   use gen <- result.map(type_to_json(ctx, constant.type_))
   use type_ <- pair.map_first(pair.map_second(gen, set.to_list))
   json.object([
@@ -332,7 +332,7 @@ pub fn function_to_json(
   ctx: Context,
   function_name: String,
   function: pi.Function,
-) -> Result(#(Json, List(String)), error.Error) {
+) -> Loss(#(Json, List(String))) {
   let mapper = parameters_to_json(ctx, _)
   use gen <- result.try(reduce_components(function.parameters, mapper))
   use #(return, parameters) <- result.map(type_to_json(ctx, function.return))

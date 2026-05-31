@@ -1,9 +1,9 @@
 import bright
 import data/model.{type Model}
-import frontend/router
-import frontend/view/navbar/styles as s
 import lustre/attribute as a
 import lustre/element/html as h
+import venus/router
+import venus/view/navbar/styles as s
 
 fn navbar_links() {
   s.nav_links([], [

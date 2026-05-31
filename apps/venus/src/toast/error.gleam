@@ -1,5 +1,5 @@
-import frontend/discuss
 import gleam/option.{Some}
+import venus/discuss
 
 pub fn describe_http_error(error: discuss.DiscussError) {
   case error {

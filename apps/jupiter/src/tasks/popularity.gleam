@@ -8,13 +8,13 @@ import gleam/result
 import gleam/result_
 import jupiter/context.{type Context}
 import jupiter/context/environment
-import jupiter/error
+import jupiter/loss.{type Loss}
 import jupiter/postgres/queries
 import palabres
 
 const module = "tasks/popularity"
 
-pub fn compute_popularity(ctx: Context) -> Result(Nil, error.Error) {
+pub fn compute_popularity(ctx: Context) -> Loss(Nil) {
   case ctx.env {
     environment.Development -> Ok(Nil)
     environment.Production -> {
@@ -41,7 +41,7 @@ fn do_compute_popularity(ctx: Context, offset offset: Int) {
 
 fn update_repo_popularity(ctx: Context, repo: Option(#(String, String))) {
   repo
-  |> error.from_option("No repository found")
+  |> loss.from_option("No repository found")
   |> result.try(do_update_repo_popularity(ctx, _))
   |> result.lazy_or(fn() { Ok(Nil) })
 }
@@ -74,7 +74,7 @@ fn update_package_popularity(
   ctx: Context,
   repo: String,
   popularity: Dict(String, Int),
-) -> Result(Nil, error.Error) {
+) -> Loss(Nil) {
   popularity
   |> queries.update_package_popularity(ctx.db, repo, _)
   |> result.replace(Nil)

@@ -15,8 +15,8 @@ import gleam/time/timestamp.{type Timestamp}
 import jupiter/context.{type Context, Context}
 import jupiter/data/hex_read.{type HexRead}
 import jupiter/data/interfaces.{type Interfaces, Interfaces}
-import jupiter/error.{type Error}
 import jupiter/gleam/context as gcontext
+import jupiter/loss.{type Error}
 import jupiter/postgres/queries
 import palabres
 import pog
@@ -81,6 +81,12 @@ fn sync_packages(state: State) -> Result(Timestamp, Error) {
   use all_packages <- result.try(api.get_api_packages_page(page, hex_api_key))
   let state = State(..state, newest: first_timestamp(all_packages, state))
   let new_packages = take_fresh_packages(all_packages, state.limit)
+  let package_names = list.map(all_packages, fn(p) { p.name })
+  palabres.debug("Taking fresh packages")
+  |> palabres.list("packages", package_names, palabres.string)
+  |> palabres.int("page", page)
+  |> palabres.at(module:, function: "sync_packages")
+  |> palabres.log
   use state <- result.try({
     use state, package <- list.try_fold(new_packages, state)
     do_sync_package(state, WorkAsync, force: False, package:)
@@ -101,8 +107,8 @@ pub fn sync_package(ctx: Context, package: hexpm.Package) {
     last_logged: timestamp.system_time(),
     db: ctx.db,
   )
-  |> do_sync_package(WorkSync, force: True, package:)
-  |> result.replace_error(error.EmptyError)
+  |> do_sync_package(WorkAsync, force: True, package:)
+  |> result.replace_error(loss.EmptyError)
   |> result.replace(Nil)
 }
 
@@ -154,7 +160,7 @@ fn extract_interfaces_from_db(
       |> palabres.string("package_release", release.version)
       |> palabres.at(module:, function: "extract_interfaces_from_db")
       |> palabres.log
-      error.new("No interfaces in DB")
+      loss.new("No interfaces in DB")
     }
   }
 }
@@ -169,7 +175,8 @@ fn extract_interfaces_from_hex(
   use content <- result.map(content)
   let interface = Some(content.package_interface)
   let gleam_toml = Some(content.gleam_toml)
-  let _ = queries.upsert_release(state.db, id, release, interface, gleam_toml)
+  queries.upsert_release(state.db, id, release, interface, gleam_toml)
+  |> loss.dismiss
   #(content.package, content.toml)
 }
 
@@ -188,7 +195,7 @@ fn extract_release_interfaces(
       |> palabres.string("package_release", release.version)
       |> palabres.at(module:, function: "extract_release_interfaces")
     }
-    _ -> error.new("No release data")
+    _ -> loss.new("No release data")
   })
   extract_interfaces_from_hex(state, id, package, release)
 }
@@ -259,7 +266,7 @@ fn insert_package_and_releases(
   use <- result.lazy_or({
     let lookup = queries.lookup_release(state.db, id, release)
     case lookup, force_old_release_update {
-      Ok(_), True -> error.empty()
+      Ok(_), True -> loss.empty()
       Ok(_), False -> Ok(Nil)
       Error(error), True -> Error(error)
       Error(error), False -> Error(error)
@@ -287,7 +294,7 @@ fn insert_package_and_releases(
         extract_package(state, id, release, package, interfaces, ignore)
       })
       |> result.replace(Nil)
-      |> result.map_error(error.ActorError)
+      |> result.map_error(loss.ActorError)
     }
   }
 }

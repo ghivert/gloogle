@@ -14,7 +14,7 @@ import gleam/package_interface
 import gleam/result
 import gleam/result_
 import gleam/string
-import jupiter/error
+import jupiter/loss
 import palabres
 import simplifile
 import tar
@@ -48,8 +48,7 @@ fn extract_tar(
       #(path, gleam_toml, "")
     }
     Ok(_) | Error(_) -> {
-      let build_cmd = "cd " <> destination <> " && gleam docs build"
-      let res = os.cmd(build_cmd)
+      let res = os.cmd("cd " <> destination <> " && gleam docs build")
       #(package_interface_path(destination, base_name), gleam_toml, res)
     }
   }
@@ -73,7 +72,7 @@ fn package_slug(name: String, version: String) {
 
 fn create_archives_directory() {
   fs.home()
-  |> result.replace_error(error.CustomError("home not found"))
+  |> result.replace_error(loss.CustomError("home not found"))
   |> result.map(fn(home) {
     let archives_path = string.join([home, "archives/gleam"], with: "/")
     let _ = simplifile.create_directory_all(archives_path)
@@ -141,7 +140,7 @@ fn get_tarball(name: String, version: String) {
   |> request.set_body(bit_array.from_string(""))
   |> request.set_scheme(http.Https)
   |> httpc.send_bits
-  |> result.map_error(error.HttpcError)
+  |> result.map_error(loss.HttpcError)
   |> result.try(fn(res) {
     case res.status {
       200 -> Ok(create_archive(archives_path, name, version, res.body))
@@ -162,7 +161,7 @@ fn read_interface(filepath: String, artifacts: String) {
     |> palabres.string("artifacts", artifacts)
     |> palabres.at(module:, function: "read_interface")
     |> palabres.log
-    error.SimplifileError(error, filepath)
+    loss.SimplifileError(error, filepath)
   })
 }
 
@@ -174,7 +173,7 @@ fn read_toml_file(filepath: String) {
     |> palabres.string("filepath", filepath)
     |> palabres.at(module:, function: "read_toml_file")
     |> palabres.log
-    error.SimplifileError(error, filepath)
+    loss.SimplifileError(error, filepath)
   })
 }
 
@@ -186,7 +185,7 @@ fn read_package_interface(blob: String) {
     |> palabres.string("package_interface", blob)
     |> palabres.at(module:, function: "read_package_interface")
     |> palabres.log
-    error.JsonError(error)
+    loss.JsonError(error)
   })
 }
 
@@ -197,7 +196,7 @@ fn parse_toml(toml: String) {
     |> palabres.string("toml", toml)
     |> palabres.at(module:, function: "parse_toml")
     |> palabres.log
-    error.TomlParseError(error)
+    loss.TomlParseError(error)
   })
 }
 
@@ -214,7 +213,7 @@ fn extract_package_infos(name: String, version: String) {
       |> palabres.string("package_name", package_name)
       |> palabres.at(module:, function: "extract_package_infos")
       |> palabres.log
-      error.CustomError("Impossible to extract tar for " <> package_name)
+      loss.CustomError("Impossible to extract tar for " <> package_name)
     })
   })
   use interface <- result.try(read_interface(package_interface, build_output))

@@ -1,9 +1,9 @@
-import frontend/effects/document
 import gleam/list
 import gleam/option
 import gleam/result
 import gleam/uri.{type Uri}
 import modem
+import venus/effects/document
 
 pub type Route {
   Home

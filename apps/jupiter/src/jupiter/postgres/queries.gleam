@@ -21,8 +21,8 @@ import helpers
 import jupiter/data/hex_read
 import jupiter/data/hex_user.{type HexUser}
 import jupiter/data/interfaces.{type Interfaces, Interfaces}
-import jupiter/error
 import jupiter/gleam/context
+import jupiter/loss.{type Loss}
 import pog
 
 pub type SignatureKind {
@@ -37,7 +37,7 @@ pub fn get_last_hex_date(db: pog.Connection) {
   |> pog.query
   |> pog.returning(hex_read.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(response) {
     response.rows
     |> list.first
@@ -57,12 +57,12 @@ pub fn upsert_most_recent_hex_timestamp(db: pog.Connection, latest: Timestamp) {
   |> pog.parameter(pog.timestamp(latest))
   |> pog.returning(hex_read.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.try(fn(response) {
     let err = "Upsert most recent hex timestamp failed"
     response.rows
     |> list.first
-    |> result.replace_error(error.CustomError(err))
+    |> result.replace_error(loss.CustomError(err))
   })
 }
 
@@ -76,12 +76,12 @@ pub fn upsert_search_analytics(db: pog.Connection, query: String) {
   |> pog.parameter(pog.text(query))
   |> pog.returning(decode.dynamic)
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.try(fn(response) {
     let err = "Upsert search analytics failed"
     response.rows
     |> list.first()
-    |> result.replace_error(error.CustomError(err))
+    |> result.replace_error(loss.CustomError(err))
   })
 }
 
@@ -95,7 +95,7 @@ pub fn select_more_popular_packages(db: pog.Connection) {
     |> pog.returning(analytics.package_decoder())
     |> pog.execute(db)
     |> result.map(fn(r) { r.rows })
-    |> result.map_error(error.DatabaseError)
+    |> result.map_error(loss.DatabaseError)
   })
   use popular <- result.try({
     "SELECT name, repository, rank, (popularity -> 'github')::int AS popularity
@@ -109,7 +109,7 @@ pub fn select_more_popular_packages(db: pog.Connection) {
     |> pog.returning(analytics.package_decoder())
     |> pog.execute(db)
     |> result.map(fn(r) { r.rows })
-    |> result.map_error(error.DatabaseError)
+    |> result.map_error(loss.DatabaseError)
   })
   Ok(#(ranked, popular))
 }
@@ -135,13 +135,13 @@ pub fn select_last_day_search_analytics(db: pog.Connection) {
   })
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn upsert_search_analytics_timeseries(
   db: pog.Connection,
   analytic: #(String, Int),
-) -> Result(pog.Returned(Nil), error.Error) {
+) -> Loss(pog.Returned(Nil)) {
   let now = start_day()
   let #(query, occurences) = analytic
   "INSERT INTO analytics_timeseries (query, occurences, date)
@@ -153,7 +153,7 @@ pub fn upsert_search_analytics_timeseries(
   |> pog.parameter(pog.int(occurences))
   |> pog.parameter(pog.timestamp(now))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn get_timeseries_count(db: pog.Connection) {
@@ -179,7 +179,7 @@ pub fn get_timeseries_count(db: pog.Connection) {
     decode.success(#(searches, date))
   })
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -196,7 +196,7 @@ pub fn upsert_hex_user(db: pog.Connection, owner: hexpm.PackageOwner) {
   |> pog.returning(hex_user.decoder())
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 fn upsert_package_owners(db: pog.Connection, owners: List(hexpm.PackageOwner)) {
@@ -215,7 +215,7 @@ fn get_current_package_owners(db: pog.Connection, package_id: String) {
   |> pog.returning(decode.at(["user_id"], decode.string))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn get_total_searches(db: pog.Connection) {
@@ -224,7 +224,7 @@ pub fn get_total_searches(db: pog.Connection) {
   |> pog.returning(decode.at(["occurences"], decode.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn get_total_signatures(db: pog.Connection) {
@@ -233,7 +233,7 @@ pub fn get_total_signatures(db: pog.Connection) {
   |> pog.returning(decode.at(["c"], decode.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn get_total_packages(db: pog.Connection) {
@@ -242,7 +242,7 @@ pub fn get_total_packages(db: pog.Connection) {
   |> pog.returning(decode.at(["c"], decode.int))
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 fn add_new_package_owners(
@@ -250,7 +250,7 @@ fn add_new_package_owners(
   owners: List(HexUser),
   current_owners: List(String),
   package_id: String,
-) -> Result(List(pog.Returned(Dynamic)), error.Error) {
+) -> Loss(List(pog.Returned(Dynamic))) {
   owners
   |> list.filter(fn(o) { bool.negate(list.contains(current_owners, o.id)) })
   |> list.map(fn(u) {
@@ -263,7 +263,7 @@ fn add_new_package_owners(
     |> pog.execute(db)
   })
   |> result.all()
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 fn remove_old_package_owners(
@@ -271,7 +271,7 @@ fn remove_old_package_owners(
   owners: List(HexUser),
   current_owners: List(String),
   package_id: String,
-) -> Result(List(pog.Returned(Nil)), error.Error) {
+) -> Loss(List(pog.Returned(Nil))) {
   let curr = list.map(owners, fn(o) { o.id })
   current_owners
   |> list.filter(fn(id) { list.contains(curr, id) })
@@ -285,14 +285,14 @@ fn remove_old_package_owners(
     |> pog.execute(db)
   })
   |> result.all()
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn sync_package_owners(
   db: pog.Connection,
   package_id: String,
   owners: List(hexpm.PackageOwner),
-) -> Result(Nil, error.Error) {
+) -> Loss(Nil) {
   use news <- result.try(upsert_package_owners(db, owners))
   use curr <- result.try(get_current_package_owners(db, package_id))
   use _ <- result.try(add_new_package_owners(db, news, curr, package_id))
@@ -328,11 +328,11 @@ pub fn upsert_package(db: pog.Connection, package: hexpm.Package) {
   |> pog.parameter(pog.nullable(pog.text, package.meta.description))
   |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.try(fn(response) {
     response.rows
     |> list.first()
-    |> result.replace_error(error.CustomError("Upsert package error"))
+    |> result.replace_error(loss.CustomError("Upsert package error"))
   })
 }
 
@@ -342,7 +342,7 @@ pub fn upsert_release(
   release: hexpm.Release,
   package_interface: Option(String),
   gleam_toml: Option(String),
-) -> Result(pog.Returned(Interfaces), error.Error) {
+) -> Loss(pog.Returned(Interfaces)) {
   "INSERT INTO package_release (
      package_id,
      version,
@@ -372,14 +372,14 @@ pub fn upsert_release(
     decode.success(Interfaces(id, it, gl))
   })
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn lookup_release(
   db: pog.Connection,
   package_id: String,
   release: hexpm.Release,
-) -> Result(Interfaces, error.Error) {
+) -> Loss(Interfaces) {
   "SELECT id::text, package_interface, gleam_toml
   FROM package_release
   WHERE package_id = $1 AND version = $2"
@@ -393,11 +393,11 @@ pub fn lookup_release(
     decode.success(Interfaces(id, it, gl))
   })
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.try(fn(res) {
     res.rows
     |> list.first()
-    |> result.replace_error(error.CustomError(""))
+    |> result.replace_error(loss.CustomError(""))
   })
 }
 
@@ -405,28 +405,28 @@ pub fn add_package_gleam_constraint(
   db: pog.Connection,
   constraint: String,
   release_id: String,
-) -> Result(Nil, error.Error) {
+) -> Loss(Nil) {
   "UPDATE package_release SET gleam_constraint = $1 WHERE id = $2"
   |> pog.query
   |> pog.parameter(pog.text(constraint))
   |> pog.parameter(pog.text(release_id))
   |> pog.execute(db)
   |> result.replace(Nil)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn add_package_retirement(
   db: pog.Connection,
   retirement: hexpm.ReleaseRetirement,
   release_id: String,
-) -> Result(Nil, error.Error) {
+) -> Loss(Nil) {
   "UPDATE package_release SET retirement = $1 WHERE id = $2"
   |> pog.query
   |> pog.parameter(pog.text(encode_retirement(retirement)))
   |> pog.parameter(pog.text(release_id))
   |> pog.execute(db)
   |> result.replace(Nil)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 fn encode_retirement(retirement: hexpm.ReleaseRetirement) {
@@ -448,7 +448,7 @@ fn encode_retirement(retirement: hexpm.ReleaseRetirement) {
 pub fn get_package_release_ids(
   db: pog.Connection,
   package: package_interface.Package,
-) -> Result(#(String, String), error.Error) {
+) -> Loss(#(String, String)) {
   "SELECT
     package.id::text package_id,
     package_release.id::text package_release_id
@@ -466,10 +466,10 @@ pub fn get_package_release_ids(
     decode.success(#(package_id, package_release_id))
   })
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.try(fn(response) {
     list.first(response.rows)
-    |> result.replace_error(error.CustomError(
+    |> result.replace_error(loss.CustomError(
       "No release found for " <> package.name <> "@" <> package.version,
     ))
   })
@@ -492,11 +492,11 @@ pub fn upsert_package_module(db: pog.Connection, module: context.Module) {
     |> pog.parameter(pog.text(module.release_id))
     |> pog.returning(decode.at(["id"], decode.string))
     |> pog.execute(db)
-    |> result.map_error(error.DatabaseError)
+    |> result.map_error(loss.DatabaseError)
   })
   response.rows
   |> list.first()
-  |> result.replace_error(error.CustomError(
+  |> result.replace_error(loss.CustomError(
     "No module found for " <> module.name,
   ))
 }
@@ -524,7 +524,7 @@ pub fn upsert_package_type_fun_signature(
   module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
-) -> Result(List(String), error.Error) {
+) -> Loss(List(String)) {
   "INSERT INTO package_type_fun_signature (
      name,
      documentation,
@@ -575,7 +575,7 @@ pub fn upsert_package_type_fun_signature(
   })
   |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -610,7 +610,7 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
   |> pog.parameter(pog.text(name))
   |> pog.returning(decode.at(["name"], decode.string))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -640,7 +640,7 @@ pub fn name_search(db: pog.Connection, query: String) {
   |> pog.parameter(pog.text(query))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -674,7 +674,7 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
   |> pog.parameter(pog.text(query))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -722,7 +722,7 @@ pub fn content_search(db: pog.Connection, query: String) {
   |> pog.parameter(pog.text(transform_query(query)))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -752,7 +752,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
   |> pog.parameter(pog.text(q))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -782,7 +782,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
   |> pog.parameter(pog.text(q))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -821,7 +821,7 @@ pub fn module_search(db: pog.Connection, q: String) {
   |> pog.parameter(pog.text(q))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -858,7 +858,7 @@ pub fn exact_type_search(db: pog.Connection, q: List(String)) {
   |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.text(q)) })
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -873,7 +873,7 @@ pub fn select_gleam_toml(db: pog.Connection, offset: Int) {
   |> pog.parameter(pog.int(offset))
   |> pog.returning(decode.at(["gleam_toml"], decode.string))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -883,7 +883,7 @@ pub fn update_package_rank(db: pog.Connection, package: String, rank: Int) {
   |> pog.parameter(pog.text(package))
   |> pog.parameter(pog.int(rank))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn select_package_repository_address(db: pog.Connection, offset: Int) {
@@ -901,7 +901,7 @@ pub fn select_package_repository_address(db: pog.Connection, offset: Int) {
     })
   })
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
 }
 
@@ -909,7 +909,7 @@ pub fn update_package_popularity(
   db: pog.Connection,
   url: String,
   popularity: Dict(String, Int),
-) -> Result(pog.Returned(Nil), error.Error) {
+) -> Loss(pog.Returned(Nil)) {
   "UPDATE package SET popularity = $2 WHERE repository = $1"
   |> pog.query
   |> pog.parameter(pog.text(url))
@@ -921,7 +921,7 @@ pub fn update_package_popularity(
     |> pog.text
   })
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn select_package_by_popularity(db: pog.Connection, page: Int) {
@@ -945,7 +945,7 @@ pub fn select_package_by_popularity(db: pog.Connection, page: Int) {
   |> pog.returning(package.decoder())
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn select_package_by_updated_at(db: pog.Connection) {
@@ -964,7 +964,7 @@ pub fn select_package_by_updated_at(db: pog.Connection) {
   |> pog.returning(package.decoder())
   |> pog.execute(db)
   |> result.map(fn(r) { r.rows })
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }
 
 pub fn insert_analytics(
@@ -972,7 +972,7 @@ pub fn insert_analytics(
   id: String,
   table_name: String,
   content: Dict(String, Int),
-) -> Result(pog.Returned(Nil), error.Error) {
+) -> Loss(pog.Returned(Nil)) {
   "INSERT INTO analytics (foreign_id, table_name, content, day)
    VALUES ($1, $2, $3, $4)
    ON CONFLICT (foreign_id, table_name, day) DO UPDATE
@@ -990,5 +990,5 @@ pub fn insert_analytics(
   })
   |> pog.parameter(pog.timestamp(start_day()))
   |> pog.execute(db)
-  |> result.map_error(error.DatabaseError)
+  |> result.map_error(loss.DatabaseError)
 }

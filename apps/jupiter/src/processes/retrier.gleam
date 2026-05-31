@@ -5,7 +5,7 @@ import gleam/function_
 import gleam/otp/actor
 import gleam/string
 import gleam/time/timestamp
-import jupiter/error.{type Error}
+import jupiter/loss.{type Error}
 import palabres
 import prng/random
 
@@ -25,7 +25,7 @@ type State(a) {
   )
 }
 
-pub const one_minute: Int = 900_000
+pub const one_minute: Int = 60_000
 
 fn enqueue_next_rerun(state: State(a)) {
   let #(random_ints, seed) = state.random_ints
@@ -72,7 +72,7 @@ fn loop(state: State(a), message: Message) -> actor.Next(State(a), Message) {
       |> palabres.string("pid", string.inspect(pid))
       |> palabres.at(module:, function: "loop")
       |> palabres.log
-      error.log(error)
+      loss.log(error)
       use <- bool.lazy_guard(when: state.iterations == 0, return: stop_process)
       State(..state, iterations: state.iterations - 1)
       |> enqueue_next_rerun

@@ -1,8 +1,8 @@
 import data/msg
-import frontend/view/search_input/styles as s
 import lustre/attribute as a
 import lustre/element as el
 import lustre/event as e
+import venus/view/search_input/styles as s
 
 pub fn view(loading loading: Bool, input input: String, small small: Bool) {
   s.search_with_filters([], [

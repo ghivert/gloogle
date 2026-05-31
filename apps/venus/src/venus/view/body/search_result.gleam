@@ -1,11 +1,6 @@
 import data/implementations
 import data/search_result
 import data/type_search.{type TypeSearch}
-import frontend/colors/palette
-import frontend/icons
-import frontend/view/body/signature
-import frontend/view/documentation
-import frontend/view/types as t
 import gleam/bool
 import gleam/dynamic/decode
 import gleam/list
@@ -19,6 +14,11 @@ import lustre/effect
 import lustre/element
 import lustre/element/html as h
 import lustre/event as e
+import venus/colors/palette
+import venus/icons
+import venus/view/body/signature
+import venus/view/documentation
+import venus/view/types as t
 
 pub type Model {
   Model(item: option.Option(TypeSearch), opened: Bool)

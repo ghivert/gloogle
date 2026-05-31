@@ -1,7 +1,5 @@
 import data/signature.{type Parameter, type Type, Parameter}
 import data/type_search
-import frontend/view/helpers
-import frontend/view/types as t
 import gleam/bool
 import gleam/int
 import gleam/list
@@ -10,6 +8,8 @@ import gleam/string
 import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
+import venus/view/helpers
+import venus/view/types as t
 
 fn do_render_parameters(from: Int, to: Int, acc: List(el.Element(a))) {
   use <- bool.guard(when: from > to, return: acc)

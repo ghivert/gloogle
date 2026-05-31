@@ -1,21 +1,24 @@
 import bright
 import data/model.{type Model, type State}
 import data/msg.{type Msg}
-import frontend/effects/api
-import frontend/effects/window
-import frontend/router
-import frontend/setup
-import frontend/update
-import frontend/view
+import lustre
 import lustre/effect
 import sketch/lustre as sl
+import venus/effects/api
+import venus/effects/window
+import venus/router
+import venus/setup
+import venus/update
+import venus/view
 
 pub fn main() {
   let assert Ok(stylesheet) = sl.setup()
   let assert Ok(_) = setup.components()
   let assert Ok(_) = setup.grille_pain()
-  let view = view.view(_, stylesheet)
-  let assert Ok(_) = setup.start_application(init, update, view)
+  let assert Ok(_) =
+    view.view(_, stylesheet)
+    |> lustre.application(init, update, _)
+    |> lustre.start("#app", Nil)
 }
 
 fn init(_) -> #(Model, effect.Effect(Msg)) {

@@ -1,10 +1,10 @@
-import frontend/colors/palette
 import lustre/attribute as a
 import lustre/element
 import sketch/css
 import sketch/css/length.{px, vh, vw}
 import sketch/css/media
 import sketch/lustre/element/html as h
+import venus/colors/palette
 
 pub fn implementations_pill_container(attrs, children) {
   css.class([

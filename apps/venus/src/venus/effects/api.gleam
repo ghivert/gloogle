@@ -3,9 +3,9 @@ import data/model.{type State}
 import data/msg
 import data/package
 import data/search_result
-import frontend/discuss
 import gleam/dynamic/decode
 import lustre/effect
+import venus/discuss
 
 pub fn get_trendings() {
   use dispatch <- effect.from

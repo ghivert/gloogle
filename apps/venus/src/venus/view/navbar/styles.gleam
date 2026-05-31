@@ -1,8 +1,8 @@
-import frontend/view/body/styles as body_styles
 import sketch/css
 import sketch/css/length.{px, vw}
 import sketch/css/media
 import sketch/lustre/element/html as h
+import venus/view/body/styles as body_styles
 
 pub const search_lucy = body_styles.search_lucy
 

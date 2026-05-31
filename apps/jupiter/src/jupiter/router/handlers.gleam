@@ -8,7 +8,7 @@ import gleam/json
 import gleam/list
 import gleam/result
 import jupiter/context.{type Context}
-import jupiter/error
+import jupiter/loss.{type Loss}
 import jupiter/postgres/queries
 import palabres
 import pog
@@ -25,14 +25,14 @@ pub fn analytics(_req: Request, ctx: Context) {
     |> json.to_string
     |> wisp.json_response(200)
   })
-  |> result.map_error(function_.tap(_, error.log))
+  |> result.map_error(function_.tap(_, loss.log))
   |> result.unwrap(wisp.internal_server_error())
 }
 
 pub fn search(req: Request, ctx: Context) {
   wisp.get_query(req)
   |> list.find(fn(item) { item.0 == "q" })
-  |> result.replace_error(error.EmptyError)
+  |> result.replace_error(loss.EmptyError)
   |> result.map(fn(item) { do_search(item.1, ctx) })
   |> result.unwrap(json.object([#("error", json.string("internal"))]))
   |> json.to_string
@@ -64,7 +64,8 @@ pub fn trendings(req: Request, ctx: Context) {
 }
 
 pub fn package_update(_req: Request, ctx: Context, name: String) {
-  let _ = do_update_package(ctx, name)
+  do_update_package(ctx, name)
+  |> loss.dismiss
   wisp.json_response("{}", 200)
 }
 
@@ -100,7 +101,8 @@ fn do_search(query: String, ctx: Context) {
   |> palabres.string("query", query)
   |> palabres.at(module:, function: "do_search")
   |> palabres.log
-  let _ = queries.upsert_search_analytics(ctx.db, query)
+  queries.upsert_search_analytics(ctx.db, query)
+  |> loss.dismiss
 
   // let exact_type_searches = exec_type_search(ctx, query)
   let exact_type_searches = []
@@ -161,19 +163,18 @@ fn do_search(query: String, ctx: Context) {
 //   })
 //   |> option.unwrap([])
 //   |> queries.exact_type_search(ctx.db, _)
-//   |> result.map_error(error.debug_log)
+//   |> result.map_error(loss.debug_log)
 //   |> result.unwrap([])
 // }
 
 fn exec_search(
   ctx: Context,
   query: String,
-  run: fn(pog.Connection, String) ->
-    Result(List(type_search.TypeSearch), error.Error),
+  run: fn(pog.Connection, String) -> Loss(List(type_search.TypeSearch)),
   previous: List(type_search.TypeSearch),
 ) -> List(type_search.TypeSearch) {
   run(ctx.db, query)
-  |> result.map_error(function_.tap(_, error.log))
+  |> result.map_error(function_.tap(_, loss.log))
   |> result.unwrap([])
   |> list.filter(fn(i) { !list.contains(previous, i) })
 }

@@ -13,6 +13,9 @@ import pog
 import simplifile
 import tom
 
+pub type Loss(a) =
+  Result(a, Error)
+
 pub type Error {
   ActorError(actor.StartError)
   CustomError(String)
@@ -36,10 +39,17 @@ pub fn new(message: String) {
   |> Error
 }
 
-pub fn from_option(value: Option(a), message: String) -> Result(a, Error) {
+pub fn from_option(value: Option(a), message: String) -> Loss(a) {
   case value {
     Some(value) -> Ok(value)
     None -> Error(CustomError(message))
+  }
+}
+
+pub fn dismiss(res: Loss(a)) -> Nil {
+  case res {
+    Ok(_) -> Nil
+    Error(e) -> log(e)
   }
 }
 

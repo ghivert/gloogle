@@ -1,10 +1,5 @@
 import bright
 import data/model.{type Model}
-import frontend/colors/palette
-import frontend/router
-import frontend/view/body/body
-import frontend/view/footer/footer
-import frontend/view/navbar/navbar
 import lustre/element as el
 import sketch
 import sketch/css
@@ -12,6 +7,11 @@ import sketch/css/length.{px}
 import sketch/css/media
 import sketch/lustre as sl
 import sketch/lustre/element/html as h
+import venus/colors/palette
+import venus/router
+import venus/view/body/body
+import venus/view/footer/footer
+import venus/view/navbar/navbar
 
 fn layout(attributes, children) {
   css.class([

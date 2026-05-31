@@ -9,7 +9,7 @@ import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/regexp
 import gleam/result
-import jupiter/error
+import jupiter/loss.{type Loss}
 
 pub fn get_stargazer_count(token: String, repo_url: String) {
   use match <- result.try(match_repository_name(repo_url))
@@ -19,7 +19,7 @@ pub fn get_stargazer_count(token: String, repo_url: String) {
       let returning = stargazer_count.decoder()
       query(token:, query: stargazer_count.query, variables:, returning:)
     }
-    _ -> Error(error.CustomError(""))
+    _ -> Error(loss.CustomError(""))
   }
 }
 
@@ -28,7 +28,7 @@ fn query(
   query query: String,
   variables variables: Option(Json),
   returning decoder: Decoder(a),
-) -> Result(a, error.Error) {
+) -> Loss(a) {
   use response <- result.try({
     request.new()
     |> request.set_header("authorization", "Bearer " <> token)
@@ -39,12 +39,12 @@ fn query(
     |> request.set_path("/graphql")
     |> request.set_body(encode_body(query, variables))
     |> httpc.send
-    |> result.map_error(error.HttpcError)
+    |> result.map_error(loss.HttpcError)
   })
 
   response.body
   |> json.parse(using: decoder)
-  |> result.map_error(error.JsonError)
+  |> result.map_error(loss.JsonError)
 }
 
 fn encode_body(query: String, variables: Option(Json)) -> String {
@@ -61,5 +61,5 @@ fn match_repository_name(repo_url: String) {
   let err = "No repository match for " <> repo_url
   regexp.scan(with: owner_name, content: repo_url)
   |> list.first
-  |> result.replace_error(error.CustomError(err))
+  |> result.replace_error(loss.CustomError(err))
 }

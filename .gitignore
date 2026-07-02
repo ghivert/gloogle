@@ -16,3 +16,8 @@ dist/
 .yarn/
 
 .mise.local.toml
+
+# Migrated data dumps / DB backups (large, not source)
+gloogle_migrated.sql
+gloogle_migrated.sql.gz
+gloogle_render_backup_*.sql.gz

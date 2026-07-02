@@ -1,7 +1,7 @@
 -- migrate:up
 create table analytics (
   id uuid primary key default uuidv7(),
-  foreign_id int not null,
+  foreign_id uuid not null,
   table_name text not null,
   content jsonb not null,
   day timestamptz not null,

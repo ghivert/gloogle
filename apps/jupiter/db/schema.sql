@@ -1,5 +1,4 @@
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
--- Dumped by pg_dump version 18.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -77,7 +76,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.analytics (
     id uuid DEFAULT uuidv7() NOT NULL,
-    foreign_id integer NOT NULL,
+    foreign_id uuid NOT NULL,
     table_name text NOT NULL,
     content jsonb NOT NULL,
     day timestamp with time zone NOT NULL,

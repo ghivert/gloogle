@@ -329,14 +329,33 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@chouquette/gleam@npm:^1.11.0, @chouquette/gleam@npm:^1.16.0":
-  version: 1.16.0
-  resolution: "@chouquette/gleam@npm:1.16.0"
+"@chouquette/gleam-ts-loader@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@chouquette/gleam-ts-loader@npm:1.0.1"
+  checksum: 10c0/1418f6ca62a01cf49b56e6007abbec2c5f663a2910689686fd9cdabe4105848b8f6ed138d1db6d315cd7f45c1f02864d6d04631155d7e0434e9866542a99591a
+  languageName: node
+  linkType: hard
+
+"@chouquette/gleam-vite-loader@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@chouquette/gleam-vite-loader@npm:1.0.0"
+  dependencies:
+    toml: "npm:^3.0.0"
+  peerDependencies:
+    "@chouquette/gleam": ^1.14.0
+    vite: ^7.3.0
+  checksum: 10c0/11673251380bea99825c09736658f3ef7bff3e76c5ad41b335bb5c02f4cdf507e78440da8ebc63468dda477de5d0138ec7434728b8a3b7888f9a279021e89c2e
+  languageName: node
+  linkType: hard
+
+"@chouquette/gleam@npm:^1.17.0":
+  version: 1.17.0
+  resolution: "@chouquette/gleam@npm:1.17.0"
   dependencies:
     tar: "npm:^7.5.13"
   bin:
     gleam: bin/cli.mjs
-  checksum: 10c0/936502e5dc43afaf0a0b8334c497833bd94972b415789072ea2daa8027b92a4436095d507b9114e5ba77ee88e3b57020a68dc6a1189b84e58cc1b1be66267937
+  checksum: 10c0/a13c1bcfcee04715825ec8104296a386a172e4fd389801a8d43a5064d66ab75694b573af09a7f11758771cf1c115641a4dcf091234d8ae2561fd969c8345157e
   languageName: node
   linkType: hard
 
@@ -561,7 +580,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@gloogle/jupiter@workspace:apps/jupiter"
   dependencies:
-    "@chouquette/gleam": "npm:^1.11.0"
+    "@chouquette/gleam": "npm:^1.17.0"
   languageName: unknown
   linkType: soft
 
@@ -569,7 +588,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@gloogle/vitools@workspace:packages/vitools"
   dependencies:
-    "@chouquette/gleam": "npm:^1.16.0"
+    "@chouquette/gleam": "npm:^1.17.0"
   languageName: unknown
   linkType: soft
 
@@ -649,7 +668,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@jupiter/venus@workspace:apps/venus"
   dependencies:
-    "@chouquette/gleam": "npm:^1.16.0"
+    "@chouquette/gleam": "npm:^1.17.0"
+    "@chouquette/gleam-ts-loader": "npm:^1.0.1"
+    "@chouquette/gleam-vite-loader": "npm:^1.0.0"
     "@gleam-lang/highlight.js-gleam": "npm:^1.5.0"
     "@sentry/browser": "npm:^9.47.1"
     "@sentry/vite-plugin": "npm:^3.6.1"
@@ -660,6 +681,7 @@ __metadata:
     marked: "npm:^15.0.12"
     marked-highlight: "npm:^2.2.4"
     prettier: "npm:^3.8.3"
+    typescript: "npm:^6.0.3"
     vite: "npm:^8.0.13"
     vite-gleam: "npm:^1.7.1"
   languageName: unknown
@@ -3232,6 +3254,26 @@ __metadata:
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
+  languageName: node
+  linkType: hard
+
+"typescript@npm:^6.0.3":
+  version: 6.0.3
+  resolution: "typescript@npm:6.0.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/4a25ff5045b984370f48f196b3a0120779b1b343d40b9a68d114ea5e5fff099809b2bb777576991a63a5cd59cf7bffd96ff6fe10afcefbcb8bd6fb96ad4b6606
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@npm%3A^6.0.3#optional!builtin<compat/typescript>":
+  version: 6.0.3
+  resolution: "typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/2f25c74e65663c248fa1ade2b8459d9ce5372ff9dad07067310f132966ebec1d93f6c42f0baf77a6b6a7a91460463f708e6887013aaade22111037457c6b25df
   languageName: node
   linkType: hard
 

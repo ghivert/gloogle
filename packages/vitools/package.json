@@ -2,6 +2,6 @@
   "name": "@gloogle/vitools",
   "packageManager": "yarn@4.9.2",
   "dependencies": {
-    "@chouquette/gleam": "^1.16.0"
+    "@chouquette/gleam": "^1.17.0"
   }
 }

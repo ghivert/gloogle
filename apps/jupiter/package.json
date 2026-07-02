@@ -21,6 +21,6 @@
     "ext": "js,erl,gleam,ex,ts"
   },
   "devDependencies": {
-    "@chouquette/gleam": "^1.11.0"
+    "@chouquette/gleam": "^1.17.0"
   }
 }

@@ -18,10 +18,13 @@
     "marked-highlight": "^2.2.4"
   },
   "devDependencies": {
-    "@chouquette/gleam": "^1.16.0",
+    "@chouquette/gleam": "^1.17.0",
+    "@chouquette/gleam-ts-loader": "^1.0.1",
+    "@chouquette/gleam-vite-loader": "^1.0.0",
     "@sentry/vite-plugin": "^3.6.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
     "vite": "^8.0.13",
     "vite-gleam": "^1.7.1"
   }

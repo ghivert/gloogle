@@ -787,6 +787,15 @@ pub fn documentation_search(db: pog.Connection, q: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+/// Search modules whose name matches `q`, returning every matching signature
+/// across *all* releases of the package. Narrowing down to the latest version
+/// is intentionally NOT done here: the backend exposes every version, and the
+/// frontend keeps only the most recent one per package (with a "Show old
+/// versions" toggle to reveal the rest). See `venus/data/model` filtering.
+///
+/// The `SIMILAR TO` guard on `r.version` only discards non-semver releases
+/// (pre-releases, build tags, etc.), so downstream code can always parse and
+/// order the version.
 pub fn module_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
      s.name type_name,
@@ -807,16 +816,10 @@ pub fn module_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE m.name LIKE '%' || lower($1) || '%'
-     AND r.version = (
-       SELECT MAX(r.version)
-       FROM package_release r
-       JOIN package_module mod
-         ON mod.package_release_id = r.id
-       WHERE mod.name = m.name
-         AND version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-         AND r.package_id = p.id
-         AND r.id = m.package_release_id
-     )
+     -- Keep only well-formed semver releases (e.g. '1.2.3'); pre-releases such
+     -- as '1.2.3-rc1' are excluded. Picking the latest version is the
+     -- frontend's job, not this query's.
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
   |> pog.query
   |> pog.parameter(pog.text(q))

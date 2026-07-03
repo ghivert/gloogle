@@ -88,6 +88,7 @@ pub fn select_more_popular_packages(db: pog.Connection) {
   use ranked <- result.try({
     "SELECT name, repository, rank, (popularity -> 'github')::int AS popularity
     FROM package
+    WHERE repository IS NOT NULL
     ORDER BY rank DESC
     LIMIT 22"
     |> pog.query
@@ -100,6 +101,7 @@ pub fn select_more_popular_packages(db: pog.Connection) {
     "SELECT name, repository, rank, (popularity -> 'github')::int AS popularity
     FROM package
     WHERE popularity -> 'github' IS NOT NULL
+      AND repository IS NOT NULL
       AND name != 'funtil'
       AND name != 'dew'
     ORDER BY popularity -> 'github' DESC

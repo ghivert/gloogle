@@ -47,9 +47,8 @@ pub fn get_last_hex_date(db: pog.Connection) {
 }
 
 pub fn upsert_most_recent_hex_timestamp(db: pog.Connection, latest: Timestamp) {
-  "INSERT INTO hex_read
-   OVERRIDING SYSTEM VALUE
-   VALUES (1, $1)
+  "INSERT INTO hex_read (id, last_check)
+   VALUES ('11111111-1111-8111-8111-111111111111', $1)
    ON CONFLICT (id) DO UPDATE
      SET last_check = $1
    RETURNING id::text, last_check"

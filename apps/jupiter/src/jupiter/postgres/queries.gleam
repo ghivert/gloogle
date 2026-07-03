@@ -616,7 +616,7 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
 }
 
 pub fn name_search(db: pog.Connection, query: String) {
-  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -635,7 +635,8 @@ pub fn name_search(db: pog.Connection, query: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE s.name = $1
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(query))
@@ -647,7 +648,7 @@ pub fn name_search(db: pog.Connection, query: String) {
 
 pub fn module_and_name_search(db: pog.Connection, query: String) {
   "WITH splitted_name AS (SELECT string_to_array($1, '.') AS full_name)
-   SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+   SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -669,7 +670,8 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
      ON true
    WHERE s.name = s_n.full_name[2]
    AND m.name LIKE '%' || lower(s_n.full_name[1]) || '%'
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(query))
@@ -691,7 +693,7 @@ fn transform_query(q: String) {
 }
 
 pub fn content_search(db: pog.Connection, query: String) {
-  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -716,7 +718,8 @@ pub fn content_search(db: pog.Connection, query: String) {
       OR replace(s.signature_, ' ', '') ILIKE '%' || $1 || '%'
       OR replace(s.signature_, ' ', '') LIKE '%' || replace($2, ' ', '%') || '%'
     )
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(query))
@@ -728,7 +731,7 @@ pub fn content_search(db: pog.Connection, query: String) {
 }
 
 pub fn signature_search(db: pog.Connection, q: String) {
-  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -747,7 +750,8 @@ pub fn signature_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ websearch_to_tsquery($1)
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(q))
@@ -758,7 +762,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
 }
 
 pub fn documentation_search(db: pog.Connection, q: String) {
-  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -777,7 +781,8 @@ pub fn documentation_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.documentation) @@ websearch_to_tsquery($1)
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(q))
@@ -797,7 +802,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
 /// (pre-releases, build tags, etc.), so downstream code can always parse and
 /// order the version.
 pub fn module_search(db: pog.Connection, q: String) {
-  "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+  "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -820,7 +825,7 @@ pub fn module_search(db: pog.Connection, q: String) {
      -- as '1.2.3-rc1' are excluded. Picking the latest version is the
      -- frontend's job, not this query's.
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
   |> pog.query
   |> pog.parameter(pog.text(q))
   |> pog.returning(type_search.decoder())
@@ -835,7 +840,7 @@ pub fn exact_type_search(db: pog.Connection, q: List(String)) {
     list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
     |> string.join(", ")
   {
-    "SELECT DISTINCT ON (package_rank, ordering, type_name, signature_kind, module_name)
+    "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
@@ -856,7 +861,8 @@ pub fn exact_type_search(db: pog.Connection, q: List(String)) {
    WHERE s.id IN ("
     <> ids
     <> ")
-   ORDER BY package_rank DESC, ordering DESC, type_name, signature_kind, module_name"
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
   }
   |> pog.query
   |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.text(q)) })

@@ -17,7 +17,7 @@ pub type Package {
 }
 
 pub fn decoder() {
-  use name <- decode.field("decode", decode.string)
+  use name <- decode.field("name", decode.string)
   use repository <- decode.field("repository", decode.optional(decode.string))
   use documentation <- decode.field("documentation", {
     decode.optional(decode.string)

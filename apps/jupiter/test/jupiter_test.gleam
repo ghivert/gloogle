@@ -1,5 +1,6 @@
+import data/ir
 import envoy
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleam/result
 import gleeunit
 import jupiter/context/postgres
@@ -38,4 +39,21 @@ pub fn type_search_test() {
   let init = search.empty()
   let search = search.add(init, kind, index)
   assert Ok([index]) == search.find(search, skind, db)
+}
+
+// `result.map`: `fn(Result(a, b), fn(a) -> c) -> Result(c, b)` — the canonical
+// form Gleam and TS front-ends must both produce (see signature-ir.md).
+pub fn ir_print_result_map_test() {
+  let result_ = fn(a, b) { ir.Named(ir.Name([], "Result", None), [a, b]) }
+  let mapper = ir.Fn([ir.Param(None, False, ir.Var(0))], ir.Var(2), False)
+  let map =
+    ir.Fn(
+      [
+        ir.Param(None, False, result_(ir.Var(0), ir.Var(1))),
+        ir.Param(None, False, mapper),
+      ],
+      result_(ir.Var(2), ir.Var(1)),
+      False,
+    )
+  assert ir.to_string(map) == "(Result<$0, $1>, ($0) -> $2) -> Result<$2, $1>"
 }

@@ -89,6 +89,25 @@ pub fn alpha_rename_test() {
   assert ir.to_string(ir.alpha_rename(sig)) == "($0, $1) -> $1"
 }
 
+// A `TypeDefinition`'s constructors share one variable numbering (the variables
+// are bound once at the type head). `type T(a, b) { First(a) Second(b, a) }` with
+// arbitrary source ids: reading left-to-right First's `a`→$0, Second's `b`→$1,
+// and Second's `a` reuses $0.
+pub fn alpha_rename_declaration_test() {
+  let param = fn(id, name) { ir.Param(None, False, ir.Var(id, name)) }
+  let definition =
+    ir.TypeDefinition(parameters: 2, constructors: [
+      ir.Constructor("First", [param(5, "a")]),
+      ir.Constructor("Second", [param(3, "b"), param(5, "a")]),
+    ])
+  let expected =
+    ir.TypeDefinition(parameters: 2, constructors: [
+      ir.Constructor("First", [param(0, "a")]),
+      ir.Constructor("Second", [param(1, "b"), param(0, "a")]),
+    ])
+  assert ir.alpha_rename_declaration(definition) == expected
+}
+
 // The IR JSON codec round-trips: decode(encode(d)) == d. Exercises Named (with
 // concept), Var, nested Fn, and labelled/unlabelled Params.
 pub fn codec_round_trip_test() {

@@ -1,4 +1,7 @@
+\restrict dbmate
+
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
+-- Dumped by pg_dump version 18.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -212,14 +215,14 @@ CREATE TABLE public.package_type_fun_signature (
     signature_ text NOT NULL,
     signature_json jsonb CONSTRAINT package_type_fun_signature_json_signature_not_null NOT NULL,
     kind public.type_nature CONSTRAINT package_type_fun_signature_nature_not_null NOT NULL,
-    parameters uuid[] NOT NULL,
     deprecation text,
     implementations text,
     metadata jsonb NOT NULL,
     package_module_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    signature_compact text GENERATED ALWAYS AS (replace(signature_, ' '::text, ''::text)) STORED
+    signature_compact text GENERATED ALWAYS AS (replace(signature_, ' '::text, ''::text)) STORED,
+    signature_ir jsonb
 );
 
 
@@ -529,6 +532,9 @@ ALTER TABLE ONLY public.package_type_fun_signature
 -- PostgreSQL database dump complete
 --
 
+\unrestrict dbmate
+
+
 --
 -- Dbmate schema migrations
 --
@@ -559,4 +565,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260703095933'),
     ('20260703095934'),
     ('20260703100000'),
-    ('20260703100001');
+    ('20260703100001'),
+    ('20260703100002'),
+    ('20260703100003');

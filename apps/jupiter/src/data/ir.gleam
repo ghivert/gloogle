@@ -151,6 +151,26 @@ pub fn alpha_rename(type_: Type) -> Type {
   renamed
 }
 
+/// Alpha-rename a whole declaration. Variables are canonicalized across the
+/// entire declaration in one numbering: a `TypeDefinition`'s constructors share
+/// it (the variables are bound once at the type head), read left-to-right.
+pub fn alpha_rename_declaration(declaration: Declaration) -> Declaration {
+  case declaration {
+    Function(signature:) -> Function(alpha_rename(signature))
+    Constant(type_:) -> Constant(alpha_rename(type_))
+    TypeAlias(parameters:, aliased:) ->
+      TypeAlias(parameters:, aliased: alpha_rename(aliased))
+    TypeDefinition(parameters:, constructors:) -> {
+      let #(_, constructors) =
+        list.map_fold(constructors, #(dict.new(), 0), fn(state, constructor) {
+          let #(params, state) = rename_params(constructor.parameters, state)
+          #(state, Constructor(..constructor, parameters: params))
+        })
+      TypeDefinition(parameters:, constructors:)
+    }
+  }
+}
+
 fn rename(type_: Type, state: Rename) -> #(Type, Rename) {
   case type_ {
     Var(index, name) -> {

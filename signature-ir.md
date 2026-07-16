@@ -213,27 +213,29 @@ Both phases derive from the IR, so the IR is what makes the query language-agnos
 re-generable by re-running ingestion (so the IR can evolve without lock-in). Per
 `package_type_fun_signature` row:
 
+The **single stored structured representation is the faithful IR** (see "Single stored
+representation" above); display, matching, and the fingerprint all derive from it.
+
 ```
 signature_  (root, source of truth — the rendered target-language signature)
-   ├─ target-language parse ─────→ signature_json     (display; per-language, faithful; renamed from json_signature)
-   └─ language front-end → IR
-          ├─ serialize ──────────→ signature_ir_json  (jsonb; phase-2 verify input: parse-free, language-agnostic)
-          └─ fingerprint ────────→ arity + type_names (phase-1 GIN)
-
-signature_compact  (derived from signature_, unchanged: content_search lexical/trigram tier)
+   ├─ (space-strip) ──────────────→ signature_compact  (content_search trigram tier, unchanged)
+   └─ language front-end → IR (faithful, Var(index, name)) → alpha_rename
+          ├─ ir.encode ───────────→ signature_ir       (jsonb; the ONE structured column)
+          └─ fingerprint ─────────→ arity + type_names  (phase-1 GIN)
 ```
+
+From `signature_ir` derive: **display** (venus renders it, `width` recomputed), **verify** (phase-2
+unifies it, reading `Var.index`), and the **fingerprint**. Shape-changing normalizations
+(nullability, synonyms — TS/Java only) are applied at match time, not stored.
 
 Notes:
 
-- `signature_ir_json` is the **materialized phase-2 input** — the alpha-renamed canonical IR as
-  jsonb. Decoding jsonb is cheaper and more robust than re-parsing a grammar string, and keeps
-  the verifier language-agnostic (it never re-parses the Gleam-specific `signature_`).
-- `signature_json` (faithful, target-language) and `signature_ir_json` (canonical IR) are **not**
-  redundant: different data, different purpose (display vs matching).
-- The canonical IR **string** (`ir.to_string`) is **not stored** — it lost variable names to
-  alpha-renaming so it cannot serve the lexical tier (that stays on `signature_compact`), and it
-  is regenerable on demand via `ir.to_string(decode(signature_ir_json))`. Add a debug column later
-  only if wanted.
+- **`signature_json` is retired** under single-store (display renders `signature_ir`). It survives
+  only in the interim until venus is refactored.
+- Metadata (`name`, `documentation`, `kind`, `deprecation`, `implementations`) stays in its own
+  columns — the IR is structural only and never duplicates them.
+- The canonical IR **string** (`ir.to_string`) is **not stored** — regenerable via
+  `ir.to_string(ir.decoder())`. Add a debug column later only if wanted.
 - The resolved cross-reference (`ref`) is **not stored** either — a `ref` resolves a semver range
   against an evolving version set, so it must be computed at query time (respecting the using
   release's requirement, via a `package_dependency` table). See `signature-ir-todos.md`. `Name`

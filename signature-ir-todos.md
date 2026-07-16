@@ -18,15 +18,15 @@ set — they are front-end lowering rules, matching-tier rules, or external data
         structural only, metadata stays in columns.
   - [x] `from_gleam` covers all 4 kinds (`pi.* → ir.Declaration`) + `pi.Type → ir.Type`.
   - [x] `data/ir` `encode(Declaration) → Json` + `decoder()`, self-describing, round-trip tested.
-  - [ ] Wire ingestion: `from_gleam` → `alpha_rename` → `codec.encode` → store in a `signature_ir`
-        column (migration). Retire `generate/types` + the `signature_json` column once display reads the IR.
+  - [x] Wire ingestion: `from_gleam` → `alpha_rename_declaration` → `ir.encode` → store in the
+        `signature_ir` jsonb column (migration `20260703100003`). All 4 `api/signatures` call sites
+        populate it; upfront recursive-type placeholders write jsonb `null`. — **done**
+  - [ ] Retire `generate/types` + the `signature_json` column once display reads the IR (gated on
+        the venus refactor below).
   - [ ] Move `data/ir` into `galaxy`; refactor venus to render the IR (drops its `pi` dependency,
         computes `width` at render). `signature_` stays as ground truth.
   - [ ] Fingerprint `arity` + `type_names` derived from the IR (GIN).
-- [ ] Storage columns — `signature_ir_json` (jsonb), `arity`, `type_names` (see Storage below);
-      rename `json_signature` → `signature_json`
-- [ ] Fingerprint — compute `arity` + `type_names` (bag of concrete names) from IR; GIN index
-- [ ] Verify unifier — unify query IR vs candidate IR (`Var` injective, `Hole` any, permutations)
+- [ ] Verify unifier — unify query IR vs candidate IR (`Var` injective via `index`, `Hole` any, permutations)
 - [ ] `data/ir/parse` — query-side canonical parser (`String → Type`) for user-typed queries
 - [ ] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,
       `ctx.search`, worker registration); it is superseded by fingerprint + verify
@@ -94,20 +94,21 @@ this also matches what the user resolves locally, and deletes the stateful inges
 
 ## Storage / integration
 
-Column layout on `package_type_fun_signature`, all derived from `signature_` (source of truth):
+**Single stored structured representation — the faithful IR — everything derives from it.**
+Columns on `package_type_fun_signature`, all derived from `signature_` (the source of truth):
 
-- `signature_` — source string (display + FTS). **Unchanged.**
-- `signature_json` — target-language faithful parse, for display. **Renamed** from `json_signature`
-  (migration `20260703100001`); `SELECT`s alias `AS json_signature` so the shared decoder / wire /
-  venus are untouched. `ref` stripped from stored JSON (migration) and no longer emitted by
-  `type_to_json`; `named_decoder` made tolerant. **Run `dbmate up`.**
-- `signature_ir_json` — **new**, jsonb; the alpha-renamed canonical IR; phase-2 verify input.
-- `arity int` + `type_names text[]` — **new**; the fingerprint; GIN index on `type_names`.
-- `signature_compact` — **unchanged**; `content_search` lexical/trigram tier (NOT replaced by IR —
-  the canonical form loses variable names, so it can't serve full-text).
+- `signature_` — source string. Ground truth + FTS (`signature_search`, `documentation_search`). **Unchanged.**
+- `signature_compact` — space-stripped `signature_`; `content_search` trigram tier. **Unchanged.**
+- `signature_ir` — **new**, jsonb; the faithful alpha-renamed IR (`Var(index, name)`). The single
+  structured source: display renders it, verify (phase 2) unifies it, the fingerprint derives from it.
+- `arity int` + `type_names text[]` — **new**; fingerprint derived from the IR; GIN index on `type_names`.
+- metadata columns (`name`, `documentation`, `kind`, `deprecation`, `implementations`, `metadata`) —
+  **unchanged**, used by search filters/FTS; the IR is structural only and never duplicates them.
+- `signature_json` — **to retire** once display reads the IR (venus renders `signature_ir`). Interim only.
 
-- [ ] The canonical IR **string** is deliberately **not stored** (derivable via
-      `ir.to_string(decode(signature_ir_json))`); add a debug column later only if wanted.
-- [ ] Backfill existing rows (keyset pagination): lower `signature_`/`pi` → IR → fill the new columns.
-- [ ] Multi-language: populate `package.language` / `package.registry` (columns already added,
-      migration `20260703100000`) as non-Gleam ingestion lands.
+Done already on the way here: `json_signature` → `signature_json` rename + `ref` strip (migration
+`20260703100001`); write-only `parameters` column dropped (`20260703100002`). **Run `dbmate up`.**
+
+- [ ] The canonical IR **string** is not stored (derivable via `ir.to_string(ir.decoder())`); debug column only if wanted.
+- [ ] Backfill existing rows (keyset): `pi`/`signature_` → IR → `alpha_rename` → fill `signature_ir` + fingerprint.
+- [ ] Multi-language: populate `package.language` / `package.registry` (migration `20260703100000`) as non-Gleam lands.

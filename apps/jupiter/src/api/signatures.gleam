@@ -1,3 +1,5 @@
+import data/ir
+import data/ir/from_gleam
 import gleam/dict
 import gleam/json
 import gleam/list
@@ -13,6 +15,15 @@ import jupiter/postgres/queries
 import palabres
 
 const module_name = "api/signatures"
+
+/// Lower a Gleam declaration to the alpha-renamed IR and encode it for storage
+/// in `signature_ir`. The single structured column display/verify/fingerprint
+/// derive from.
+fn encode_ir(declaration: ir.Declaration) -> json.Json {
+  declaration
+  |> ir.alpha_rename_declaration
+  |> ir.encode
+}
 
 fn add_gleam_constraint(ctx: Context, release_id: String) {
   case ctx.package_interface.gleam_version_constraint {
@@ -43,6 +54,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         metadata: json.null(),
         signature: "",
         json_signature: json.null(),
+        signature_ir: json.null(),
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
@@ -56,6 +68,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
       metadata: metadata.generate(def.deprecation, None),
       signature: sources.type_definition_to_string(name, def),
       json_signature:,
+      signature_ir: encode_ir(from_gleam.type_definition(def)),
       module_id: module.id,
       deprecation: def.deprecation,
       implementations: None,
@@ -85,6 +98,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         metadata: json.null(),
         signature: "",
         json_signature: json.null(),
+        signature_ir: json.null(),
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
@@ -98,6 +112,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
       metadata: metadata.generate(alias.deprecation, None),
       signature: sources.type_alias_to_string(name, alias),
       json_signature:,
+      signature_ir: encode_ir(from_gleam.type_alias(alias)),
       module_id: module.id,
       deprecation: alias.deprecation,
       implementations: None,
@@ -126,6 +141,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
         |> metadata.generate(constant.deprecation, _),
       signature: sources.constant_to_string(name, constant),
       json_signature:,
+      signature_ir: encode_ir(from_gleam.constant(constant)),
       module_id: module.id,
       deprecation: constant.deprecation,
       implementations: Some(constant.implementations),
@@ -156,6 +172,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
           |> metadata.generate(function.deprecation, _),
         signature:,
         json_signature:,
+        signature_ir: encode_ir(from_gleam.function(function)),
         module_id: module.id,
         deprecation: function.deprecation,
         implementations: Some(function.implementations),

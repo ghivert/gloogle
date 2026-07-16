@@ -1,6 +1,8 @@
 import data/ir
+import data/ir/from_gleam
 import envoy
 import gleam/option.{None, Some}
+import gleam/package_interface as pi
 import gleam/result
 import gleeunit
 import jupiter/context/postgres
@@ -44,7 +46,7 @@ pub fn type_search_test() {
 // `result.map`: `fn(Result(a, b), fn(a) -> c) -> Result(c, b)` — the canonical
 // form Gleam and TS front-ends must both produce (see signature-ir.md).
 pub fn ir_print_result_map_test() {
-  let result_ = fn(a, b) { ir.Named(ir.Name([], "Result", None), [a, b]) }
+  let result_ = fn(a, b) { ir.Named(ir.Name("", "", "Result", None), [a, b]) }
   let mapper = ir.Fn([ir.Param(None, False, ir.Var(0))], ir.Var(2), False)
   let map =
     ir.Fn(
@@ -56,4 +58,21 @@ pub fn ir_print_result_map_test() {
       False,
     )
   assert ir.to_string(map) == "(Result<$0, $1>, ($0) -> $2) -> Result<$2, $1>"
+}
+
+// `Result(a, Int)` from `gleam/result`, with a prelude `Int`. Checks package +
+// qualifier extraction from the module, prelude staying unqualified, `Variable`
+// → `Var` (pi ids preserved, alpha-renaming is a later pass), and nesting.
+pub fn lower_type_test() {
+  let pi_type =
+    pi.Named("Result", "gleam_stdlib", "gleam/result", [
+      pi.Variable(0),
+      pi.Named("Int", "", "gleam", []),
+    ])
+  let expected =
+    ir.Named(ir.Name("gleam_stdlib", "gleam/result", "Result", None), [
+      ir.Var(0),
+      ir.Named(ir.Name("", "", "Int", None), []),
+    ])
+  assert from_gleam.type_(pi_type) == expected
 }

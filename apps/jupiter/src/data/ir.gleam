@@ -38,13 +38,16 @@ pub type Field {
 }
 
 /// A possibly-qualified type name.
-///   - `qualifier` namespace segments, e.g. `["gleam", "option"]`.
-///   - `base`      the written name, e.g. `"Option"`.
-///   - `concept`   cross-language canonical id from the synonym table (layer 3),
-///                 e.g. `base "Int"` → `concept "int"`. Exact match uses `base`;
-///                 conceptual match uses `concept` when present.
+///   - `package` origin package (`""` for the prelude/builtins). Carried for
+///               nominal linkability (query-time ref resolution); the matcher
+///               ignores it by default. Not emitted in the canonical string.
+///   - `module`  the module path (`""` for the prelude), e.g. `"gleam/option"`.
+///   - `name`    the written name, e.g. `"Option"`.
+///   - `concept` cross-language canonical id from the synonym table (layer 3),
+///               e.g. `name "Int"` → `concept "int"`. Exact match uses `name`;
+///               conceptual match uses `concept` when present.
 pub type Name {
-  Name(qualifier: List(String), base: String, concept: Option(String))
+  Name(package: String, module: String, name: String, concept: Option(String))
 }
 
 /// Deterministic printer: an IR `Type` → its canonical notation string.
@@ -91,10 +94,10 @@ fn print_param(param: Param) -> String {
   label <> spread <> to_string(param.type_)
 }
 
-fn print_named(name: Name, args: List(Type)) -> String {
-  let qualified = case name.qualifier {
-    [] -> name.base
-    qualifier -> string.join(list.append(qualifier, [name.base]), ".")
+fn print_named(named: Name, args: List(Type)) -> String {
+  let qualified = case named.module {
+    "" -> named.name
+    module -> module <> "." <> named.name
   }
   case args {
     [] -> qualified

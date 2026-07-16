@@ -72,13 +72,16 @@ pub type Field {
   Field(name: String, type_: Type)
 }
 
-/// `qualifier` — namespace segments, e.g. ["gleam", "option"] or ["java", "util"].
-/// `base`      — the written type name, e.g. "Option", "List".
-/// `concept`   — cross-language canonical id filled by the synonym table (layer 3),
-///               e.g. base "Int" → concept "int". Exact match uses `base`; conceptual
-///               match uses `concept` when present.
+/// `package` — origin package ("" for prelude/builtins); carried for nominal
+///             linkability (query-time ref resolution), matcher-optional, not
+///             emitted in the canonical string.
+/// `module`  — the module path ("" for the prelude), e.g. "gleam/option", "java/util".
+/// `name`    — the written type name, e.g. "Option", "List".
+/// `concept` — cross-language canonical id filled by the synonym table (layer 3),
+///             e.g. name "Int" → concept "int". Exact match uses `name`; conceptual
+///             match uses `concept` when present.
 pub type Name {
-  Name(qualifier: List(String), base: String, concept: Option(String))
+  Name(package: String, module: String, name: String, concept: Option(String))
 }
 ```
 
@@ -110,7 +113,7 @@ field      ::= field-name ":" type                           ⟶ Field(name, typ
 
 args       ::= type { "," type }
 fields     ::= field { "," field }
-qname      ::= { segment "." } base                          ⟶ Name(qualifier, base, concept?)
+qname      ::= { segment "." } base                          ⟶ Name(package, module, name, concept?)
 base       ::= upper-ident
 segment    ::= ident
 field-name ::= ident
@@ -211,6 +214,10 @@ Notes:
   alpha-renaming so it cannot serve the lexical tier (that stays on `signature_compact`), and it
   is regenerable on demand via `ir.to_string(decode(signature_ir_json))`. Add a debug column later
   only if wanted.
+- The resolved cross-reference (`ref`) is **not stored** either — a `ref` resolves a semver range
+  against an evolving version set, so it must be computed at query time (respecting the using
+  release's requirement, via a `package_dependency` table). See `signature-ir-todos.md`. `Name`
+  carries `package`/`qualifier`/`base` precisely so this resolution is a join, not stored state.
 
 ## Scope
 

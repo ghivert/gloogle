@@ -6,10 +6,10 @@ set — they are front-end lowering rules, matching-tier rules, or external data
 
 ## Build order (v1)
 
-- [x] `data/ir` types + `to_string` printer + test — **done**
-- [ ] Gleam front-end — `pi.Type → ir.Type` lowering (next to `generate/sources`/`generate/types`;
-      _not_ a text parser — `package_interface` is already structured at ingestion)
-- [ ] Shared alpha-renaming pass (post-lowering)
+- [x] `data/ir` types (+ `Name.package`) + `to_string` printer + tests — **done**
+- [x] Gleam front-end — `pi.Type → ir.Type` converter (`data/ir/from_gleam`; pure, no
+      ctx/DB; `Var` keeps pi ids for now). One `ir/from_<language>` per source language — **done**
+- [ ] Shared alpha-renaming pass (post-lowering: `Var` pi ids → first-appearance 0,1,2…)
 - [ ] Storage columns — `signature_ir_json` (jsonb), `arity`, `type_names` (see Storage below);
       rename `json_signature` → `signature_json`
 - [ ] Fingerprint — compute `arity` + `type_names` (bag of concrete names) from IR; GIN index
@@ -46,6 +46,27 @@ set — they are front-end lowering rules, matching-tier rules, or external data
 - [ ] **Generic bounds.** `<T extends Comparable>` — would attach an optional bound to a variable
       binder. Out until a target language makes it load-bearing for search.
 - [ ] **Default parameter values.** Ingestion/display detail; likely never a matching concern.
+
+## Cross-reference (`ref`) resolution — moved to query time
+
+Decision: **stop storing the resolved `ref`** (in `signature_json` or anywhere). A `ref` resolves a
+semver *range* against an *evolving* set of published versions, so freezing it at ingestion is stale
+by construction. Resolve on demand instead, against current DB state, respecting the requirement —
+this also matches what the user resolves locally, and deletes the stateful ingestion machinery.
+
+- [ ] Drop `ref` computation from ingestion (`generate/types` `extract_parameters_relation`,
+      `find_type_signature`, the cross-package "restart extraction" logic, the `ctx`/`Loss` threading).
+- [ ] `Name` carries `package` + `qualifier` + `base` (done) → the nominal coordinates needed to resolve.
+- [ ] **`package_dependency` normalized table** (preferred over jsonb: cleaner joins, data analysis):
+      `(id, package_release_id, name, requirement, kind ['dependency'|'dev-dependency'])`,
+      `unique (package_release_id, name, kind)`, index on `name`. Populated at ingestion from the
+      already-stored `package_release.gleam_toml`; backfill existing rows.
+- [ ] Query-time resolution for displayed rows: row → release → `package_dependency` (constraint) →
+      `keep_matching_releases`/`semver.is_match` (dynamic, existing logic) → target release/signature.
+      Reuse `toml.find_package_requirement` logic, debranched from `ctx`. Self-package type → the
+      release's own version.
+- [ ] NULL `gleam_toml` (nullable column) or dependency not yet indexed → **unresolved link** (show
+      the type name un-linked / hex link).
 
 ## Storage / integration
 

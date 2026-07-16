@@ -49,7 +49,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         implementations: None,
       )
     use #(json_signature, parameters) <- result.try({
-      types.type_definition_to_json(ctx, name, def)
+      types.type_definition_to_json(name, def)
     })
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -95,7 +95,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         implementations: None,
       )
     use #(json_signature, parameters) <- result.try({
-      types.type_alias_to_json(ctx, name, alias)
+      types.type_alias_to_json(name, alias)
     })
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -125,7 +125,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   result.all({
     use #(name, constant) <- list.map(all_constants)
     use #(json_signature, parameters) <- result.try({
-      types.constant_to_json(ctx, name, constant)
+      types.constant_to_json(name, constant)
     })
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -156,7 +156,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   result.all({
     use #(name, function) <- list.map(all_functions)
     use #(json_signature, parameters) <- result.try({
-      types.function_to_json(ctx, name, function)
+      types.function_to_json(name, function)
     })
     let signature = sources.function_to_string(name, function)
     let content =

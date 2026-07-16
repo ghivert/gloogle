@@ -281,17 +281,16 @@ fn insert_package_and_releases(
   use interfaces <- result.try(extract_interfaces_from_db(state, id, release))
   use _ <- result.try(save_retirement_data(state, interfaces, package, release))
   case work_async {
-    WorkSync -> extract_package(state, id, release, package, interfaces, False)
+    WorkSync -> extract_package(state, id, release, package, interfaces)
     WorkAsync -> {
       let slug = package.name <> " v" <> release.version
       retrier.retry(fn(iterations) {
-        let ignore = iterations == 0
         palabres.notice("Trying extracting package")
         |> palabres.int("iterations", iterations)
         |> palabres.string("slug", slug)
         |> palabres.at(module:, function: "insert_package_and_releases")
         |> palabres.log
-        extract_package(state, id, release, package, interfaces, ignore)
+        extract_package(state, id, release, package, interfaces)
       })
       |> result.replace(Nil)
       |> result.map_error(loss.ActorError)
@@ -305,17 +304,11 @@ fn extract_package(
   release: hexpm.Release,
   package: hexpm.Package,
   interfaces: Interfaces,
-  ignore_parameters_errors: Bool,
 ) -> Result(Nil, Error) {
   use #(package_interface, gleam_toml) <- result.try({
     extract_release_interfaces(state, id, package, release, interfaces)
   })
-  gcontext.Context(
-    db: state.db,
-    package_interface:,
-    gleam_toml:,
-    ignore_parameters_errors:,
-  )
+  gcontext.Context(db: state.db, package_interface:, gleam_toml:)
   |> signatures.extract_signatures
   |> result.replace(Nil)
   |> result_.tap(fn(_content) {

@@ -41,6 +41,20 @@ COMMENT ON EXTENSION moddatetime IS 'functions for tracking last modification ti
 
 
 --
+-- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
+
+
+--
 -- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -136,7 +150,9 @@ CREATE TABLE public.package (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     rank integer DEFAULT 0 NOT NULL,
-    popularity jsonb
+    popularity jsonb,
+    language text DEFAULT 'gleam'::text NOT NULL,
+    registry text DEFAULT 'hex'::text NOT NULL
 );
 
 
@@ -194,7 +210,7 @@ CREATE TABLE public.package_type_fun_signature (
     name text NOT NULL,
     documentation text NOT NULL,
     signature_ text NOT NULL,
-    json_signature jsonb NOT NULL,
+    signature_json jsonb CONSTRAINT package_type_fun_signature_json_signature_not_null NOT NULL,
     kind public.type_nature CONSTRAINT package_type_fun_signature_nature_not_null NOT NULL,
     parameters uuid[] NOT NULL,
     deprecation text,
@@ -202,7 +218,8 @@ CREATE TABLE public.package_type_fun_signature (
     metadata jsonb NOT NULL,
     package_module_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    signature_compact text GENERATED ALWAYS AS (replace(signature_, ' '::text, ''::text)) STORED
 );
 
 
@@ -371,6 +388,13 @@ CREATE INDEX package_name_index ON public.package_type_fun_signature USING btree
 
 
 --
+-- Name: package_popularity_github; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_popularity_github ON public.package USING btree (((popularity -> 'github'::text))) WHERE ((popularity -> 'github'::text) IS NOT NULL);
+
+
+--
 -- Name: package_type_fun_signature_documentation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -385,10 +409,24 @@ CREATE INDEX package_type_fun_signature_name ON public.package_type_fun_signatur
 
 
 --
+-- Name: package_type_fun_signature_name_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_name_trgm ON public.package_type_fun_signature USING gin (name public.gin_trgm_ops);
+
+
+--
 -- Name: package_type_fun_signature_signature; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX package_type_fun_signature_signature ON public.package_type_fun_signature USING gin (to_tsvector('english'::regconfig, signature_));
+
+
+--
+-- Name: package_type_fun_signature_signature_compact_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_signature_compact_trgm ON public.package_type_fun_signature USING gin (signature_compact public.gin_trgm_ops);
 
 
 --
@@ -517,4 +555,8 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240801220817'),
     ('20240902224247'),
     ('20240902225236'),
-    ('20241016151324');
+    ('20241016151324'),
+    ('20260703095933'),
+    ('20260703095934'),
+    ('20260703100000'),
+    ('20260703100001');

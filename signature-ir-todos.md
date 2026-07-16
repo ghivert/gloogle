@@ -55,8 +55,16 @@ semver *range* against an *evolving* set of published versions, so freezing it a
 by construction. Resolve on demand instead, against current DB state, respecting the requirement —
 this also matches what the user resolves locally, and deletes the stateful ingestion machinery.
 
-- [ ] Drop `ref` computation from ingestion (`generate/types` `extract_parameters_relation`,
-      `find_type_signature`, the cross-package "restart extraction" logic, the `ctx`/`Loss` threading).
+- [x] Stop storing `ref`: stripped from existing JSON + no longer emitted (migration
+      `20260703100001`, `type_to_json`). Decoder made tolerant.
+- [x] Dismantle the ingestion ref-resolution machinery: removed `extract_parameters_relation` +
+      6 DB helpers from `generate/types`, the retry/`ignore` "restart extraction" flag in
+      `tasks/hex`, and `Context.ignore_parameters_errors`. Ingestion no longer hits the DB to
+      resolve refs.
+- [ ] Residual cleanup (cosmetic, no behaviour change): `type_to_json` still threads a now-unused
+      `ctx` (one compiler warning) and an always-empty `Set`/`Loss`. Purify the chain to pure
+      `pi.Type → Json` and drop the write-only `parameters uuid[]` column (+ its `upsert` param,
+      migration).
 - [ ] `Name` carries `package` + `qualifier` + `base` (done) → the nominal coordinates needed to resolve.
 - [ ] **`package_dependency` normalized table** (preferred over jsonb: cleaner joins, data analysis):
       `(id, package_release_id, name, requirement, kind ['dependency'|'dev-dependency'])`,
@@ -74,8 +82,10 @@ this also matches what the user resolves locally, and deletes the stateful inges
 Column layout on `package_type_fun_signature`, all derived from `signature_` (source of truth):
 
 - `signature_` — source string (display + FTS). **Unchanged.**
-- `signature_json` — target-language faithful parse, for display. **Rename** of `json_signature`
-  (follow the rename through `SELECT` aliases, `type_search.decoder()`, frontend).
+- `signature_json` — target-language faithful parse, for display. **Renamed** from `json_signature`
+  (migration `20260703100001`); `SELECT`s alias `AS json_signature` so the shared decoder / wire /
+  venus are untouched. `ref` stripped from stored JSON (migration) and no longer emitted by
+  `type_to_json`; `named_decoder` made tolerant. **Run `dbmate up`.**
 - `signature_ir_json` — **new**, jsonb; the alpha-renamed canonical IR; phase-2 verify input.
 - `arity int` + `type_names text[]` — **new**; the fingerprint; GIN index on `type_names`.
 - `signature_compact` — **unchanged**; `content_search` lexical/trigram tier (NOT replaced by IR —

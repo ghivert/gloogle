@@ -39,15 +39,35 @@ Consequences of the rule, already decided:
 
 ## Two decided invariants
 
-1. **Type variables are alpha-renamed to indices.** `(a) -> b` and `(x) -> y` are the same value. The IR stores
-   `Var(Int)` only — **the source name is dropped**. The name is needed transiently during lowering (a
-   `Dict(String, Int)` to bind repeated occurrences) and discarded afterwards. `parse.gleam` already does this today via
-   `replace_indexed` producing `Index("", value)`; the IR formalizes it as `Var(Int)`. For display, readable names are
-   regenerated deterministically from indices (`$0`→`a`, …) or read from the preserved raw `signature_`.
+1. **Type variables carry both a canonical index and their source name — `Var(index, name)`.** `index` is the
+   alpha-renamed position (first-appearance order), so `(a) -> b` and `(x) -> y` share the same indices and matching
+   reads `index` directly — **the alpha-rename is precomputed at ingestion, never at query time**. `name` is the source
+   name kept for faithful display (for Gleam, the conventional letter derived from the compiler id — `a`, `b`, …, since
+   Gleam preserves no source name; for TS/Java, the real `<T, E>`). Two labels on one node: matching uses `index`,
+   display uses `name`. This is the general principle — see below.
 
 2. **A method is a receiver-first function.** An OO method is a `Fn` whose first parameter is the receiver, with
    `is_method: True`. This converges Java/Python/JS methods with Gleam's pipe-first idiom (`foo |> bar(x)`), where the
    receiver is already the first argument. The flag is retained only so same-shape methods can be boosted/filtered.
+
+## Single stored representation: store the faithful IR, derive the rest
+
+Target: **one stored structured column — the faithful IR** — from which display, matching, and the fingerprint all
+derive. This collapses the `signature_json` (display) / `signature_ir_json` (matching) split into one, killing the
+format duplication and making the IR the universal model. The rules:
+
+- **The stored IR is faithful (un-normalized).** It retains what display needs. Normalizations are *derivations*, not
+  baked into storage.
+- **When the two views of a node are just labels, store both** (no derivation). `Var(index, name)` is the archetype:
+  `index` = matching, `name` = display. Precompute at ingestion.
+- **When a normalization changes the tree *shape*, it stays a derivation** applied at match time — you cannot carry two
+  shapes on one node. These are the shape-changers: nullability (`Option(a)` ≡ `t | null`, a `Named` vs a `Union`) and
+  the concept/synonym mapping. **All shape-changers are TS/Python/Java-only; Gleam has none**, so for Gleam the faithful
+  stored IR is already fully matching-ready (only `index` precompute + fingerprint), zero shape derivation.
+
+Consequences: `signature_json` is retired (display renders the IR); the IR type moves to `galaxy` so venus renders it
+(dropping its `pi` dependency); `signature_` stays as ground truth + FTS + regeneration source. Open piece: the venus
+rendering refactor.
 
 ## Node set (Gleam types)
 
@@ -57,7 +77,7 @@ Consequences of the rule, already decided:
 pub type Type {
   Fn(params: List(Param), return: Type, is_method: Bool)
   Named(name: Name, args: List(Type))
-  Var(index: Int)
+  Var(index: Int, name: String)
   Hole
   Tuple(elements: List(Type))
   Record(fields: List(Field))

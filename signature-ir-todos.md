@@ -10,7 +10,12 @@ set — they are front-end lowering rules, matching-tier rules, or external data
 - [x] Gleam front-end — `pi.Type → ir.Type` converter (`data/ir/from_gleam`; pure, no
       ctx/DB; `Var` keeps pi ids for now). One `ir/from_<language>` per source language — **done**
 - [x] Shared alpha-renaming pass (`ir.alpha_rename`: `Var` pi ids → first-appearance 0,1,2…;
-      reading order = params then return) — **done**
+      reading order = params then return; preserves `Var.name`) — **done**
+- [x] `Var(index, name)` — index (matching, precomputed) + name (display); `from_gleam` fills the
+      name from the id letter — **done**
+- [ ] **Single-store consolidation** (design decided, see design doc "Single stored representation"):
+      store only the faithful IR, retire `signature_json`, move `data/ir` into `galaxy`, refactor
+      venus to render the IR (drops its `pi` dependency). `signature_` stays as ground truth.
 - [ ] Storage columns — `signature_ir_json` (jsonb), `arity`, `type_names` (see Storage below);
       rename `json_signature` → `signature_json`
 - [ ] Fingerprint — compute `arity` + `type_names` (bag of concrete names) from IR; GIN index
@@ -61,10 +66,13 @@ this also matches what the user resolves locally, and deletes the stateful inges
       6 DB helpers from `generate/types`, the retry/`ignore` "restart extraction" flag in
       `tasks/hex`, and `Context.ignore_parameters_errors`. Ingestion no longer hits the DB to
       resolve refs.
-- [ ] Residual cleanup (cosmetic, no behaviour change): `type_to_json` still threads a now-unused
-      `ctx` (one compiler warning) and an always-empty `Set`/`Loss`. Purify the chain to pure
-      `pi.Type → Json` and drop the write-only `parameters uuid[]` column (+ its `upsert` param,
-      migration).
+- [x] Purified the `generate/types` chain: dropped the vestigial `ctx` everywhere (+ `Context`
+      import); `api/signatures` call sites updated. Build is warning-clean. `Loss`/`Set` kept
+      (always `Ok`/empty) to leave `api/signatures`' `result.try` wrappers untouched.
+- [x] Dropped the write-only `parameters uuid[]` column (migration `20260703100002`) + its `upsert`
+      param/INSERT/`pog.array` ($-placeholders renumbered). `generate/types` is now pure
+      `pi.Type → Json` — `Loss`/`Set`/`reduce_components` removed (the chain can't fail), call sites
+      in `api/signatures` de-`result.try`'d. Build warning-clean.
 - [ ] `Name` carries `package` + `qualifier` + `base` (done) → the nominal coordinates needed to resolve.
 - [ ] **`package_dependency` normalized table** (preferred over jsonb: cleaner joins, data analysis):
       `(id, package_release_id, name, requirement, kind ['dependency'|'dev-dependency'])`,

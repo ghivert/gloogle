@@ -19,8 +19,11 @@ pub type Type {
   Fn(params: List(Param), return: Type, is_method: Bool)
   /// Nominal type applied to zero or more arguments: `Int`, `List<a>`, `Result<A, E>`.
   Named(name: Name, args: List(Type))
-  /// Alpha-renamed type variable. No source name is kept.
-  Var(index: Int)
+  /// Type variable. `index` is the alpha-renamed canonical position (used by
+  /// matching, precomputed so no renaming is needed at query time); `name` is the
+  /// source name kept for faithful display (for Gleam it is the conventional
+  /// letter derived from the id — `a`, `b`, …; for TS/Java the real `<T, E>`).
+  Var(index: Int, name: String)
   /// Query-side wildcard: matches any type.
   Hole
   Tuple(elements: List(Type))
@@ -57,7 +60,7 @@ pub fn to_string(type_: Type) -> String {
   case type_ {
     Fn(params, return, is_method) -> print_fn(params, return, is_method)
     Named(name, args) -> print_named(name, args)
-    Var(i) -> "$" <> int.to_string(i)
+    Var(i, _) -> "$" <> int.to_string(i)
     Hole -> "_"
     Tuple(elements) -> "#(" <> print_args(elements) <> ")"
     Record(fields) -> "{ " <> print_fields(fields) <> " }"
@@ -133,11 +136,14 @@ pub fn alpha_rename(type_: Type) -> Type {
 
 fn rename(type_: Type, state: Rename) -> #(Type, Rename) {
   case type_ {
-    Var(index) -> {
+    Var(index, name) -> {
       let #(mapping, next) = state
       case dict.get(mapping, index) {
-        Ok(canonical) -> #(Var(canonical), state)
-        Error(_) -> #(Var(next), #(dict.insert(mapping, index, next), next + 1))
+        Ok(canonical) -> #(Var(canonical, name), state)
+        Error(_) -> #(
+          Var(next, name),
+          #(dict.insert(mapping, index, next), next + 1),
+        )
       }
     }
     Hole -> #(Hole, state)

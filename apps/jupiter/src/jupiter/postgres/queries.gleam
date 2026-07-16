@@ -521,7 +521,6 @@ pub fn upsert_package_type_fun_signature(
   metadata metadata: json.Json,
   signature signature: String,
   json_signature json_signature: json.Json,
-  parameters parameters: List(String),
   module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
@@ -532,22 +531,20 @@ pub fn upsert_package_type_fun_signature(
      signature_,
      signature_json,
      kind,
-     parameters,
      metadata,
      package_module_id,
      deprecation,
      implementations
-   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
    ON CONFLICT (package_module_id, name) DO UPDATE
      SET
        documentation = $2,
        signature_ = $3,
        signature_json = $4,
        kind = $5,
-       parameters = $6,
-       metadata = $7,
-       deprecation = $9,
-       implementations = $10
+       metadata = $6,
+       deprecation = $8,
+       implementations = $9
    RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
@@ -560,7 +557,6 @@ pub fn upsert_package_type_fun_signature(
   |> pog.parameter(pog.text(signature))
   |> pog.parameter(json_signature |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(kind_to_string(kind)))
-  |> pog.parameter(pog.array(pog.text, parameters))
   |> pog.parameter(metadata |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(module_id))
   |> pog.parameter({

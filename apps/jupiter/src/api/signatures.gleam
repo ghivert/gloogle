@@ -43,14 +43,11 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         metadata: json.null(),
         signature: "",
         json_signature: json.null(),
-        parameters: [],
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
-    use #(json_signature, parameters) <- result.try({
-      types.type_definition_to_json(name, def)
-    })
+    let json_signature = types.type_definition_to_json(name, def)
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       kind:,
@@ -59,7 +56,6 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
       metadata: metadata.generate(def.deprecation, None),
       signature: sources.type_definition_to_string(name, def),
       json_signature:,
-      parameters:,
       module_id: module.id,
       deprecation: def.deprecation,
       implementations: None,
@@ -89,14 +85,11 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         metadata: json.null(),
         signature: "",
         json_signature: json.null(),
-        parameters: [],
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
-    use #(json_signature, parameters) <- result.try({
-      types.type_alias_to_json(name, alias)
-    })
+    let json_signature = types.type_alias_to_json(name, alias)
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name:,
@@ -105,7 +98,6 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
       metadata: metadata.generate(alias.deprecation, None),
       signature: sources.type_alias_to_string(name, alias),
       json_signature:,
-      parameters:,
       module_id: module.id,
       deprecation: alias.deprecation,
       implementations: None,
@@ -124,9 +116,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   let all_constants = dict.to_list(module.module.constants)
   result.all({
     use #(name, constant) <- list.map(all_constants)
-    use #(json_signature, parameters) <- result.try({
-      types.constant_to_json(name, constant)
-    })
+    let json_signature = types.constant_to_json(name, constant)
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name:,
@@ -136,7 +126,6 @@ fn upsert_constants(ctx: Context, module: context.Module) {
         |> metadata.generate(constant.deprecation, _),
       signature: sources.constant_to_string(name, constant),
       json_signature:,
-      parameters:,
       module_id: module.id,
       deprecation: constant.deprecation,
       implementations: Some(constant.implementations),
@@ -155,9 +144,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   let all_functions = dict.to_list(module.module.functions)
   result.all({
     use #(name, function) <- list.map(all_functions)
-    use #(json_signature, parameters) <- result.try({
-      types.function_to_json(name, function)
-    })
+    let json_signature = types.function_to_json(name, function)
     let signature = sources.function_to_string(name, function)
     let content =
       queries.upsert_package_type_fun_signature(
@@ -169,7 +156,6 @@ fn upsert_functions(ctx: Context, module: context.Module) {
           |> metadata.generate(function.deprecation, _),
         signature:,
         json_signature:,
-        parameters:,
         module_id: module.id,
         deprecation: function.deprecation,
         implementations: Some(function.implementations),

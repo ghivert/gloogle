@@ -47,14 +47,15 @@ pub fn type_search_test() {
 // form Gleam and TS front-ends must both produce (see signature-ir.md).
 pub fn ir_print_result_map_test() {
   let result_ = fn(a, b) { ir.Named(ir.Name("", "", "Result", None), [a, b]) }
-  let mapper = ir.Fn([ir.Param(None, False, ir.Var(0))], ir.Var(2), False)
+  let mapper =
+    ir.Fn([ir.Param(None, False, ir.Var(0, "a"))], ir.Var(2, "c"), False)
   let map =
     ir.Fn(
       [
-        ir.Param(None, False, result_(ir.Var(0), ir.Var(1))),
+        ir.Param(None, False, result_(ir.Var(0, "a"), ir.Var(1, "b"))),
         ir.Param(None, False, mapper),
       ],
-      result_(ir.Var(2), ir.Var(1)),
+      result_(ir.Var(2, "c"), ir.Var(1, "b")),
       False,
     )
   assert ir.to_string(map) == "(Result<$0, $1>, ($0) -> $2) -> Result<$2, $1>"
@@ -71,7 +72,7 @@ pub fn lower_type_test() {
     ])
   let expected =
     ir.Named(ir.Name("gleam_stdlib", "gleam/result", "Result", None), [
-      ir.Var(0),
+      ir.Var(0, "a"),
       ir.Named(ir.Name("", "", "Int", None), []),
     ])
   assert from_gleam.type_(pi_type) == expected
@@ -80,9 +81,9 @@ pub fn lower_type_test() {
 // `fn(b, a) -> a` with arbitrary source ids (5, 3) → first-appearance 0, 1.
 // Makes alpha-equivalent signatures identical.
 pub fn alpha_rename_test() {
-  let var = fn(id) { ir.Param(None, False, ir.Var(id)) }
-  let sig = ir.Fn([var(5), var(3)], ir.Var(3), False)
-  let expected = ir.Fn([var(0), var(1)], ir.Var(1), False)
+  let var = fn(id, name) { ir.Param(None, False, ir.Var(id, name)) }
+  let sig = ir.Fn([var(5, "x"), var(3, "y")], ir.Var(3, "y"), False)
+  let expected = ir.Fn([var(0, "x"), var(1, "y")], ir.Var(1, "y"), False)
   assert ir.alpha_rename(sig) == expected
   assert ir.to_string(ir.alpha_rename(sig)) == "($0, $1) -> $1"
 }

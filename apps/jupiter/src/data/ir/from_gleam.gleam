@@ -10,6 +10,7 @@ import data/ir
 import gleam/list
 import gleam/option.{None}
 import gleam/package_interface as pi
+import gleam/string
 
 /// Lower a function signature into an `ir.Fn`. Top-level parameters carry labels.
 pub fn function(function: pi.Function) -> ir.Type {
@@ -44,7 +45,7 @@ pub fn type_(t: pi.Type) -> ir.Type {
         return: type_(return),
         is_method: False,
       )
-    pi.Variable(id) -> ir.Var(id)
+    pi.Variable(id) -> ir.Var(index: id, name: variable_name(id))
     pi.Named(name, package, module, parameters) ->
       ir.Named(
         name: named(name, package, module),
@@ -69,4 +70,14 @@ fn module_path(package: String, module: String) -> String {
 
 fn is_prelude(package: String, module: String) -> Bool {
   package == "" && module == "gleam"
+}
+
+/// Gleam type variables have no source name; the compiler assigns ids and the
+/// display name is the conventional letter (`0 → a`, `1 → b`, …), mirroring
+/// `generate/sources`.
+fn variable_name(id: Int) -> String {
+  case string.utf_codepoint(97 + id) {
+    Ok(codepoint) -> string.from_utf_codepoints([codepoint])
+    Error(_) -> "a"
+  }
 }

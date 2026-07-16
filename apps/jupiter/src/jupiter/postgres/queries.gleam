@@ -714,9 +714,7 @@ pub fn content_search(db: pog.Connection, query: String) {
    WHERE s.name <> $1
      AND (
       s.name ILIKE '%' || $1 || '%'
-      OR s.signature_ ILIKE '%' || $1 || '%'
-      OR replace(s.signature_, ' ', '') ILIKE '%' || $1 || '%'
-      OR replace(s.signature_, ' ', '') LIKE '%' || replace($2, ' ', '%') || '%'
+      OR s.signature_compact ILIKE '%' || replace($2, ' ', '%') || '%'
     )
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name

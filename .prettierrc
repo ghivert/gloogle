@@ -4,13 +4,7 @@
   "arrowParens": "avoid",
   "trailingComma": "es5",
   "proseWrap": "always",
-  "importOrder": [
-    "^\\@.*$",
-    "^[^@\\.].*$",
-    "^\\..*$"
-  ],
+  "importOrder": ["^\\@.*$", "^[^@\\.].*$", "^\\..*$"],
   "importOrderSortSpecifiers": true,
-  "plugins": [
-    "@trivago/prettier-plugin-sort-imports"
-  ]
+  "plugins": ["@trivago/prettier-plugin-sort-imports"]
 }

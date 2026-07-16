@@ -9,7 +9,8 @@ set — they are front-end lowering rules, matching-tier rules, or external data
 - [x] `data/ir` types (+ `Name.package`) + `to_string` printer + tests — **done**
 - [x] Gleam front-end — `pi.Type → ir.Type` converter (`data/ir/from_gleam`; pure, no
       ctx/DB; `Var` keeps pi ids for now). One `ir/from_<language>` per source language — **done**
-- [ ] Shared alpha-renaming pass (post-lowering: `Var` pi ids → first-appearance 0,1,2…)
+- [x] Shared alpha-renaming pass (`ir.alpha_rename`: `Var` pi ids → first-appearance 0,1,2…;
+      reading order = params then return) — **done**
 - [ ] Storage columns — `signature_ir_json` (jsonb), `arity`, `type_names` (see Storage below);
       rename `json_signature` → `signature_json`
 - [ ] Fingerprint — compute `arity` + `type_names` (bag of concrete names) from IR; GIN index

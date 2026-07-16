@@ -76,3 +76,13 @@ pub fn lower_type_test() {
     ])
   assert from_gleam.type_(pi_type) == expected
 }
+
+// `fn(b, a) -> a` with arbitrary source ids (5, 3) → first-appearance 0, 1.
+// Makes alpha-equivalent signatures identical.
+pub fn alpha_rename_test() {
+  let var = fn(id) { ir.Param(None, False, ir.Var(id)) }
+  let sig = ir.Fn([var(5), var(3)], ir.Var(3), False)
+  let expected = ir.Fn([var(0), var(1)], ir.Var(1), False)
+  assert ir.alpha_rename(sig) == expected
+  assert ir.to_string(ir.alpha_rename(sig)) == "($0, $1) -> $1"
+}

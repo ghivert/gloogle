@@ -8,6 +8,7 @@
 ////     is dropped;
 ////   - a method is a receiver-first `Fn` with `method: True`.
 
+import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -115,4 +116,78 @@ fn print_fields(fields: List(Field)) -> String {
   fields
   |> list.map(fn(field) { field.name <> ": " <> to_string(field.type_) })
   |> string.join(", ")
+}
+
+// Original variable id → canonical index, plus the next index to hand out.
+type Rename =
+  #(Dict(Int, Int), Int)
+
+/// Alpha-rename type variables to first-appearance order (`0, 1, 2, …`), so that
+/// alpha-equivalent signatures become identical (`fn(a, b) -> a` ≡ `fn(x, y) -> x`).
+/// Front-ends emit `Var` with the source language's ids; this canonicalizes them.
+/// Reading order: parameters left-to-right, then the return type.
+pub fn alpha_rename(type_: Type) -> Type {
+  let #(renamed, _) = rename(type_, #(dict.new(), 0))
+  renamed
+}
+
+fn rename(type_: Type, state: Rename) -> #(Type, Rename) {
+  case type_ {
+    Var(index) -> {
+      let #(mapping, next) = state
+      case dict.get(mapping, index) {
+        Ok(canonical) -> #(Var(canonical), state)
+        Error(_) -> #(Var(next), #(dict.insert(mapping, index, next), next + 1))
+      }
+    }
+    Hole -> #(Hole, state)
+    Named(name, args) -> {
+      let #(args, state) = rename_types(args, state)
+      #(Named(name, args), state)
+    }
+    Tuple(elements) -> {
+      let #(elements, state) = rename_types(elements, state)
+      #(Tuple(elements), state)
+    }
+    Union(members) -> {
+      let #(members, state) = rename_types(members, state)
+      #(Union(members), state)
+    }
+    Fn(params, return, is_method) -> {
+      let #(params, state) = rename_params(params, state)
+      let #(return, state) = rename(return, state)
+      #(Fn(params, return, is_method), state)
+    }
+    Record(fields) -> {
+      let #(fields, state) = rename_fields(fields, state)
+      #(Record(fields), state)
+    }
+  }
+}
+
+fn rename_types(types: List(Type), state: Rename) -> #(List(Type), Rename) {
+  let #(state, renamed) =
+    list.map_fold(types, state, fn(state, type_) {
+      let #(type_, state) = rename(type_, state)
+      #(state, type_)
+    })
+  #(renamed, state)
+}
+
+fn rename_params(params: List(Param), state: Rename) -> #(List(Param), Rename) {
+  let #(state, renamed) =
+    list.map_fold(params, state, fn(state, param) {
+      let #(type_, state) = rename(param.type_, state)
+      #(state, Param(..param, type_:))
+    })
+  #(renamed, state)
+}
+
+fn rename_fields(fields: List(Field), state: Rename) -> #(List(Field), Rename) {
+  let #(state, renamed) =
+    list.map_fold(fields, state, fn(state, field) {
+      let #(type_, state) = rename(field.type_, state)
+      #(state, Field(..field, type_:))
+    })
+  #(renamed, state)
 }

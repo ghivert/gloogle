@@ -12,18 +12,38 @@ import gleam/option.{None}
 import gleam/package_interface as pi
 import gleam/string
 
-/// Lower a function signature into an `ir.Fn`. Top-level parameters carry labels.
-pub fn function(function: pi.Function) -> ir.Type {
-  ir.Fn(
+/// Lower a function declaration. Top-level parameters carry labels.
+pub fn function(function: pi.Function) -> ir.Declaration {
+  ir.Function(signature: ir.Fn(
     params: list.map(function.parameters, parameter),
     return: type_(function.return),
     is_method: False,
+  ))
+}
+
+/// Lower a constant declaration.
+pub fn constant(constant: pi.Constant) -> ir.Declaration {
+  ir.Constant(type_: type_(constant.type_))
+}
+
+/// Lower a type alias declaration.
+pub fn type_alias(alias: pi.TypeAlias) -> ir.Declaration {
+  ir.TypeAlias(parameters: alias.parameters, aliased: type_(alias.alias))
+}
+
+/// Lower a type definition declaration (its constructors).
+pub fn type_definition(definition: pi.TypeDefinition) -> ir.Declaration {
+  ir.TypeDefinition(
+    parameters: definition.parameters,
+    constructors: list.map(definition.constructors, constructor),
   )
 }
 
-/// Lower a constant's type.
-pub fn constant(constant: pi.Constant) -> ir.Type {
-  type_(constant.type_)
+fn constructor(constructor: pi.TypeConstructor) -> ir.Constructor {
+  ir.Constructor(
+    name: constructor.name,
+    parameters: list.map(constructor.parameters, parameter),
+  )
 }
 
 fn parameter(parameter: pi.Parameter) -> ir.Param {

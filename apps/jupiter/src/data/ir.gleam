@@ -8,8 +8,11 @@
 ////     is dropped;
 ////   - a method is a receiver-first `Fn` with `method: True`.
 
+import decrypt
 import gleam/dict.{type Dict}
+import gleam/dynamic/decode
 import gleam/int
+import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
@@ -52,6 +55,20 @@ pub type Field {
 ///               conceptual match uses `concept` when present.
 pub type Name {
   Name(package: String, module: String, name: String, concept: Option(String))
+}
+
+/// A stored, searchable declaration. Only the *structural* core lives here; the
+/// metadata (name, documentation, kind, deprecation, implementations) stays in
+/// its own DB columns. Extend with a `Class` variant when OO languages land.
+pub type Declaration {
+  Function(signature: Type)
+  Constant(type_: Type)
+  TypeAlias(parameters: Int, aliased: Type)
+  TypeDefinition(parameters: Int, constructors: List(Constructor))
+}
+
+pub type Constructor {
+  Constructor(name: String, parameters: List(Param))
 }
 
 /// Deterministic printer: an IR `Type` → its canonical notation string.
@@ -196,4 +213,187 @@ fn rename_fields(fields: List(Field), state: Rename) -> #(List(Field), Rename) {
       #(state, Field(..field, type_:))
     })
   #(renamed, state)
+}
+
+// ─── JSON codec (storage format of `signature_ir`) ───────────────────────────
+// Structural only: metadata (name, documentation, kind, deprecation,
+// implementations) lives in its own DB columns. Self-describing via a `kind`
+// tag per node so `decoder()` round-trips `encode()` standalone.
+
+pub fn encode(declaration: Declaration) -> Json {
+  case declaration {
+    Function(signature:) ->
+      json.object([
+        #("kind", json.string("function")),
+        #("signature", encode_type(signature)),
+      ])
+    Constant(type_:) ->
+      json.object([
+        #("kind", json.string("constant")),
+        #("type", encode_type(type_)),
+      ])
+    TypeAlias(parameters:, aliased:) ->
+      json.object([
+        #("kind", json.string("type-alias")),
+        #("parameters", json.int(parameters)),
+        #("aliased", encode_type(aliased)),
+      ])
+    TypeDefinition(parameters:, constructors:) ->
+      json.object([
+        #("kind", json.string("type-definition")),
+        #("parameters", json.int(parameters)),
+        #("constructors", json.array(constructors, encode_constructor)),
+      ])
+  }
+}
+
+fn encode_constructor(constructor: Constructor) -> Json {
+  json.object([
+    #("name", json.string(constructor.name)),
+    #("parameters", json.array(constructor.parameters, encode_param)),
+  ])
+}
+
+fn encode_type(type_: Type) -> Json {
+  case type_ {
+    Fn(params:, return:, is_method:) ->
+      json.object([
+        #("kind", json.string("fn")),
+        #("params", json.array(params, encode_param)),
+        #("return", encode_type(return)),
+        #("is_method", json.bool(is_method)),
+      ])
+    Named(name:, args:) ->
+      json.object([
+        #("kind", json.string("named")),
+        #("package", json.string(name.package)),
+        #("module", json.string(name.module)),
+        #("name", json.string(name.name)),
+        #("concept", json.nullable(name.concept, json.string)),
+        #("args", json.array(args, encode_type)),
+      ])
+    Var(index:, name:) ->
+      json.object([
+        #("kind", json.string("var")),
+        #("index", json.int(index)),
+        #("name", json.string(name)),
+      ])
+    Hole -> json.object([#("kind", json.string("hole"))])
+    Tuple(elements:) ->
+      json.object([
+        #("kind", json.string("tuple")),
+        #("elements", json.array(elements, encode_type)),
+      ])
+    Record(fields:) ->
+      json.object([
+        #("kind", json.string("record")),
+        #("fields", json.array(fields, encode_field)),
+      ])
+    Union(members:) ->
+      json.object([
+        #("kind", json.string("union")),
+        #("members", json.array(members, encode_type)),
+      ])
+  }
+}
+
+fn encode_param(param: Param) -> Json {
+  json.object([
+    #("label", json.nullable(param.label, json.string)),
+    #("is_spread", json.bool(param.is_spread)),
+    #("type", encode_type(param.type_)),
+  ])
+}
+
+fn encode_field(field: Field) -> Json {
+  json.object([
+    #("name", json.string(field.name)),
+    #("type", encode_type(field.type_)),
+  ])
+}
+
+pub fn decoder() -> decode.Decoder(Declaration) {
+  use kind <- decode.field("kind", decode.string)
+  case kind {
+    "function" -> {
+      use signature <- decode.field("signature", type_decoder())
+      decode.success(Function(signature:))
+    }
+    "constant" -> {
+      use type_ <- decode.field("type", type_decoder())
+      decode.success(Constant(type_:))
+    }
+    "type-alias" -> {
+      use parameters <- decode.field("parameters", decode.int)
+      use aliased <- decode.field("aliased", type_decoder())
+      decode.success(TypeAlias(parameters:, aliased:))
+    }
+    "type-definition" -> {
+      use parameters <- decode.field("parameters", decode.int)
+      use constructors <- decode.field(
+        "constructors",
+        decode.list(constructor_decoder()),
+      )
+      decode.success(TypeDefinition(parameters:, constructors:))
+    }
+    _ -> decode.failure(Constant(Hole), "Declaration")
+  }
+}
+
+fn constructor_decoder() -> decode.Decoder(Constructor) {
+  use name <- decode.field("name", decode.string)
+  use parameters <- decode.field("parameters", decode.list(param_decoder()))
+  decode.success(Constructor(name:, parameters:))
+}
+
+fn type_decoder() -> decode.Decoder(Type) {
+  use kind <- decode.field("kind", decode.string)
+  case kind {
+    "fn" -> {
+      use params <- decode.field("params", decode.list(param_decoder()))
+      use return <- decode.field("return", type_decoder())
+      use is_method <- decode.field("is_method", decode.bool)
+      decode.success(Fn(params:, return:, is_method:))
+    }
+    "named" -> {
+      use package <- decode.field("package", decode.string)
+      use module <- decode.field("module", decode.string)
+      use name <- decode.field("name", decode.string)
+      use concept <- decrypt.optional_field("concept", decode.string)
+      use args <- decode.field("args", decode.list(type_decoder()))
+      decode.success(Named(Name(package:, module:, name:, concept:), args))
+    }
+    "var" -> {
+      use index <- decode.field("index", decode.int)
+      use name <- decode.field("name", decode.string)
+      decode.success(Var(index:, name:))
+    }
+    "hole" -> decode.success(Hole)
+    "tuple" -> {
+      use elements <- decode.field("elements", decode.list(type_decoder()))
+      decode.success(Tuple(elements:))
+    }
+    "record" -> {
+      use fields <- decode.field("fields", decode.list(field_decoder()))
+      decode.success(Record(fields:))
+    }
+    "union" -> {
+      use members <- decode.field("members", decode.list(type_decoder()))
+      decode.success(Union(members:))
+    }
+    _ -> decode.failure(Hole, "Type")
+  }
+}
+
+fn param_decoder() -> decode.Decoder(Param) {
+  use label <- decrypt.optional_field("label", decode.string)
+  use is_spread <- decode.field("is_spread", decode.bool)
+  use type_ <- decode.field("type", type_decoder())
+  decode.success(Param(label:, is_spread:, type_:))
+}
+
+fn field_decoder() -> decode.Decoder(Field) {
+  use name <- decode.field("name", decode.string)
+  use type_ <- decode.field("type", type_decoder())
+  decode.success(Field(name:, type_:))
 }

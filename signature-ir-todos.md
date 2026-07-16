@@ -13,9 +13,16 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       reading order = params then return; preserves `Var.name`) — **done**
 - [x] `Var(index, name)` — index (matching, precomputed) + name (display); `from_gleam` fills the
       name from the id letter — **done**
-- [ ] **Single-store consolidation** (design decided, see design doc "Single stored representation"):
-      store only the faithful IR, retire `signature_json`, move `data/ir` into `galaxy`, refactor
-      venus to render the IR (drops its `pi` dependency). `signature_` stays as ground truth.
+- **Single-store consolidation** (design: design doc "Single stored representation"):
+  - [x] `ir.Declaration` (`Function`/`Constant`/`TypeAlias`/`TypeDefinition`) + `ir.Constructor` —
+        structural only, metadata stays in columns.
+  - [x] `from_gleam` covers all 4 kinds (`pi.* → ir.Declaration`) + `pi.Type → ir.Type`.
+  - [x] `data/ir` `encode(Declaration) → Json` + `decoder()`, self-describing, round-trip tested.
+  - [ ] Wire ingestion: `from_gleam` → `alpha_rename` → `codec.encode` → store in a `signature_ir`
+        column (migration). Retire `generate/types` + the `signature_json` column once display reads the IR.
+  - [ ] Move `data/ir` into `galaxy`; refactor venus to render the IR (drops its `pi` dependency,
+        computes `width` at render). `signature_` stays as ground truth.
+  - [ ] Fingerprint `arity` + `type_names` derived from the IR (GIN).
 - [ ] Storage columns — `signature_ir_json` (jsonb), `arity`, `type_names` (see Storage below);
       rename `json_signature` → `signature_json`
 - [ ] Fingerprint — compute `arity` + `type_names` (bag of concrete names) from IR; GIN index

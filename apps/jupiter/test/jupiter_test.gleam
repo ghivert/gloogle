@@ -1,6 +1,7 @@
 import data/ir
 import data/ir/from_gleam
 import envoy
+import gleam/json
 import gleam/option.{None, Some}
 import gleam/package_interface as pi
 import gleam/result
@@ -86,4 +87,25 @@ pub fn alpha_rename_test() {
   let expected = ir.Fn([var(0, "x"), var(1, "y")], ir.Var(1, "y"), False)
   assert ir.alpha_rename(sig) == expected
   assert ir.to_string(ir.alpha_rename(sig)) == "($0, $1) -> $1"
+}
+
+// The IR JSON codec round-trips: decode(encode(d)) == d. Exercises Named (with
+// concept), Var, nested Fn, and labelled/unlabelled Params.
+pub fn codec_round_trip_test() {
+  let result_ = fn(a, b) {
+    ir.Named(ir.Name("gleam_stdlib", "gleam/result", "Result", None), [a, b])
+  }
+  let mapper =
+    ir.Fn([ir.Param(None, False, ir.Var(0, "a"))], ir.Var(2, "c"), False)
+  let declaration =
+    ir.Function(ir.Fn(
+      params: [
+        ir.Param(None, False, result_(ir.Var(0, "a"), ir.Var(1, "b"))),
+        ir.Param(Some("with"), False, mapper),
+      ],
+      return: result_(ir.Var(2, "c"), ir.Var(1, "b")),
+      is_method: False,
+    ))
+  let encoded = ir.encode(declaration) |> json.to_string
+  assert json.parse(encoded, ir.decoder()) == Ok(declaration)
 }

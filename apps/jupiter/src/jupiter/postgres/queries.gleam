@@ -522,6 +522,8 @@ pub fn upsert_package_type_fun_signature(
   signature signature: String,
   json_signature json_signature: json.Json,
   signature_ir signature_ir: json.Json,
+  arity arity: Int,
+  type_names type_names: List(String),
   module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
@@ -536,8 +538,10 @@ pub fn upsert_package_type_fun_signature(
      package_module_id,
      deprecation,
      implementations,
-     signature_ir
-   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     signature_ir,
+     arity,
+     type_names
+   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
    ON CONFLICT (package_module_id, name) DO UPDATE
      SET
        documentation = $2,
@@ -547,7 +551,9 @@ pub fn upsert_package_type_fun_signature(
        metadata = $6,
        deprecation = $8,
        implementations = $9,
-       signature_ir = $10
+       signature_ir = $10,
+       arity = $11,
+       type_names = $12
    RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
@@ -574,6 +580,8 @@ pub fn upsert_package_type_fun_signature(
     |> option.unwrap(pog.null())
   })
   |> pog.parameter(signature_ir |> json.to_string() |> pog.text())
+  |> pog.parameter(pog.int(arity))
+  |> pog.parameter(pog.array(pog.text, type_names))
   |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)

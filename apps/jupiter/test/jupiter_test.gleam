@@ -108,6 +108,28 @@ pub fn alpha_rename_declaration_test() {
   assert ir.alpha_rename_declaration(definition) == expected
 }
 
+// Fingerprint of `result.map`: `fn(Result(a, b), fn(a) -> c) -> Result(c, b)`.
+// arity = 2 (top-level params); `type_names` = the concrete nominal names,
+// nesting flattened, `Var` contributing nothing, `Result` deduped despite two
+// occurrences.
+pub fn fingerprint_test() {
+  let result_ = fn(a, b) {
+    ir.Named(ir.Name("gleam_stdlib", "gleam/result", "Result", None), [a, b])
+  }
+  let mapper =
+    ir.Fn([ir.Param(None, False, ir.Var(0, "a"))], ir.Var(2, "c"), False)
+  let declaration =
+    ir.Function(ir.Fn(
+      params: [
+        ir.Param(None, False, result_(ir.Var(0, "a"), ir.Var(1, "b"))),
+        ir.Param(None, False, mapper),
+      ],
+      return: result_(ir.Var(2, "c"), ir.Var(1, "b")),
+      is_method: False,
+    ))
+  assert ir.fingerprint(declaration) == #(2, ["Result"])
+}
+
 // The IR JSON codec round-trips: decode(encode(d)) == d. Exercises Named (with
 // concept), Var, nested Fn, and labelled/unlabelled Params.
 pub fn codec_round_trip_test() {

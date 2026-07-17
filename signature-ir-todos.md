@@ -25,7 +25,9 @@ set — they are front-end lowering rules, matching-tier rules, or external data
         the venus refactor below).
   - [ ] Move `data/ir` into `galaxy`; refactor venus to render the IR (drops its `pi` dependency,
         computes `width` at render). `signature_` stays as ground truth.
-  - [ ] Fingerprint `arity` + `type_names` derived from the IR (GIN).
+  - [x] Fingerprint `arity` + `type_names` derived from the IR (`ir.fingerprint`); columns +
+        GIN index on `type_names` (migration `20260703100004`); populated at every `api/signatures`
+        call site. v1 stores bare `Name.name` (concept expansion deferred). — **done**
 - [ ] Verify unifier — unify query IR vs candidate IR (`Var` injective via `index`, `Hole` any, permutations)
 - [ ] `data/ir/parse` — query-side canonical parser (`String → Type`) for user-typed queries
 - [ ] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,

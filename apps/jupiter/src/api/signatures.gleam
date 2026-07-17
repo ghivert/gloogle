@@ -16,13 +16,13 @@ import palabres
 
 const module_name = "api/signatures"
 
-/// Lower a Gleam declaration to the alpha-renamed IR and encode it for storage
-/// in `signature_ir`. The single structured column display/verify/fingerprint
-/// derive from.
-fn encode_ir(declaration: ir.Declaration) -> json.Json {
-  declaration
-  |> ir.alpha_rename_declaration
-  |> ir.encode
+/// Alpha-rename a lowered declaration, then derive the columns that hang off the
+/// IR: the encoded `signature_ir` and its phase-1 fingerprint (`arity`,
+/// `type_names`). All three come from the one canonical declaration.
+fn structured(declaration: ir.Declaration) -> #(json.Json, Int, List(String)) {
+  let declaration = ir.alpha_rename_declaration(declaration)
+  let #(arity, type_names) = ir.fingerprint(declaration)
+  #(ir.encode(declaration), arity, type_names)
 }
 
 fn add_gleam_constraint(ctx: Context, release_id: String) {
@@ -55,11 +55,15 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         signature: "",
         json_signature: json.null(),
         signature_ir: json.null(),
+        arity: 0,
+        type_names: [],
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
     let json_signature = types.type_definition_to_json(name, def)
+    let #(signature_ir, arity, type_names) =
+      structured(from_gleam.type_definition(def))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       kind:,
@@ -68,7 +72,9 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
       metadata: metadata.generate(def.deprecation, None),
       signature: sources.type_definition_to_string(name, def),
       json_signature:,
-      signature_ir: encode_ir(from_gleam.type_definition(def)),
+      signature_ir:,
+      arity:,
+      type_names:,
       module_id: module.id,
       deprecation: def.deprecation,
       implementations: None,
@@ -99,11 +105,15 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         signature: "",
         json_signature: json.null(),
         signature_ir: json.null(),
+        arity: 0,
+        type_names: [],
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
     let json_signature = types.type_alias_to_json(name, alias)
+    let #(signature_ir, arity, type_names) =
+      structured(from_gleam.type_alias(alias))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name:,
@@ -112,7 +122,9 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
       metadata: metadata.generate(alias.deprecation, None),
       signature: sources.type_alias_to_string(name, alias),
       json_signature:,
-      signature_ir: encode_ir(from_gleam.type_alias(alias)),
+      signature_ir:,
+      arity:,
+      type_names:,
       module_id: module.id,
       deprecation: alias.deprecation,
       implementations: None,
@@ -132,6 +144,8 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   result.all({
     use #(name, constant) <- list.map(all_constants)
     let json_signature = types.constant_to_json(name, constant)
+    let #(signature_ir, arity, type_names) =
+      structured(from_gleam.constant(constant))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name:,
@@ -141,7 +155,9 @@ fn upsert_constants(ctx: Context, module: context.Module) {
         |> metadata.generate(constant.deprecation, _),
       signature: sources.constant_to_string(name, constant),
       json_signature:,
-      signature_ir: encode_ir(from_gleam.constant(constant)),
+      signature_ir:,
+      arity:,
+      type_names:,
       module_id: module.id,
       deprecation: constant.deprecation,
       implementations: Some(constant.implementations),
@@ -162,6 +178,8 @@ fn upsert_functions(ctx: Context, module: context.Module) {
     use #(name, function) <- list.map(all_functions)
     let json_signature = types.function_to_json(name, function)
     let signature = sources.function_to_string(name, function)
+    let #(signature_ir, arity, type_names) =
+      structured(from_gleam.function(function))
     let content =
       queries.upsert_package_type_fun_signature(
         db: ctx.db,
@@ -172,7 +190,9 @@ fn upsert_functions(ctx: Context, module: context.Module) {
           |> metadata.generate(function.deprecation, _),
         signature:,
         json_signature:,
-        signature_ir: encode_ir(from_gleam.function(function)),
+        signature_ir:,
+        arity:,
+        type_names:,
         module_id: module.id,
         deprecation: function.deprecation,
         implementations: Some(function.implementations),

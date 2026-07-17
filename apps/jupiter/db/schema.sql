@@ -222,7 +222,9 @@ CREATE TABLE public.package_type_fun_signature (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     signature_compact text GENERATED ALWAYS AS (replace(signature_, ' '::text, ''::text)) STORED,
-    signature_ir jsonb
+    signature_ir jsonb,
+    arity integer,
+    type_names text[]
 );
 
 
@@ -433,6 +435,13 @@ CREATE INDEX package_type_fun_signature_signature_compact_trgm ON public.package
 
 
 --
+-- Name: package_type_fun_signature_type_names_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_type_names_gin ON public.package_type_fun_signature USING gin (type_names);
+
+
+--
 -- Name: analytics analytics_moddatetime; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -567,4 +576,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260703100000'),
     ('20260703100001'),
     ('20260703100002'),
-    ('20260703100003');
+    ('20260703100003'),
+    ('20260703100004');

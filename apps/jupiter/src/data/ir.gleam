@@ -235,6 +235,60 @@ fn rename_fields(fields: List(Field), state: Rename) -> #(List(Field), Rename) {
   #(renamed, state)
 }
 
+// ─── Fingerprint (phase-1 GIN candidate selection) ───────────────────────────
+// Derived from the IR. `arity` is the top-level function's parameter count (0 for
+// non-function forms), narrowing candidates by shape. `type_names` is the set of
+// concrete nominal names the declaration mentions, nesting flattened; `Var` and
+// `Hole` contribute nothing. A GIN index on `type_names` answers
+// `arity = $1 AND type_names @> ARRAY[...]`. v1 stores the written `Name.name`;
+// synonym/concept expansion is deferred to the matching tier.
+
+pub fn fingerprint(declaration: Declaration) -> #(Int, List(String)) {
+  case declaration {
+    Function(signature:) -> #(type_arity(signature), names(signature))
+    Constant(type_:) -> #(type_arity(type_), names(type_))
+    TypeAlias(aliased:, ..) -> #(0, names(aliased))
+    TypeDefinition(constructors:, ..) -> {
+      let types =
+        list.flat_map(constructors, fn(c) {
+          list.map(c.parameters, fn(p) { p.type_ })
+        })
+      #(0, list.flat_map(types, collect_names(_, [])) |> list.unique)
+    }
+  }
+}
+
+fn type_arity(type_: Type) -> Int {
+  case type_ {
+    Fn(params:, ..) -> list.length(params)
+    _ -> 0
+  }
+}
+
+fn names(type_: Type) -> List(String) {
+  collect_names(type_, []) |> list.unique
+}
+
+fn collect_names(type_: Type, acc: List(String)) -> List(String) {
+  case type_ {
+    Named(name:, args:) ->
+      list.fold(args, [name.name, ..acc], fn(acc, arg) {
+        collect_names(arg, acc)
+      })
+    Fn(params:, return:, ..) ->
+      params
+      |> list.fold(acc, fn(acc, param) { collect_names(param.type_, acc) })
+      |> collect_names(return, _)
+    Tuple(elements:) ->
+      list.fold(elements, acc, fn(acc, el) { collect_names(el, acc) })
+    Union(members:) ->
+      list.fold(members, acc, fn(acc, member) { collect_names(member, acc) })
+    Record(fields:) ->
+      list.fold(fields, acc, fn(acc, field) { collect_names(field.type_, acc) })
+    Var(..) | Hole -> acc
+  }
+}
+
 // ─── JSON codec (storage format of `signature_ir`) ───────────────────────────
 // Structural only: metadata (name, documentation, kind, deprecation,
 // implementations) lives in its own DB columns. Self-describing via a `kind`

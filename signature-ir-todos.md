@@ -23,8 +23,14 @@ set — they are front-end lowering rules, matching-tier rules, or external data
         populate it; upfront recursive-type placeholders write jsonb `null`. — **done**
   - [ ] Retire `generate/types` + the `signature_json` column once display reads the IR (gated on
         the venus refactor below).
-  - [ ] Move `data/ir` into `galaxy`; refactor venus to render the IR (drops its `pi` dependency,
-        computes `width` at render). `signature_` stays as ground truth.
+  - [x] Move `data/ir` into `galaxy` (module path `data/ir` unchanged, so no import churn; no new
+        galaxy dependency — `decrypt` already comes via `plasma`). The Gleam front-end
+        `data/ir/from_gleam` **stays in jupiter**: it is the only piece needing
+        `gleam_package_interface`, so keeping it out of galaxy is what lets venus drop `pi`.
+        IR unit tests moved to `packages/galaxy/test/ir_test.gleam`; galaxy's test runner fixed
+        (`interfaces_test.gleam` → `galaxy_test.gleam`, it was missing so galaxy tests never ran). — **done**
+  - [ ] Refactor venus to render the IR (drops its `pi` dependency, computes `width` at render).
+        `signature_` stays as ground truth. Gates retiring `signature_json`.
   - [x] Fingerprint `arity` + `type_names` derived from the IR (`ir.fingerprint`); columns +
         GIN index on `type_names` (migration `20260703100004`); populated at every `api/signatures`
         call site. v1 stores bare `Name.name` (concept expansion deferred). — **done**

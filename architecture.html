@@ -1,0 +1,2007 @@
+<title>Gloogle — architecture backend</title>
+
+<style>
+  :root {
+    --paper: #f6f4f8;
+    --panel: #fffdff;
+    --panel-2: #f0edf3;
+    --ink: #1a1622;
+    --muted: #6f6880;
+    --line: #e2ddea;
+    --line-strong: #cec6da;
+    --accent: #c4187f;
+    --accent-soft: #fbe8f4;
+    --steel: #3f5d7d;
+    --steel-soft: #e7eff6;
+    --amber: #8f6410;
+    --amber-soft: #f8efdb;
+    --shadow: 0 1px 2px rgba(26, 22, 34, .05);
+
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #131019;
+      --panel: #1b1724;
+      --panel-2: #221d2e;
+      --ink: #ece8f2;
+      --muted: #9b93ab;
+      --line: #2e2839;
+      --line-strong: #453c56;
+      --accent: #ff7ac8;
+      --accent-soft: #35142a;
+      --steel: #8fb4d6;
+      --steel-soft: #16232f;
+      --amber: #d9a441;
+      --amber-soft: #2b2210;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #131019;
+    --panel: #1b1724;
+    --panel-2: #221d2e;
+    --ink: #ece8f2;
+    --muted: #9b93ab;
+    --line: #2e2839;
+    --line-strong: #453c56;
+    --accent: #ff7ac8;
+    --accent-soft: #35142a;
+    --steel: #8fb4d6;
+    --steel-soft: #16232f;
+    --amber: #d9a441;
+    --amber-soft: #2b2210;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  }
+
+  :root[data-theme="light"] {
+    --paper: #f6f4f8;
+    --panel: #fffdff;
+    --panel-2: #f0edf3;
+    --ink: #1a1622;
+    --muted: #6f6880;
+    --line: #e2ddea;
+    --line-strong: #cec6da;
+    --accent: #c4187f;
+    --accent-soft: #fbe8f4;
+    --steel: #3f5d7d;
+    --steel-soft: #e7eff6;
+    --amber: #8f6410;
+    --amber-soft: #f8efdb;
+    --shadow: 0 1px 2px rgba(26, 22, 34, .05);
+  }
+
+  /* ── Bilinguisme / Bilingual ───────────────────────────
+     Le français est la valeur par défaut : sans JavaScript,
+     la page reste entièrement lisible en français.
+     French is the default: with no JavaScript the page still
+     reads end-to-end in French. */
+
+  :root:not([data-lang="en"]) [lang="en"] { display: none !important; }
+  :root[data-lang="en"] [lang="fr"] { display: none !important; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code, .mono { font-family: var(--mono); }
+
+  code {
+    font-size: .87em;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: .08em .3em;
+  }
+
+  /* ── Shell ─────────────────────────────────────────── */
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .rail { display: none; }
+  }
+
+  /* ── Masthead ──────────────────────────────────────── */
+
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+    padding: 72px 0 40px;
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 20px;
+    padding-right: 120px;
+  }
+
+  .masthead h1 {
+    font-family: var(--mono);
+    font-size: clamp(30px, 5vw, 48px);
+    font-weight: 600;
+    letter-spacing: -.03em;
+    line-height: 1.05;
+    margin: 0 0 20px;
+    text-wrap: balance;
+  }
+
+  .masthead h1 em { font-style: normal; color: var(--accent); }
+
+  .lede {
+    max-width: 62ch;
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 32px;
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--muted);
+    background: var(--panel);
+  }
+
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  /* ── Sélecteur de langue / Language switch ─────────── */
+
+  .lang {
+    position: absolute;
+    top: 68px;
+    right: 0;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    background: var(--panel-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+  }
+
+  .lang-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    font-weight: 600;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 5px 13px;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+
+  .lang-btn:hover { color: var(--ink); }
+
+  .lang-btn[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  :root[data-theme="dark"] .lang-btn[aria-pressed="true"],
+  .lang-btn[aria-pressed="true"] { color: var(--paper); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lang-btn { transition: background-color .12s ease, color .12s ease; }
+  }
+
+  /* ── Rail ──────────────────────────────────────────── */
+
+  .rail { position: sticky; top: 32px; }
+
+  .rail-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  .rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+
+  .rail a {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    display: block;
+    line-height: 1.4;
+  }
+
+  .rail a:hover { color: var(--accent); }
+
+  /* ── Sections ──────────────────────────────────────── */
+
+  section { margin-bottom: 88px; scroll-margin-top: 24px; }
+
+  section > h2 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    max-width: 70ch;
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 40px 0 12px;
+  }
+
+  p { max-width: 70ch; }
+
+  .note {
+    max-width: 70ch;
+    border-left: 2px solid var(--line-strong);
+    padding: 2px 0 2px 16px;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .note.warn { border-left-color: var(--amber); }
+  .note strong { color: var(--ink); font-weight: 600; }
+
+  /* ── Scrollers & panels ────────────────────────────── */
+
+  .scroller { overflow-x: auto; margin: 24px 0; padding-bottom: 4px; }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin: 0;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+
+  pre .c { color: var(--muted); }
+  pre .k { color: var(--accent); }
+
+  /* ── Tables ────────────────────────────────────────── */
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 520px;
+    font-size: 14px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom-color: var(--line-strong);
+    white-space: nowrap;
+  }
+
+  td.m { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; }
+  td.d { color: var(--muted); }
+
+  /* ── Tags ──────────────────────────────────────────── */
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .tag.stored { background: var(--steel-soft); color: var(--steel); border-color: color-mix(in srgb, var(--steel) 25%, transparent); }
+  .tag.derived { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .tag.legacy { background: var(--amber-soft); color: var(--amber); border-color: color-mix(in srgb, var(--amber) 30%, transparent); }
+  .tag.truth { background: var(--panel-2); color: var(--ink); border-color: var(--line-strong); }
+
+  /* ── Flow chain (ingestion) ────────────────────────── */
+
+  .flow { display: flex; align-items: stretch; gap: 0; min-width: 900px; }
+
+  .step {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .step-n {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .step-t { font-family: var(--mono); font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 6px; }
+  .step-d { font-size: 12.5px; color: var(--muted); line-height: 1.5; display: block; }
+
+  .arrow {
+    flex: 0 0 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--line-strong);
+    font-family: var(--mono);
+  }
+
+  /* ── Supervision tree ──────────────────────────────── */
+
+  .tree { font-family: var(--mono); font-size: 13px; min-width: 640px; }
+  .tree ul { list-style: none; margin: 0; padding: 0 0 0 26px; }
+  .tree > ul { padding-left: 0; }
+
+  .tree li { position: relative; padding: 5px 0; }
+
+  .tree ul li::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  .tree ul li:last-child::before { bottom: auto; height: 17px; }
+
+  .tree ul li::after {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 17px;
+    width: 12px;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .node {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 4px 10px;
+    box-shadow: var(--shadow);
+  }
+
+  .node.root { border-color: var(--accent); background: var(--accent-soft); }
+  .node.dim { opacity: .68; }
+  .node b { font-weight: 600; }
+  .node span { color: var(--muted); font-size: 11.5px; }
+
+  /* ── Cards grid ────────────────────────────────────── */
+
+  .grid { display: grid; gap: 12px; margin: 24px 0; }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .card h4 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    line-height: 1.5;
+  }
+
+  .card h4 .tag { margin-left: 8px; vertical-align: 1px; }
+
+  .card p { font-size: 13px; color: var(--muted); margin: 0; max-width: none; }
+
+  /* ── Trace (la vie d'une déclaration) ──────────────── */
+
+  .trace { margin: 24px 0; display: flex; flex-direction: column; }
+
+  .trace-step { position: relative; padding: 0 0 22px 36px; }
+
+  .trace-step::before {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 20px;
+    bottom: 0;
+    border-left: 1px dashed var(--line-strong);
+  }
+
+  .trace-step:last-child::before { display: none; }
+
+  .trace-n {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trace-step.keep .trace-n { border-color: var(--steel); color: var(--steel); background: var(--steel-soft); }
+  .trace-step.out .trace-n { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  .trace-t { font-family: var(--mono); font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 2px; }
+  .trace-op { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  .trace-d { font-size: 13px; color: var(--muted); margin: 4px 0 0; max-width: 68ch; }
+  .trace pre { margin-top: 8px; font-size: 11.5px; }
+
+  /* ── Fiches types ──────────────────────────────────── */
+
+  .fiches { display: flex; flex-direction: column; gap: 14px; margin: 24px 0; }
+
+  .fiche {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .fiche.core { border-color: var(--accent); }
+
+  .fiche-hd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .fiche.core .fiche-hd { background: var(--accent-soft); border-bottom-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+
+  .fiche-name { font-family: var(--mono); font-size: 13.5px; font-weight: 600; }
+  .fiche-path { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  .fiche pre {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    font-size: 11.5px;
+    padding: 14px 16px;
+  }
+
+  .fiche-band {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 14px;
+    padding: 11px 16px;
+    border-top: 1px solid var(--line);
+    align-items: baseline;
+  }
+
+  .fiche-band-l {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .fiche-band-c { font-size: 13px; color: var(--muted); }
+  .fiche-band-c strong { color: var(--ink); font-weight: 600; }
+
+  @media (max-width: 620px) {
+    .fiche-band { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  }
+
+  .uses { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .use {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 9px 2px 7px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--muted);
+  }
+
+  .use::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--steel);
+  }
+
+  .use.on { color: var(--ink); border-color: color-mix(in srgb, var(--steel) 40%, transparent); }
+  .use.soon::before { background: var(--accent); }
+  .use.soon { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+  /* « ne passe pas par là » — absence, pas avertissement : l'ambre est réservé
+     à « à retirer » partout ailleurs sur la page.
+     "does not go through here" — absence, not warning: amber is reserved for
+     "to remove" everywhere else on the page. */
+  .use.no {
+    color: var(--muted);
+    border-style: dashed;
+    border-color: var(--line);
+    text-decoration: line-through;
+    text-decoration-color: var(--line-strong);
+  }
+
+  .use.no::before { background: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+  /* ── ERD ───────────────────────────────────────────── */
+
+  .erd { min-width: 940px; }
+  .erd .box-bg { fill: var(--panel); stroke: var(--line-strong); }
+  .erd .box-hd { fill: var(--panel-2); stroke: var(--line-strong); }
+  .erd .box-bg.hi { stroke: var(--accent); stroke-width: 1.5; }
+  .erd .box-hd.hi { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .erd .t-name { font-family: var(--mono); font-size: 12px; font-weight: 600; fill: var(--ink); }
+  .erd .t-col { font-family: var(--mono); font-size: 10.5px; fill: var(--ink); }
+  .erd .t-key { font-family: var(--mono); font-size: 8.5px; letter-spacing: .06em; fill: var(--steel); }
+  .erd .t-gen { font-family: var(--mono); font-size: 8.5px; letter-spacing: .06em; fill: var(--accent); }
+  .erd .rel { stroke: var(--line-strong); stroke-width: 1.25; fill: none; }
+  .erd .card-l { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+  .erd .dot { fill: var(--line-strong); }
+
+  /* ── Cascade ───────────────────────────────────────── */
+
+  .cascade { display: flex; flex-direction: column; gap: 8px; margin: 24px 0; }
+
+  .tier {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--steel);
+    border-radius: 5px;
+    padding: 11px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .tier.off { border-left-color: var(--amber); opacity: .75; }
+  .tier-k { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+  .tier-d { font-size: 13px; color: var(--muted); }
+  .tier-q { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  @media (max-width: 700px) {
+    .tier { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  // Fixe la langue avant le premier rendu pour éviter un flash.
+  // Set the language before first paint to avoid a flash.
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("gloogle-arch-lang"); } catch (e) {}
+    var nav = (navigator.language || "fr").toLowerCase();
+    var lang = stored === "en" || stored === "fr" ? stored : (nav.indexOf("en") === 0 ? "en" : "fr");
+    document.documentElement.setAttribute("data-lang", lang);
+    document.documentElement.lang = lang;
+  })();
+</script>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="lang" role="group" aria-label="Langue / Language">
+      <button type="button" class="lang-btn" data-lang="fr" aria-pressed="true">FR</button>
+      <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+
+    <p class="eyebrow">
+      <span lang="fr">Gloogle · apps/jupiter · branche refactor/fingerprinting-ir</span>
+      <span lang="en">Gloogle · apps/jupiter · branch refactor/fingerprinting-ir</span>
+    </p>
+
+    <h1 lang="fr">Un moteur de recherche<br>par <em>signature de type</em></h1>
+    <h1 lang="en">A search engine<br>keyed on <em>type signatures</em></h1>
+
+    <p class="lede" lang="fr">
+      Jupiter aspire l'écosystème Hex, abaisse chaque déclaration Gleam vers une IR de types
+      indépendante du langage, et la stocke dans Postgres sous une forme d'où dérivent
+      l'affichage, l'empreinte de recherche et la vérification. Voici les diagrammes, les types
+      partagés, et la manière dont tout cela atterrit en base.
+    </p>
+    <p class="lede" lang="en">
+      Jupiter ingests the Hex ecosystem, lowers every Gleam declaration into a language-agnostic
+      type IR, and stores it in Postgres in a form from which display, the search fingerprint and
+      verification all derive. Here are the diagrams, the shared types, and how all of it lands
+      in the database.
+    </p>
+
+    <div class="chips">
+      <span class="chip"><b>jupiter</b> <span lang="fr">backend Gleam/Erlang</span><span lang="en">Gleam/Erlang backend</span></span>
+      <span class="chip"><b>venus</b> <span lang="fr">frontend Lustre</span><span lang="en">Lustre frontend</span></span>
+      <span class="chip"><b>galaxy</b> <span lang="fr">types partagés</span><span lang="en">shared types</span></span>
+      <span class="chip"><b>11</b> tables</span>
+      <span class="chip"><b>5</b> <span lang="fr">clés étrangères</span><span lang="en">foreign keys</span></span>
+      <span class="chip"><b>29</b> migrations</span>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Sommaire / Contents">
+    <p class="rail-title"><span lang="fr">Sommaire</span><span lang="en">Contents</span></p>
+    <ol>
+      <li><a href="#monorepo"><span lang="fr">Le monorepo</span><span lang="en">The monorepo</span></a></li>
+      <li><a href="#supervision"><span lang="fr">Arbre de supervision</span><span lang="en">Supervision tree</span></a></li>
+      <li><a href="#ingestion"><span lang="fr">Pipeline d'ingestion</span><span lang="en">Ingestion pipeline</span></a></li>
+      <li><a href="#ir"><span lang="fr">L'IR de signatures</span><span lang="en">The signature IR</span></a></li>
+      <li><a href="#partages"><span lang="fr">Les types importants</span><span lang="en">The types that matter</span></a></li>
+      <li><a href="#api"><span lang="fr">API HTTP</span><span lang="en">HTTP API</span></a></li>
+      <li><a href="#recherche"><span lang="fr">Cascade de recherche</span><span lang="en">Search cascade</span></a></li>
+      <li><a href="#schema"><span lang="fr">Schéma relationnel</span><span lang="en">Relational schema</span></a></li>
+      <li><a href="#colonnes"><span lang="fr">Colonnes &amp; dérivation</span><span lang="en">Columns &amp; derivation</span></a></li>
+      <li><a href="#index"><span lang="fr">Index</span><span lang="en">Indexes</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ══ MONOREPO ══ -->
+    <section id="monorepo">
+      <h2><span lang="fr">Le monorepo</span><span lang="en">The monorepo</span></h2>
+      <p class="sub" lang="fr">Deux applications, quatre paquets. <code>galaxy</code> est la charnière : c'est le seul code que le backend et le frontend partagent — les types de données avec leurs encodeurs/décodeurs JSON, et depuis <code>b63a44c</code> l'IR de signatures elle-même.</p>
+      <p class="sub" lang="en">Two applications, four packages. <code>galaxy</code> is the hinge: it is the only code the backend and the frontend share — the data types with their JSON encoders and decoders, and since <code>b63a44c</code> the signature IR itself.</p>
+
+      <div class="grid two">
+        <div class="card">
+          <h4>apps/jupiter <span class="tag stored">backend</span></h4>
+          <p lang="fr">Serveur Wisp/Mist sur Erlang, pool Postgres via <code>pog</code>, workers périodiques sous supervision OTP. Contient l'ingestion Hex, toutes les requêtes SQL, et le front-end Gleam <code>data/ir/from_gleam</code> — seul morceau à dépendre de <code>gleam_package_interface</code>, et c'est précisément pour ça qu'il ne suit pas l'IR dans galaxy.</p>
+          <p lang="en">A Wisp/Mist server on Erlang, a Postgres pool through <code>pog</code>, periodic workers under OTP supervision. Holds Hex ingestion, every SQL query, and the Gleam front-end <code>data/ir/from_gleam</code> — the only piece depending on <code>gleam_package_interface</code>, which is exactly why it did not follow the IR into galaxy.</p>
+        </div>
+        <div class="card">
+          <h4>apps/venus <span class="tag stored">frontend</span></h4>
+          <p lang="fr">SPA Lustre (MVU). Consomme l'API JSON de jupiter et rend les signatures. Dépend encore de <code>gleam/package_interface</code> pour l'affichage — c'est ce que le refactor IR vise à supprimer.</p>
+          <p lang="en">A Lustre SPA (MVU). Consumes jupiter's JSON API and renders signatures. Still depends on <code>gleam/package_interface</code> for display — which is exactly what the IR refactor aims to drop.</p>
+        </div>
+        <div class="card">
+          <h4>packages/galaxy <span class="tag derived"><span lang="fr">partagé</span><span lang="en">shared</span></span></h4>
+          <p lang="fr">Les types de la frontière HTTP : <code>Package</code>, <code>TypeSearch</code>, <code>Signature</code>, <code>Kind</code>, <code>Metadata</code>, <code>Analytics</code>, <code>Implementations</code> — et l'<code>ir</code>. Dépend de <code>plasma</code>, qui lui apporte <code>decrypt</code>.</p>
+          <p lang="en">The types on the HTTP boundary: <code>Package</code>, <code>TypeSearch</code>, <code>Signature</code>, <code>Kind</code>, <code>Metadata</code>, <code>Analytics</code>, <code>Implementations</code> — and the <code>ir</code>. Depends on <code>plasma</code>, which brings it <code>decrypt</code>.</p>
+        </div>
+        <div class="card">
+          <h4>packages/plasma</h4>
+          <p lang="fr">Utilitaires bas-niveau : <code>tar</code>, <code>decrypt</code>, <code>fs</code>, plus des extensions de la stdlib (<code>semver</code>, <code>list_</code>, <code>result_</code>, <code>function_</code>).</p>
+          <p lang="en">Low-level utilities: <code>tar</code>, <code>decrypt</code>, <code>fs</code>, plus stdlib extensions (<code>semver</code>, <code>list_</code>, <code>result_</code>, <code>function_</code>).</p>
+        </div>
+        <div class="card">
+          <h4>packages/chomp</h4>
+          <p lang="fr">Combinateurs de lexing/parsing (<code>lexer</code>, <code>pratt</code>, <code>span</code>). C'est la brique prévue pour le parseur de la notation canonique côté requête.</p>
+          <p lang="en">Lexing/parsing combinators (<code>lexer</code>, <code>pratt</code>, <code>span</code>). This is the building block earmarked for the query-side canonical-notation parser.</p>
+        </div>
+        <div class="card">
+          <h4>packages/vitools</h4>
+          <p lang="fr">Intégration Vite pour le build de venus.</p>
+          <p lang="en">Vite integration for the venus build.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SUPERVISION ══ -->
+    <section id="supervision">
+      <h2><span lang="fr">L'arbre de supervision</span><span lang="en">The supervision tree</span></h2>
+      <p class="sub" lang="fr">Défini dans <code>jupiter.gleam</code>. Un superviseur racine <code>OneForOne</code> en <code>auto_shutdown(AnySignificant)</code> : si un enfant significatif meurt définitivement, tout le nœud s'arrête plutôt que de tourner à moitié.</p>
+      <p class="sub" lang="en">Defined in <code>jupiter.gleam</code>. A <code>OneForOne</code> root supervisor with <code>auto_shutdown(AnySignificant)</code>: if a significant child dies for good, the whole node shuts down rather than running half-alive.</p>
+
+      <div class="scroller">
+        <div class="tree">
+          <ul>
+            <li>
+              <span class="node root"><b>supervisor.new(OneForOne)</b> <span>auto_shutdown: AnySignificant</span></span>
+              <ul>
+                <li><span class="node"><b>postgres.supervised()</b> <span><span lang="fr">pool pog</span><span lang="en">pog pool</span></span></span></li>
+                <li><span class="node"><b>http_server(ctx)</b> <span>mist + wisp_mist · 0.0.0.0:$PORT</span></span></li>
+                <li>
+                  <span class="node"><b>periodic_workers(ctx)</b> <span><span lang="fr">sous-superviseur OneForOne</span><span lang="en">OneForOne sub-supervisor</span></span></span>
+                  <ul>
+                    <li><span class="node"><b>sync_new_gleam_releases</b> <span><span lang="fr">toutes les 10 s</span><span lang="en">every 10 s</span></span></span></li>
+                    <li><span class="node"><b>compute_ranking</b> <span><span lang="fr">86 400 s — quotidien</span><span lang="en">86,400 s — daily</span></span></span></li>
+                    <li><span class="node"><b>compute_popularity</b> <span><span lang="fr">86 400 s — étoiles GitHub</span><span lang="en">86,400 s — GitHub stars</span></span></span></li>
+                    <li><span class="node"><b>store_timeseries</b> <span><span lang="fr">3 600 s — horaire</span><span lang="en">3,600 s — hourly</span></span></span></li>
+                  </ul>
+                </li>
+                <li><span class="node dim"><b>type_search.worker(ctx)</b> <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></span></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="note warn" lang="fr">
+        <strong>Le worker <code>type_search</code> est en sursis.</strong> C'est l'ancien index trie + acteur,
+        reconstruit au démarrage. Il est déjà débranché côté recherche (<code>exec_type_search</code> est
+        commenté dans <code>handlers.gleam</code>, et <code>exact_type_searches</code> vaut <code>[]</code>) ;
+        le design <em>fingerprint + verify</em> le remplace entièrement, sans index mémoire ni scan au boot.
+      </p>
+      <p class="note warn" lang="en">
+        <strong>The <code>type_search</code> worker is living on borrowed time.</strong> It is the old trie +
+        actor index, rebuilt at boot. It is already unplugged on the search side (<code>exec_type_search</code>
+        is commented out in <code>handlers.gleam</code>, and <code>exact_type_searches</code> is <code>[]</code>);
+        the <em>fingerprint + verify</em> design replaces it entirely, with no in-memory index and no boot-time scan.
+      </p>
+    </section>
+
+    <!-- ══ INGESTION ══ -->
+    <section id="ingestion">
+      <h2><span lang="fr">Le pipeline d'ingestion</span><span lang="en">The ingestion pipeline</span></h2>
+      <p class="sub" lang="fr">Toutes les 10 secondes, <code>tasks/hex</code> pagine l'API Hex à partir du dernier horodatage vu (table <code>hex_read</code>), et ne garde que les paquets plus récents. Chaque release fraîche est téléchargée, son <code>package_interface</code> structuré est lu, puis chaque déclaration traverse la chaîne ci-dessous.</p>
+      <p class="sub" lang="en">Every 10 seconds, <code>tasks/hex</code> pages through the Hex API starting from the last timestamp it saw (the <code>hex_read</code> table), keeping only newer packages. Each fresh release is downloaded, its structured <code>package_interface</code> is read, and then every declaration travels the chain below.</p>
+
+      <div class="scroller">
+        <div class="flow">
+          <div class="step">
+            <span class="step-n">01</span>
+            <span class="step-t">api/hex</span>
+            <span class="step-d" lang="fr">Pagination de l'API Hex, tri par <code>updated_at</code>, filtrage sur le curseur.</span>
+            <span class="step-d" lang="en">Pages the Hex API, ordered by <code>updated_at</code>, filtered against the cursor.</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="step">
+            <span class="step-n">02</span>
+            <span class="step-t">api/hex_repo</span>
+            <span class="step-d" lang="fr">Récupération du tarball de la release, extraction (<code>plasma/tar</code>).</span>
+            <span class="step-d" lang="en">Fetches the release tarball and extracts it (<code>plasma/tar</code>).</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="step">
+            <span class="step-n">03</span>
+            <span class="step-t">api/signatures</span>
+            <span class="step-d" lang="fr">Parcours des modules : types, alias, constantes, fonctions.</span>
+            <span class="step-d" lang="en">Walks the modules: types, aliases, constants, functions.</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="step">
+            <span class="step-n">04</span>
+            <span class="step-t">ir/from_gleam</span>
+            <span class="step-d" lang="fr">Abaissement <code>pi.Type → ir.Type</code>. Pur : pas de ctx, pas de DB.</span>
+            <span class="step-d" lang="en">Lowers <code>pi.Type → ir.Type</code>. Pure: no ctx, no DB.</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="step">
+            <span class="step-n">05</span>
+            <span class="step-t">ir.alpha_rename</span>
+            <span class="step-d" lang="fr">Les <code>Var</code> passent des ids du compilateur à l'ordre de première apparition.</span>
+            <span class="step-d" lang="en">The <code>Var</code>s move from compiler ids to first-appearance order.</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="step">
+            <span class="step-n">06</span>
+            <span class="step-t">encode + fingerprint</span>
+            <span class="step-d" lang="fr">Une déclaration canonique → <code>signature_ir</code>, <code>arity</code>, <code>type_names</code>.</span>
+            <span class="step-d" lang="en">One canonical declaration → <code>signature_ir</code>, <code>arity</code>, <code>type_names</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <p lang="fr">Les trois sorties de l'étape 6 viennent d'un seul appel, dans <code>api/signatures.structured</code> — c'est le point où l'invariant « une seule représentation stockée » est tenu :</p>
+      <p lang="en">All three outputs of step 6 come from a single call, in <code>api/signatures.structured</code> — this is where the "one stored representation" invariant is actually held:</p>
+
+      <div class="scroller">
+        <pre><span class="c">/// Alpha-rename a lowered declaration, then derive the columns that hang off the
+/// IR: the encoded `signature_ir` and its phase-1 fingerprint (`arity`,
+/// `type_names`). All three come from the one canonical declaration.</span>
+<span class="k">fn</span> structured(declaration: ir.Declaration) -> #(json.Json, Int, List(String)) {
+  <span class="k">let</span> declaration = ir.alpha_rename_declaration(declaration)
+  <span class="k">let</span> #(arity, type_names) = ir.fingerprint(declaration)
+  #(ir.encode(declaration), arity, type_names)
+}</pre>
+      </div>
+
+      <p class="note" lang="fr">
+        <strong>Les types récursifs sont insérés deux fois.</strong> Avant de calculer sa signature,
+        <code>upsert_type_definitions</code> écrit une ligne placeholder (signature vide,
+        <code>signature_ir</code> à <code>null</code>, <code>arity: 0</code>, <code>type_names: []</code>)
+        pour que le type existe déjà quand il se référence lui-même. Le second upsert, sur le conflit
+        <code>(package_module_id, name)</code>, remplit les vraies valeurs.
+      </p>
+      <p class="note" lang="en">
+        <strong>Recursive types are inserted twice.</strong> Before computing its signature,
+        <code>upsert_type_definitions</code> writes a placeholder row (empty signature,
+        <code>signature_ir</code> as <code>null</code>, <code>arity: 0</code>, <code>type_names: []</code>)
+        so the type already exists by the time it refers to itself. The second upsert, on the
+        <code>(package_module_id, name)</code> conflict, fills in the real values.
+      </p>
+    </section>
+
+    <!-- ══ IR ══ -->
+    <section id="ir">
+      <h2><span lang="fr">L'IR de signatures</span><span lang="en">The signature IR</span></h2>
+      <p class="sub" lang="fr">Le cœur du refactor. Un nœud n'existe que s'il ajoute un pouvoir d'expression irréductible — tout ce qui est du sucre sur une combinaison de nœuds existants est une règle d'abaissement du front-end, pas un nœud. Défini dans <code>packages/galaxy/src/data/ir.gleam</code> : l'IR vit désormais dans <code>galaxy</code>, donc venus pourra la rendre. Le front-end Gleam <code>data/ir/from_gleam</code>, lui, <strong>reste dans jupiter</strong>.</p>
+      <p class="sub" lang="en">The heart of the refactor. A node exists only if it adds irreducible expressive power — anything that is merely sugar over a combination of existing nodes is a front-end lowering rule, not a node. Defined in <code>packages/galaxy/src/data/ir.gleam</code>: the IR now lives in <code>galaxy</code>, so venus will be able to render it. The Gleam front-end <code>data/ir/from_gleam</code>, however, <strong>stays in jupiter</strong>.</p>
+
+      <h3><span lang="fr">Les nœuds — <code>ir.Type</code></span><span lang="en">The nodes — <code>ir.Type</code></span></h3>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th><span lang="fr">Nœud</span><span lang="en">Node</span></th>
+              <th><span lang="fr">Champs</span><span lang="en">Fields</span></th>
+              <th><span lang="fr">Ce qu'il porte</span><span lang="en">What it carries</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">Fn</td>
+              <td class="m">params, return, is_method</td>
+              <td class="d">
+                <span lang="fr">Fonction, et type de fonction d'ordre supérieur. <code>is_method: True</code> ⇒ le premier paramètre est le receveur.</span>
+                <span lang="en">A function, and a higher-order function type. <code>is_method: True</code> ⇒ the first parameter is the receiver.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Named</td>
+              <td class="m">name: Name, args</td>
+              <td class="d">
+                <span lang="fr">Type nominal appliqué : <code>Int</code>, <code>List&lt;a&gt;</code>, <code>Result&lt;A, E&gt;</code>.</span>
+                <span lang="en">An applied nominal type: <code>Int</code>, <code>List&lt;a&gt;</code>, <code>Result&lt;A, E&gt;</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Var</td>
+              <td class="m">index: Int, name: String</td>
+              <td class="d">
+                <span lang="fr">Deux étiquettes sur un nœud : <code>index</code> pour le matching (alpha-renommé, précalculé), <code>name</code> pour l'affichage fidèle.</span>
+                <span lang="en">Two labels on one node: <code>index</code> for matching (alpha-renamed, precomputed), <code>name</code> for faithful display.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Hole</td>
+              <td class="m">—</td>
+              <td class="d">
+                <span lang="fr">Joker côté requête : s'unifie avec n'importe quoi. Ne contribue pas à l'empreinte.</span>
+                <span lang="en">Query-side wildcard: unifies with anything. Contributes nothing to the fingerprint.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Tuple</td>
+              <td class="m">elements</td>
+              <td class="d">
+                <span lang="fr">Tuple positionnel.</span>
+                <span lang="en">A positional tuple.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Record</td>
+              <td class="m">fields: List(Field)</td>
+              <td class="d">
+                <span lang="fr">Forme structurelle anonyme : objets/interfaces TS, jeux de champs de classes. <em>Inerte tant que TS/Java ne sont pas ingérés.</em></span>
+                <span lang="en">An anonymous structural shape: TS objects/interfaces, class field sets. <em>Inert until TS/Java are ingested.</em></span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Union</td>
+              <td class="m">members</td>
+              <td class="d">
+                <span lang="fr">Union anonyme <code>A | B</code>. <em>Inerte de la même manière.</em></span>
+                <span lang="en">An anonymous union, <code>A | B</code>. <em>Inert in the same way.</em></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span lang="fr">Les enveloppes</span><span lang="en">The wrappers</span></h3>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th><span lang="fr">Définition</span><span lang="en">Definition</span></th>
+              <th><span lang="fr">Rôle</span><span lang="en">Role</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">Param</td>
+              <td class="m">label, is_spread, type_</td>
+              <td class="d">
+                <span lang="fr">Un paramètre. Le label n'existe qu'au niveau supérieur ; les <code>Fn</code> imbriqués n'en portent pas.</span>
+                <span lang="en">A parameter. Labels exist only at the top level; nested <code>Fn</code>s carry none.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Field</td>
+              <td class="m">name, type_</td>
+              <td class="d">
+                <span lang="fr">Un champ de <code>Record</code>.</span>
+                <span lang="en">A <code>Record</code> field.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Name</td>
+              <td class="m">package, module, name, concept</td>
+              <td class="d">
+                <span lang="fr">Nom qualifié. <code>package</code> sert à la résolution des refs au moment de la requête ; <code>concept</code> est l'id canonique inter-langages (couche 3, encore vide).</span>
+                <span lang="en">A qualified name. <code>package</code> serves query-time ref resolution; <code>concept</code> is the cross-language canonical id (layer 3, still empty).</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Declaration</td>
+              <td class="m">Function | Constant | TypeAlias | TypeDefinition</td>
+              <td class="d">
+                <span lang="fr">L'unité stockée. <strong>Structurel uniquement</strong> — les métadonnées restent dans leurs colonnes.</span>
+                <span lang="en">The stored unit. <strong>Structural only</strong> — metadata stays in its own columns.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">Constructor</td>
+              <td class="m">name, parameters</td>
+              <td class="d">
+                <span lang="fr">Un constructeur de <code>TypeDefinition</code>.</span>
+                <span lang="en">A <code>TypeDefinition</code> constructor.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span lang="fr">Les deux invariants</span><span lang="en">The two invariants</span></h3>
+      <p lang="fr">Ils expliquent presque tout le reste du design :</p>
+      <p lang="en">They explain almost everything else in the design:</p>
+
+      <div class="grid two">
+        <div class="card">
+          <h4 lang="fr">1 · Les variables portent index <em>et</em> nom</h4>
+          <h4 lang="en">1 · Variables carry an index <em>and</em> a name</h4>
+          <p lang="fr"><code>(a) -> b</code> et <code>(x) -> y</code> partagent les mêmes indices, donc l'unificateur lit <code>index</code> directement. L'alpha-renommage est <strong>précalculé à l'ingestion, jamais à la requête</strong>. Le <code>name</code> survit pour l'affichage — en Gleam c'est la lettre dérivée de l'id (<code>0 → a</code>), en TS/Java le vrai <code>&lt;T, E&gt;</code>.</p>
+          <p lang="en"><code>(a) -> b</code> and <code>(x) -> y</code> share the same indices, so the unifier reads <code>index</code> directly. The alpha-rename is <strong>precomputed at ingestion, never at query time</strong>. The <code>name</code> survives for display — in Gleam it is the letter derived from the id (<code>0 → a</code>), in TS/Java the real <code>&lt;T, E&gt;</code>.</p>
+        </div>
+        <div class="card">
+          <h4 lang="fr">2 · Une méthode est une fonction receveur-en-premier</h4>
+          <h4 lang="en">2 · A method is a receiver-first function</h4>
+          <p lang="fr">Ce qui la fait converger avec l'idiome pipe-first de Gleam (<code>foo |> bar(x)</code>), où le receveur est déjà le premier argument. Le flag <code>is_method</code> n'est gardé que pour pouvoir booster ou filtrer.</p>
+          <p lang="en">Which makes it converge with Gleam's pipe-first idiom (<code>foo |> bar(x)</code>), where the receiver is already the first argument. The <code>is_method</code> flag is kept only so same-shape methods can be boosted or filtered.</p>
+        </div>
+      </div>
+
+      <h3><span lang="fr">La notation canonique</span><span lang="en">The canonical notation</span></h3>
+      <p lang="fr">Un seul parseur, un seul printer (<code>ir.to_string</code>). C'est à la fois la syntaxe de requête et la chaîne canonique relisible. Non ambiguë par construction : les variables sont <code>$n</code>, donc aucune devinette lexicale variable-vs-nominal. Gleam et TypeScript se rejoignent exactement :</p>
+      <p lang="en">One parser, one printer (<code>ir.to_string</code>). It is both the query syntax and the re-readable canonical string. Unambiguous by construction: variables are <code>$n</code>, so there is no lexical variable-vs-nominal guessing. Gleam and TypeScript land on exactly the same form:</p>
+
+      <div class="scroller">
+        <pre lang="fr"><span class="c">// Gleam</span>
+fn(Result(a, b), fn(a) -> c) -> Result(c, b)
+
+<span class="c">// TypeScript</span>
+function map&lt;A, B, C&gt;(r: Result&lt;A, B&gt;, f: (a: A) =&gt; C): Result&lt;C, B&gt;
+
+<span class="c">// ── les deux front-ends produisent la même forme canonique ──</span>
+<span class="k">( Result&lt;$0, $1&gt;, ($0) -> $2 ) -> Result&lt;$2, $1&gt;</span></pre>
+        <pre lang="en"><span class="c">// Gleam</span>
+fn(Result(a, b), fn(a) -> c) -> Result(c, b)
+
+<span class="c">// TypeScript</span>
+function map&lt;A, B, C&gt;(r: Result&lt;A, B&gt;, f: (a: A) =&gt; C): Result&lt;C, B&gt;
+
+<span class="c">// ── both front-ends produce the same canonical form ──</span>
+<span class="k">( Result&lt;$0, $1&gt;, ($0) -> $2 ) -> Result&lt;$2, $1&gt;</span></pre>
+      </div>
+
+      <p class="note" lang="fr">
+        <strong>Il n'y a pas de <code>?</code> dans la notation</strong>, et pas de nœud <code>Optional</code> :
+        la nullabilité est résolue par le front-end avant d'atteindre la forme canonique.
+        <code>Promise</code> non plus n'est pas un nœud — c'est un <code>Named</code> ordinaire dans tous
+        les langages, donc chercher <code>-> Promise&lt;B&gt;</code> marche gratuitement.
+      </p>
+      <p class="note" lang="en">
+        <strong>There is no <code>?</code> in the notation</strong>, and no <code>Optional</code> node:
+        nullability is resolved by the front-end before it reaches the canonical form.
+        <code>Promise</code> is not a node either — it is an ordinary <code>Named</code> in every
+        language, so searching <code>-> Promise&lt;B&gt;</code> works for free.
+      </p>
+    </section>
+
+    <!-- ══ TYPES PARTAGÉS ══ -->
+    <section id="partages">
+      <h2><span lang="fr">Les types importants</span><span lang="en">The types that matter</span></h2>
+      <p class="sub" lang="fr">Ces types ne sont pas des pairs : ils se <strong>succèdent</strong>. Une déclaration entre par <code>pi.Type</code>, devient une <code>ir.Declaration</code>, se pose en jsonb, ressort en <code>TypeSearch</code>, et finit rendue. D'où la forme choisie ici : un exemple réel suivi de bout en bout, puis une fiche par type — définition, stockage, usage. Les types qui sont réellement des pairs restent en tableau, plus bas.</p>
+      <p class="sub" lang="en">These types are not peers: they <strong>follow one another</strong>. A declaration enters as a <code>pi.Type</code>, becomes an <code>ir.Declaration</code>, settles as jsonb, comes back out as a <code>TypeSearch</code>, and ends up rendered. Hence the shape used here: one real example traced end to end, then one card per type — definition, storage, usage. The types that genuinely are peers stay in a table, further down.</p>
+
+      <h3><span lang="fr">La vie d'une déclaration — <code>gleam/result.map</code></span><span lang="en">The life of a declaration — <code>gleam/result.map</code></span></h3>
+      <p lang="fr">Une seule fonction, suivie à travers chaque représentation qu'elle traverse entre le tarball Hex et la colonne Postgres.</p>
+      <p lang="en">A single function, followed through every representation it passes on the way from the Hex tarball to the Postgres column.</p>
+
+      <div class="trace">
+
+        <div class="trace-step">
+          <span class="trace-n">1</span>
+          <span class="trace-t"><span lang="fr">Le code publié sur Hex</span><span lang="en">The code published on Hex</span></span>
+          <p class="trace-d" lang="fr">Le point de départ, dans <code>gleam_stdlib</code>. Retiens les noms des variables de type : <code>a</code>, <code>e</code>, <code>b</code>.</p>
+          <p class="trace-d" lang="en">The starting point, in <code>gleam_stdlib</code>. Note the type-variable names: <code>a</code>, <code>e</code>, <code>b</code>.</p>
+          <pre>pub fn map(over result: Result(a, e), with fun: fn(a) -> b) -> Result(b, e)</pre>
+        </div>
+
+        <div class="trace-step keep">
+          <span class="trace-n">2</span>
+          <span class="trace-t">package_release.package_interface <span class="trace-op">← api/hex_repo</span></span>
+          <p class="trace-d" lang="fr">Jupiter n'analyse aucun texte : le tarball contient déjà l'interface structurée, stockée telle quelle en <code>text</code>. Les variables y sont des <strong>ids du compilateur</strong>, pas des noms — c'est là que <code>e</code> disparaît.</p>
+          <p class="trace-d" lang="en">Jupiter parses no text: the tarball already carries the structured interface, stored as-is in a <code>text</code> column. Variables there are <strong>compiler ids</strong>, not names — this is where <code>e</code> disappears.</p>
+          <pre>Fn(parameters: [Named("Result", [Variable(0), Variable(1)]),
+                Fn([Variable(0)], Variable(2))],
+   return: Named("Result", [Variable(2), Variable(1)]))
+<span class="c">// les labels `over` / `with` vivent sur pi.Parameter</span></pre>
+        </div>
+
+        <div class="trace-step out">
+          <span class="trace-n">3</span>
+          <span class="trace-t">signature_ <span class="trace-op">← generate/sources</span></span>
+          <p class="trace-d" lang="fr">La source de vérité, rendue depuis <code>pi</code>. <code>sources.gleam:73</code> écrit chaque variable comme <code>'a' + id</code> — donc le <code>e</code> du code source s'affiche <code>b</code>. Le nom source n'existe nulle part : Gleam ne le transmet pas.</p>
+          <p class="trace-d" lang="en">The source of truth, rendered from <code>pi</code>. <code>sources.gleam:73</code> writes each variable as <code>'a' + id</code> — so the source's <code>e</code> displays as <code>b</code>. The source name exists nowhere: Gleam does not carry it through.</p>
+          <pre>fn(Result(a, b), fn(a) -> c) -> Result(c, b)</pre>
+        </div>
+
+        <div class="trace-step">
+          <span class="trace-n">4</span>
+          <span class="trace-t">ir.Declaration <span class="trace-op">← from_gleam (jupiter)</span></span>
+          <p class="trace-d" lang="fr">L'abaissement. <code>Var</code> garde l'id <code>pi</code> comme index, et la lettre comme nom — la même règle que le rendu, pour que les deux coïncident. <code>Result</code> est un type du prelude, donc son <code>module</code> est vidé.</p>
+          <p class="trace-d" lang="en">The lowering. <code>Var</code> keeps the <code>pi</code> id as its index, and the letter as its name — the same rule as rendering, so the two agree. <code>Result</code> is a prelude type, so its <code>module</code> is emptied.</p>
+          <pre>Function(signature: Fn(
+  params: [
+    Param(Some("over"), False, Named(Name("", "", "Result", None), [Var(0, "a"), Var(1, "b")])),
+    Param(Some("with"), False, Fn([Param(None, False, Var(0, "a"))], Var(2, "c"), False)),
+  ],
+  return: Named(Name("", "", "Result", None), [Var(2, "c"), Var(1, "b")]),
+  is_method: False,
+))</pre>
+        </div>
+
+        <div class="trace-step">
+          <span class="trace-n">5</span>
+          <span class="trace-t">alpha_rename_declaration <span class="trace-op">← ir</span></span>
+          <p class="trace-d" lang="fr">Les indices repassent en ordre de première apparition (paramètres, puis retour). Ici les ids du compilateur étaient déjà <code>0, 1, 2</code> dans cet ordre, donc rien ne bouge — mais c'est cette passe qui rend <code>(a) -> b</code> et <code>(x) -> y</code> identiques. Elle tourne une fois, à l'ingestion, <strong>jamais à la requête</strong>.</p>
+          <p class="trace-d" lang="en">Indices are renumbered in first-appearance order (parameters, then return). Here the compiler ids already were <code>0, 1, 2</code> in that order, so nothing moves — but this is the pass that makes <code>(a) -> b</code> and <code>(x) -> y</code> identical. It runs once, at ingestion, <strong>never at query time</strong>.</p>
+        </div>
+
+        <div class="trace-step out">
+          <span class="trace-n">6</span>
+          <span class="trace-t">signature_ir <span class="trace-op">← ir.encode</span></span>
+          <p class="trace-d" lang="fr">La colonne jsonb. Auto-descriptive : chaque nœud porte son <code>kind</code>, donc <code>ir.decoder()</code> la relit sans contexte.</p>
+          <p class="trace-d" lang="en">The jsonb column. Self-describing: every node carries its <code>kind</code>, so <code>ir.decoder()</code> reads it back with no context.</p>
+          <pre>{"kind": "function",
+ "signature": {"kind": "fn", "is_method": false,
+   "params": [
+     {"label": "over", "is_spread": false,
+      "type": {"kind": "named", "package": "", "module": "", "name": "Result",
+               "concept": null,
+               "args": [{"kind": "var", "index": 0, "name": "a"},
+                        {"kind": "var", "index": 1, "name": "b"}]}},
+     {"label": "with", "is_spread": false, "type": {"kind": "fn", …}}],
+   "return": {"kind": "named", "name": "Result", …}}}</pre>
+        </div>
+
+        <div class="trace-step out">
+          <span class="trace-n">7</span>
+          <span class="trace-t">arity + type_names <span class="trace-op">← ir.fingerprint</span></span>
+          <p class="trace-d" lang="fr">L'empreinte de phase 1. Les deux <code>Var</code> et le <code>Fn</code> imbriqué n'apportent aucun nom ; seul <code>Result</code> reste, dédoublonné entre le paramètre et le retour.</p>
+          <p class="trace-d" lang="en">The phase-1 fingerprint. Both <code>Var</code>s and the nested <code>Fn</code> contribute no name; only <code>Result</code> survives, deduplicated across the parameter and the return.</p>
+          <pre>arity      = 2
+type_names = {Result}</pre>
+        </div>
+
+        <div class="trace-step">
+          <span class="trace-n">8</span>
+          <span class="trace-t"><span lang="fr">La forme canonique</span><span lang="en">The canonical form</span> <span class="trace-op">← ir.to_string</span></span>
+          <p class="trace-d" lang="fr"><strong>Non stockée</strong> — régénérable à tout moment depuis <code>signature_ir</code>. C'est cette forme que la requête d'un utilisateur devra rejoindre, et celle sur laquelle Gleam et TypeScript convergent.</p>
+          <p class="trace-d" lang="en"><strong>Not stored</strong> — regenerable at any time from <code>signature_ir</code>. This is the form a user's query will have to meet, and the one Gleam and TypeScript converge on.</p>
+          <pre>(over: Result&lt;$0, $1&gt;, with: ($0) -> $2) -> Result&lt;$2, $1&gt;</pre>
+        </div>
+
+      </div>
+
+      <p class="note" lang="fr">
+        <strong>Ce que l'exemple apprend et qu'un tableau tait :</strong> le nom des variables de type est
+        <em>perdu</em> dès le <code>package_interface</code>. Ce que la page appelle « le nom source gardé pour
+        l'affichage » n'est, en Gleam, qu'une lettre recalculée depuis un id — <code>e</code> devient <code>b</code>.
+        La distinction ne prendra son sens qu'avec TS ou Java, où <code>&lt;T, E&gt;</code> existe vraiment.
+      </p>
+      <p class="note" lang="en">
+        <strong>What the example teaches and a table cannot:</strong> type-variable names are <em>lost</em> as
+        early as the <code>package_interface</code>. What the design calls "the source name kept for display" is,
+        in Gleam, merely a letter recomputed from an id — <code>e</code> becomes <code>b</code>. The distinction
+        only earns its keep with TS or Java, where <code>&lt;T, E&gt;</code> genuinely exists.
+      </p>
+
+      <h3><span lang="fr">Les cinq types du chemin critique</span><span lang="en">The five types on the critical path</span></h3>
+      <p lang="fr">Chaque fiche répond aux trois mêmes questions : quelle forme, stocké où, utilisé par qui.</p>
+      <p lang="en">Each card answers the same three questions: what shape, stored where, used by whom.</p>
+
+      <div class="fiches">
+
+        <div class="fiche">
+          <div class="fiche-hd">
+            <span class="fiche-name">pi.Type</span>
+            <span class="fiche-path">gleam_package_interface <span lang="fr">· dépendance externe</span><span lang="en">· external dependency</span></span>
+          </div>
+          <pre>pub type Type {
+  Tuple(elements)         Fn(parameters, return)
+  Variable(id: Int)       Named(name, package, module, parameters)
+}</pre>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
+            <span class="fiche-band-c">
+              <span lang="fr"><strong><code>package_release.package_interface</code></strong> — en <code>text</code>, le JSON brut du tarball, jamais décomposé en colonnes. C'est ce qui rend l'ingestion rejouable.</span>
+              <span lang="en"><strong><code>package_release.package_interface</code></strong> — as <code>text</code>, the raw tarball JSON, never decomposed into columns. This is what makes ingestion replayable.</span>
+            </span>
+          </div>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Utilisé</span><span lang="en">Used</span></span>
+            <span class="fiche-band-c">
+              <div class="uses">
+                <span class="use on">ingestion</span>
+                <span class="use no">matching</span>
+                <span class="use no">venus</span>
+              </div>
+              <span lang="fr">Confiné à jupiter. C'est <em>la</em> dépendance qui empêche venus de rendre les signatures — d'où <code>from_gleam</code> laissé hors de galaxy.</span>
+              <span lang="en">Confined to jupiter. This is <em>the</em> dependency keeping venus from rendering signatures — hence <code>from_gleam</code> being left out of galaxy.</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="fiche core">
+          <div class="fiche-hd">
+            <span class="fiche-name">ir.Type / ir.Declaration</span>
+            <span class="fiche-path">packages/galaxy/src/data/ir.gleam</span>
+          </div>
+          <pre>pub type Declaration {
+  Function(signature: Type)              Constant(type_: Type)
+  TypeAlias(parameters: Int, aliased: Type)
+  TypeDefinition(parameters: Int, constructors: List(Constructor))
+}
+
+pub type Type {
+  Fn(params: List(Param), return: Type, is_method: Bool)
+  Named(name: Name, args: List(Type))
+  Var(index: Int, name: String)
+  Hole
+  Tuple(elements: List(Type))
+  Record(fields: List(Field))
+  Union(members: List(Type))
+}</pre>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
+            <span class="fiche-band-c">
+              <span lang="fr"><strong><code>signature_ir</code></strong> <span class="tag derived">dérivé</span> — jsonb, via <code>ir.encode</code> ⇄ <code>ir.decoder</code>, aller-retour testé. <strong>Structurel uniquement</strong> : ni nom, ni doc, ni <code>kind</code> ne s'y trouvent, ils ont leurs colonnes.</span>
+              <span lang="en"><strong><code>signature_ir</code></strong> <span class="tag derived">derived</span> — jsonb, via <code>ir.encode</code> ⇄ <code>ir.decoder</code>, round-trip tested. <strong>Structural only</strong>: no name, no doc, no <code>kind</code> in there, they have their own columns.</span>
+            </span>
+          </div>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Utilisé</span><span lang="en">Used</span></span>
+            <span class="fiche-band-c">
+              <div class="uses">
+                <span class="use on">ingestion</span>
+                <span class="use soon"><span lang="fr">matching · phase 2</span><span lang="en">matching · phase 2</span></span>
+                <span class="use soon"><span lang="fr">venus · rendu</span><span lang="en">venus · rendering</span></span>
+              </div>
+              <span lang="fr">Le seul type dont tout le reste dérive : affichage, vérification et empreinte. Dans galaxy depuis <code>b63a44c</code> — les deux usages « bientôt » ne tiennent qu'à ça.</span>
+              <span lang="en">The one type everything else derives from: display, verification and fingerprint. In galaxy since <code>b63a44c</code> — both "soon" usages hinge on exactly that.</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="fiche">
+          <div class="fiche-hd">
+            <span class="fiche-name">ir.Name</span>
+            <span class="fiche-path">packages/galaxy/src/data/ir.gleam</span>
+          </div>
+          <pre>pub type Name {
+  Name(package: String, module: String, name: String, concept: Option(String))
+}</pre>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
+            <span class="fiche-band-c">
+              <span lang="fr">Inline dans <code>signature_ir</code>, <strong>et</strong> son seul champ <code>name</code> extrait dans <code>type_names</code> pour l'empreinte. Un même nom vit donc à deux endroits, l'un pour vérifier, l'autre pour sélectionner.</span>
+              <span lang="en">Inline in <code>signature_ir</code>, <strong>and</strong> its <code>name</code> field alone lifted into <code>type_names</code> for the fingerprint. So one name lives in two places, one to verify, one to select.</span>
+            </span>
+          </div>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Utilisé</span><span lang="en">Used</span></span>
+            <span class="fiche-band-c">
+              <div class="uses">
+                <span class="use on">ingestion</span>
+                <span class="use on"><span lang="fr">empreinte</span><span lang="en">fingerprint</span></span>
+                <span class="use no"><span lang="fr">concept · couche 3</span><span lang="en">concept · layer 3</span></span>
+              </div>
+              <span lang="fr">Trois de ses quatre champs sont des paris sur l'avenir : <code>concept</code> est toujours <code>None</code>, et <code>package</code>/<code>module</code> n'existent que pour que la résolution des refs soit une jointure à la requête plutôt qu'un état stocké.</span>
+              <span lang="en">Three of its four fields are bets on the future: <code>concept</code> is always <code>None</code>, and <code>package</code>/<code>module</code> exist only so that ref resolution can be a query-time join rather than stored state.</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="fiche">
+          <div class="fiche-hd">
+            <span class="fiche-name">TypeSearch</span>
+            <span class="fiche-path">packages/galaxy/src/data/type_search.gleam</span>
+          </div>
+          <pre>pub type TypeSearch {
+  TypeSearch(type_name: String, documentation: String, signature_kind: Kind,
+             metadata: Metadata, json_signature: Signature,
+             module_name: String, package_name: String, version: String)
+}</pre>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
+            <span class="fiche-band-c">
+              <span lang="fr"><strong>Nulle part.</strong> C'est une <em>projection</em>, jamais écrite : les cinq requêtes de recherche la fabriquent par jointure sur quatre tables, et <code>pog.returning(type_search.decoder())</code> la décode à la volée. Le seul type de la liste qui n'a aucune colonne.</span>
+              <span lang="en"><strong>Nowhere.</strong> It is a <em>projection</em>, never written: the five search queries build it by joining four tables, and <code>pog.returning(type_search.decoder())</code> decodes it on the fly. The only type here with no column at all.</span>
+            </span>
+          </div>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Utilisé</span><span lang="en">Used</span></span>
+            <span class="fiche-band-c">
+              <div class="uses">
+                <span class="use no">ingestion</span>
+                <span class="use on"><span lang="fr">les 5 requêtes</span><span lang="en">the 5 queries</span></span>
+                <span class="use on">/search → venus</span>
+              </div>
+              <span lang="fr">Le contrat HTTP au sens strict : jupiter l'encode, venus le décode, avec le même code.</span>
+              <span lang="en">The HTTP contract in the strict sense: jupiter encodes it, venus decodes it, with the same code.</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="fiche">
+          <div class="fiche-hd">
+            <span class="fiche-name">data/signature</span>
+            <span class="fiche-path">packages/galaxy/src/data/signature.gleam <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></span>
+          </div>
+          <pre>pub type Type {
+  Tuple(width: Int, elements: List(Type))
+  Fn(width: Int, parameters: List(Type), return: Type)
+  Variable(width: Int, id: Int)
+  Named(width: Int, name: String, package: String, module: String,
+        parameters: List(Type), ref: Option(String))
+}</pre>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
+            <span class="fiche-band-c">
+              <span lang="fr"><strong><code>signature_json</code></strong> <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span> — le doublon structuré de <code>signature_ir</code>. Sa raison d'être tient dans un champ : <code>width</code>, précalculé par nœud pour le retour à la ligne.</span>
+              <span lang="en"><strong><code>signature_json</code></strong> <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span> — the structured duplicate of <code>signature_ir</code>. Its whole reason to exist is one field: <code>width</code>, precomputed per node for line wrapping.</span>
+            </span>
+          </div>
+          <div class="fiche-band">
+            <span class="fiche-band-l"><span lang="fr">Utilisé</span><span lang="en">Used</span></span>
+            <span class="fiche-band-c">
+              <div class="uses">
+                <span class="use on"><span lang="fr">venus · rendu</span><span lang="en">venus · rendering</span></span>
+                <span class="use no">matching</span>
+              </div>
+              <span lang="fr">Il meurt le jour où venus recalcule <code>width</code> à l'affichage. Note son <code>ref</code>, absent de l'IR : c'est la seule chose qu'il porte et que l'IR refuse de stocker.</span>
+              <span lang="en">It dies the day venus recomputes <code>width</code> at render time. Note its <code>ref</code>, absent from the IR: it is the one thing it carries that the IR refuses to store.</span>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <h3><span lang="fr">Les pairs — le tableau leur va</span><span lang="en">The peers — a table suits them</span></h3>
+      <p lang="fr">Ceux-ci ne se transforment en rien : ce sont des types de données indépendants, sans chaîne entre eux. Chacun expose un <code>decoder()</code> et un <code>encode()</code>, et jupiter décode les lignes Postgres avec le décodeur que venus applique au JSON reçu — c'est ce qui empêche la forme de diverger.</p>
+      <p lang="en">These transform into nothing: they are independent data types with no chain between them. Each exposes a <code>decoder()</code> and an <code>encode()</code>, and jupiter decodes Postgres rows with the very decoder venus applies to the received JSON — that is what keeps the shape from drifting.</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th><span lang="fr">Stocké</span><span lang="en">Stored</span></th>
+              <th><span lang="fr">Remarque</span><span lang="en">Note</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">data/kind</td>
+              <td class="m">kind</td>
+              <td class="d">
+                <span lang="fr">Miroir exact de l'enum Postgres <code>type_nature</code>.</span>
+                <span lang="en">An exact mirror of the Postgres <code>type_nature</code> enum.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">data/metadata</td>
+              <td class="m">metadata</td>
+              <td class="d">
+                <span lang="fr">Emballe <code>deprecation</code> + <code>implementations</code> dans un seul jsonb. Ce que l'IR ne stocke jamais.</span>
+                <span lang="en">Wraps <code>deprecation</code> + <code>implementations</code> into a single jsonb. What the IR never stores.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">data/implementations</td>
+              <td class="m"><span lang="fr">dans <code>metadata</code></span><span lang="en">inside <code>metadata</code></span></td>
+              <td class="d">
+                <span lang="fr">Cibles : <code>gleam</code>, <code>uses_erlang_externals</code>, <code>uses_javascript_externals</code>.</span>
+                <span lang="en">Targets: <code>gleam</code>, <code>uses_erlang_externals</code>, <code>uses_javascript_externals</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">data/package</td>
+              <td class="m">package.*</td>
+              <td class="d">
+                <span lang="fr">Sert <code>/packages</code> et <code>/trendings</code>. Son décodeur de licences tolère les deux formes : liste JSON, ou chaîne JSON encodée.</span>
+                <span lang="en">Serves <code>/packages</code> and <code>/trendings</code>. Its licence decoder tolerates both shapes: a JSON list, or a JSON-encoded string.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">data/analytics</td>
+              <td class="m"><span lang="fr">agrégat</span><span lang="en">aggregate</span></td>
+              <td class="d">
+                <span lang="fr">Sert <code>/analytics</code>. Recomposé à la volée depuis <code>search_analytics</code>, <code>analytics_timeseries</code> et <code>package</code>.</span>
+                <span lang="en">Serves <code>/analytics</code>. Recomposed on the fly from <code>search_analytics</code>, <code>analytics_timeseries</code> and <code>package</code>.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="note warn" lang="fr">
+        <strong>Le doublon <code>signature</code> / <code>ir</code> est temporaire, et c'est le nœud du refactor.</strong>
+        <code>data/ir</code> <strong>a rejoint <code>galaxy</code></strong> (commit <code>b63a44c</code>) : les deux
+        formats structurés y cohabitent désormais, en attendant que le second remplace le premier. Le chemin de
+        module <code>data/ir</code> est inchangé, donc aucun import n'a bougé, et galaxy n'a pas gagné de
+        dépendance — <code>decrypt</code> arrivait déjà via <code>plasma</code>. Ce qui reste : faire rendre l'IR à
+        venus en recalculant <code>width</code> à l'affichage, puis retirer <code>data/signature</code>, la colonne
+        <code>signature_json</code> et <code>generate/types</code>.
+      </p>
+      <p class="note warn" lang="en">
+        <strong>The <code>signature</code> / <code>ir</code> duplication is temporary, and it is the crux of the refactor.</strong>
+        <code>data/ir</code> <strong>has moved into <code>galaxy</code></strong> (commit <code>b63a44c</code>): both
+        structured formats now live there, until the second replaces the first. The <code>data/ir</code> module path
+        is unchanged, so no import moved, and galaxy gained no dependency — <code>decrypt</code> already came in via
+        <code>plasma</code>. What remains: have venus render the IR with <code>width</code> recomputed at display
+        time, then drop <code>data/signature</code>, the <code>signature_json</code> column and
+        <code>generate/types</code>.
+      </p>
+    </section>
+
+    <!-- ══ API ══ -->
+    <section id="api">
+      <h2><span lang="fr">L'API HTTP</span><span lang="en">The HTTP API</span></h2>
+      <p class="sub" lang="fr">Trois middlewares s'appliquent avant tout routage, dans cet ordre : CORS (<code>cors_builder</code>), <code>web.foundations</code>, puis <code>context.set_trace_id</code> qui attache un identifiant de trace au contexte pour les logs <code>palabres</code>. Toute méthode autre que GET et POST tombe en 404.</p>
+      <p class="sub" lang="en">Three middlewares run before any routing, in this order: CORS (<code>cors_builder</code>), <code>web.foundations</code>, then <code>context.set_trace_id</code>, which attaches a trace id to the context for <code>palabres</code> logs. Any method other than GET and POST falls through to a 404.</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th><span lang="fr">Méthode</span><span lang="en">Method</span></th>
+              <th>Route</th>
+              <th>Handler</th>
+              <th><span lang="fr">Réponse</span><span lang="en">Response</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">GET</td><td class="m">/healthcheck</td><td class="d">—</td>
+              <td class="d"><span lang="fr">200 vide</span><span lang="en">empty 200</span></td>
+            </tr>
+            <tr>
+              <td class="m">GET</td><td class="m">/packages</td><td class="m">handlers.packages</td>
+              <td class="d">
+                <span lang="fr">Paquets triés par <code>updated_at</code>.</span>
+                <span lang="en">Packages ordered by <code>updated_at</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">GET</td><td class="m">/trendings</td><td class="m">handlers.trendings</td>
+              <td class="d">
+                <span lang="fr">Paquets par popularité, paginé via <code>?page</code> (défaut 0).</span>
+                <span lang="en">Packages by popularity, paginated via <code>?page</code> (defaults to 0).</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">GET</td><td class="m">/analytics</td><td class="m">handlers.analytics</td>
+              <td class="d">
+                <span lang="fr">Compteurs, série temporelle, classés et populaires.</span>
+                <span lang="en">Counters, time series, ranked and popular packages.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">GET</td><td class="m">/search?q=</td><td class="m">handlers.search</td>
+              <td class="d">
+                <span lang="fr">Les six tiers de la cascade ci-dessous, en un seul objet.</span>
+                <span lang="en">The six tiers of the cascade below, in a single object.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">POST</td><td class="m">/packages/update/:name</td><td class="m">handlers.package_update</td>
+              <td class="d">
+                <span lang="fr">Resynchronise un paquet à la demande (<code>force: True</code>). Répond <code>{}</code> sans attendre.</span>
+                <span lang="en">Re-syncs a package on demand (<code>force: True</code>). Answers <code>{}</code> without waiting.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ RECHERCHE ══ -->
+    <section id="recherche">
+      <h2><span lang="fr">La cascade de recherche</span><span lang="en">The search cascade</span></h2>
+      <p class="sub" lang="fr">Une requête traverse six tiers, du plus précis au plus large. Chaque tier reçoit la concaténation de tous les résultats précédents et s'en défausse (<code>exec_search</code> filtre par <code>list.contains</code>), si bien qu'un même item n'apparaît qu'une fois, dans son tier le plus précis. Chaque requête SQL est plafonnée à 100 lignes et triée par <code>package_rank DESC, ordering DESC</code>, où <code>ordering</code> est la version découpée en <code>int[]</code>.</p>
+      <p class="sub" lang="en">A query travels through six tiers, from the most precise to the broadest. Each tier receives the concatenation of every previous result and discards those (<code>exec_search</code> filters with <code>list.contains</code>), so a given item appears exactly once, in its most precise tier. Every SQL query is capped at 100 rows and ordered by <code>package_rank DESC, ordering DESC</code>, where <code>ordering</code> is the version split into an <code>int[]</code>.</p>
+
+      <div class="cascade">
+        <div class="tier off">
+          <span class="tier-k">exact-type-matches</span>
+          <span class="tier-d">
+            <span lang="fr">Recherche par type via l'ancien trie. <strong>Débranchée</strong> — le code est commenté, la liste est vide en dur, en attendant <em>fingerprint + verify</em>.</span>
+            <span lang="en">Type search through the old trie. <strong>Unplugged</strong> — the code is commented out and the list is hard-coded empty, pending <em>fingerprint + verify</em>.</span>
+          </span>
+          <span class="tier-q">= []</span>
+        </div>
+        <div class="tier">
+          <span class="tier-k">exact-matches</span>
+          <span class="tier-d">
+            <span lang="fr">Nom exact, puis <code>module.nom</code> exact. Deux requêtes dont les résultats sont aplatis ensemble.</span>
+            <span lang="en">Exact name, then exact <code>module.name</code>. Two queries whose results are flattened together.</span>
+          </span>
+          <span class="tier-q">name_search + module_and_name_search</span>
+        </div>
+        <div class="tier">
+          <span class="tier-k">matches</span>
+          <span class="tier-d">
+            <span lang="fr">Sous-chaîne sur le nom, ou sur <code>signature_compact</code> — la requête est nettoyée de ses parenthèses/virgules/points et les espaces deviennent des <code>%</code>.</span>
+            <span lang="en">Substring on the name, or on <code>signature_compact</code> — the query is stripped of parentheses/commas/dots and its spaces become <code>%</code>.</span>
+          </span>
+          <span class="tier-q">content_search · ILIKE + <span lang="fr">trigrammes</span><span lang="en">trigrams</span></span>
+        </div>
+        <div class="tier">
+          <span class="tier-k">searches</span>
+          <span class="tier-d">
+            <span lang="fr">Recherche plein texte sur la signature rendue.</span>
+            <span lang="en">Full-text search over the rendered signature.</span>
+          </span>
+          <span class="tier-q">to_tsvector('english', signature_)</span>
+        </div>
+        <div class="tier">
+          <span class="tier-k">docs-searches</span>
+          <span class="tier-d">
+            <span lang="fr">Recherche plein texte sur la documentation.</span>
+            <span lang="en">Full-text search over the documentation.</span>
+          </span>
+          <span class="tier-q">to_tsvector('english', documentation)</span>
+        </div>
+        <div class="tier">
+          <span class="tier-k">module-searches</span>
+          <span class="tier-d">
+            <span lang="fr">Le filet de sécurité : correspondance sur le nom de module.</span>
+            <span lang="en">The safety net: a match on the module name.</span>
+          </span>
+          <span class="tier-q">module_search</span>
+        </div>
+      </div>
+
+      <h3><span lang="fr">Ce qui remplace le tier débranché</span><span lang="en">What replaces the unplugged tier</span></h3>
+      <p lang="fr">Le design cible est natif Postgres, en deux phases, et les deux dérivent de l'IR :</p>
+      <p lang="en">The target design is Postgres-native and two-phase, and both phases derive from the IR:</p>
+
+      <div class="grid two">
+        <div class="card">
+          <h4 lang="fr">Phase 1 · sélection (GIN)</h4>
+          <h4 lang="en">Phase 1 · candidate selection (GIN)</h4>
+          <p lang="fr">L'empreinte de chaque ligne — <code>arity</code> + <code>type_names</code> — répond à <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> en millisecondes, et fait tomber ~50 k lignes à quelques centaines de candidats.</p>
+          <p lang="en">Each row's fingerprint — <code>arity</code> + <code>type_names</code> — answers <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> in milliseconds, narrowing ~50k rows down to a few hundred candidates.</p>
+        </div>
+        <div class="card">
+          <h4 lang="fr">Phase 2 · vérification <span class="tag legacy">à écrire</span></h4>
+          <h4 lang="en">Phase 2 · verification <span class="tag legacy">to write</span></h4>
+          <p lang="fr">L'IR de chaque candidat est unifiée contre l'IR de la requête : structure exacte, liaison des <code>Var</code> injective, <code>Hole</code> qui matche tout. Consomme <code>signature_ir</code> directement.</p>
+          <p lang="en">Each candidate's IR is unified against the query IR: exact structure, injective <code>Var</code> binding, <code>Hole</code> matching anything. Consumes <code>signature_ir</code> directly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SCHEMA ══ -->
+    <section id="schema">
+      <h2><span lang="fr">Le schéma relationnel</span><span lang="en">The relational schema</span></h2>
+      <p class="sub" lang="fr">Une colonne vertébrale à quatre niveaux — <code>package → package_release → package_module → package_type_fun_signature</code> — plus la propriété des paquets en table de jonction. Tous les identifiants sont des UUIDv7 générés en base (<code>uuidv7()</code>), donc triables par date de création. Chaque table porte un trigger <code>moddatetime</code> qui tient <code>updated_at</code> à jour.</p>
+      <p class="sub" lang="en">A four-level spine — <code>package → package_release → package_module → package_type_fun_signature</code> — plus package ownership as a join table. Every id is a UUIDv7 generated in the database (<code>uuidv7()</code>), hence sortable by creation date. Each table carries a <code>moddatetime</code> trigger that keeps <code>updated_at</code> current.</p>
+
+      <div class="scroller">
+        <svg class="erd" viewBox="0 0 960 1010" role="img" aria-label="Schéma relationnel des tables Gloogle / Relational schema of the Gloogle tables">
+
+          <!-- hex_user -->
+          <g>
+            <rect class="box-bg" x="40" y="40" width="230" height="106" rx="5"/>
+            <path class="box-hd" d="M40 45 a5 5 0 0 1 5 -5 h220 a5 5 0 0 1 5 5 v21 h-230 z"/>
+            <text class="t-name" x="52" y="60">hex_user</text>
+            <text class="t-col" x="52" y="85">id</text><text class="t-key" x="240" y="85" text-anchor="end">PK</text>
+            <text class="t-col" x="52" y="102">username</text><text class="t-key" x="240" y="102" text-anchor="end">UNIQUE</text>
+            <text class="t-col" x="52" y="119">email</text>
+            <text class="t-col" x="52" y="136">url</text>
+          </g>
+
+          <!-- package_owner -->
+          <g>
+            <rect class="box-bg" x="40" y="250" width="230" height="72" rx="5"/>
+            <path class="box-hd" d="M40 255 a5 5 0 0 1 5 -5 h220 a5 5 0 0 1 5 5 v21 h-230 z"/>
+            <text class="t-name" x="52" y="270">package_owner</text>
+            <text class="t-col" x="52" y="295">hex_user_id</text><text class="t-key" x="258" y="295" text-anchor="end">PK · FK</text>
+            <text class="t-col" x="52" y="312">package_id</text><text class="t-key" x="258" y="312" text-anchor="end">PK · FK</text>
+          </g>
+
+          <!-- package -->
+          <g>
+            <rect class="box-bg" x="430" y="40" width="290" height="157" rx="5"/>
+            <path class="box-hd" d="M430 45 a5 5 0 0 1 5 -5 h280 a5 5 0 0 1 5 5 v21 h-290 z"/>
+            <text class="t-name" x="442" y="60">package</text>
+            <text class="t-col" x="442" y="85">id</text><text class="t-key" x="708" y="85" text-anchor="end">PK</text>
+            <text class="t-col" x="442" y="102">name</text><text class="t-key" x="708" y="102" text-anchor="end">UNIQUE</text>
+            <text class="t-col" x="442" y="119">language</text><text class="t-key" x="708" y="119" text-anchor="end">DEFAULT 'gleam'</text>
+            <text class="t-col" x="442" y="136">registry</text><text class="t-key" x="708" y="136" text-anchor="end">DEFAULT 'hex'</text>
+            <text class="t-col" x="442" y="153">rank</text>
+            <text class="t-col" x="442" y="170">popularity</text><text class="t-key" x="708" y="170" text-anchor="end">jsonb</text>
+            <text class="t-col" x="442" y="187">licenses, links</text><text class="t-key" x="708" y="187" text-anchor="end">jsonb</text>
+          </g>
+
+          <!-- package_release -->
+          <g>
+            <rect class="box-bg" x="430" y="300" width="290" height="157" rx="5"/>
+            <path class="box-hd" d="M430 305 a5 5 0 0 1 5 -5 h280 a5 5 0 0 1 5 5 v21 h-290 z"/>
+            <text class="t-name" x="442" y="320">package_release</text>
+            <text class="t-col" x="442" y="345">id</text><text class="t-key" x="708" y="345" text-anchor="end">PK</text>
+            <text class="t-col" x="442" y="362">package_id</text><text class="t-key" x="708" y="362" text-anchor="end">FK</text>
+            <text class="t-col" x="442" y="379">version</text><text class="t-key" x="708" y="379" text-anchor="end">UQ (package_id, version)</text>
+            <text class="t-col" x="442" y="396">package_interface</text>
+            <text class="t-col" x="442" y="413">gleam_toml, url</text>
+            <text class="t-col" x="442" y="430">gleam_constraint</text>
+            <text class="t-col" x="442" y="447">retirement</text><text class="t-key" x="708" y="447" text-anchor="end">jsonb</text>
+          </g>
+
+          <!-- package_module -->
+          <g>
+            <rect class="box-bg" x="430" y="560" width="290" height="89" rx="5"/>
+            <path class="box-hd" d="M430 565 a5 5 0 0 1 5 -5 h280 a5 5 0 0 1 5 5 v21 h-290 z"/>
+            <text class="t-name" x="442" y="580">package_module</text>
+            <text class="t-col" x="442" y="605">id</text><text class="t-key" x="708" y="605" text-anchor="end">PK</text>
+            <text class="t-col" x="442" y="622">package_release_id</text><text class="t-key" x="708" y="622" text-anchor="end">FK</text>
+            <text class="t-col" x="442" y="639">name, documentation</text><text class="t-key" x="708" y="639" text-anchor="end">UQ (release_id, name)</text>
+          </g>
+
+          <!-- package_type_fun_signature -->
+          <g>
+            <rect class="box-bg hi" x="350" y="752" width="450" height="225" rx="5"/>
+            <path class="box-hd hi" d="M350 757 a5 5 0 0 1 5 -5 h440 a5 5 0 0 1 5 5 v21 h-450 z"/>
+            <text class="t-name" x="362" y="772">package_type_fun_signature</text>
+            <text class="t-col" x="362" y="797">id</text><text class="t-key" x="788" y="797" text-anchor="end">PK</text>
+            <text class="t-col" x="362" y="814">package_module_id</text><text class="t-key" x="788" y="814" text-anchor="end">FK · UQ (module_id, name)</text>
+            <text class="t-col" x="362" y="831">name, documentation</text>
+            <text class="t-col" x="362" y="848">kind</text><text class="t-key" x="788" y="848" text-anchor="end">ENUM type_nature</text>
+            <text class="t-col" x="362" y="865">signature_</text>
+            <text class="t-key" x="788" y="865" text-anchor="end" lang="fr">source de vérité</text>
+            <text class="t-key" x="788" y="865" text-anchor="end" lang="en">source of truth</text>
+            <text class="t-col" x="362" y="882">signature_compact</text><text class="t-gen" x="788" y="882" text-anchor="end">GENERATED · STORED</text>
+            <text class="t-col" x="362" y="899">signature_ir</text>
+            <text class="t-gen" x="788" y="899" text-anchor="end" lang="fr">jsonb · dérivé</text>
+            <text class="t-gen" x="788" y="899" text-anchor="end" lang="en">jsonb · derived</text>
+            <text class="t-col" x="362" y="916">arity</text>
+            <text class="t-gen" x="788" y="916" text-anchor="end" lang="fr">empreinte · dérivé</text>
+            <text class="t-gen" x="788" y="916" text-anchor="end" lang="en">fingerprint · derived</text>
+            <text class="t-col" x="362" y="933">type_names</text>
+            <text class="t-gen" x="788" y="933" text-anchor="end" lang="fr">text[] · dérivé</text>
+            <text class="t-gen" x="788" y="933" text-anchor="end" lang="en">text[] · derived</text>
+            <text class="t-col" x="362" y="950">signature_json</text>
+            <text class="t-key" x="788" y="950" text-anchor="end" lang="fr">jsonb · à retirer</text>
+            <text class="t-key" x="788" y="950" text-anchor="end" lang="en">jsonb · to remove</text>
+            <text class="t-col" x="362" y="967">metadata, deprecation</text><text class="t-key" x="788" y="967" text-anchor="end">jsonb</text>
+          </g>
+
+          <!-- rel: package_owner -> hex_user -->
+          <path class="rel" d="M100 250 L100 146"/>
+          <circle class="dot" cx="100" cy="146" r="3"/>
+          <text class="card-l" x="107" y="163">1</text>
+          <text class="card-l" x="107" y="243">N</text>
+
+          <!-- rel: package_owner -> package -->
+          <path class="rel" d="M270 286 L350 286 L350 118 L430 118"/>
+          <circle class="dot" cx="430" cy="118" r="3"/>
+          <text class="card-l" x="412" y="112" text-anchor="end">1</text>
+          <text class="card-l" x="278" y="280">N</text>
+
+          <!-- rel: package_release -> package -->
+          <path class="rel" d="M575 300 L575 197"/>
+          <circle class="dot" cx="575" cy="197" r="3"/>
+          <text class="card-l" x="582" y="214">1</text>
+          <text class="card-l" x="582" y="293">N</text>
+
+          <!-- rel: package_module -> package_release -->
+          <path class="rel" d="M575 560 L575 457"/>
+          <circle class="dot" cx="575" cy="457" r="3"/>
+          <text class="card-l" x="582" y="474">1</text>
+          <text class="card-l" x="582" y="553">N</text>
+
+          <!-- rel: ptfs -> package_module -->
+          <path class="rel" d="M575 752 L575 649"/>
+          <circle class="dot" cx="575" cy="649" r="3"/>
+          <text class="card-l" x="582" y="666">1</text>
+          <text class="card-l" x="582" y="745">N</text>
+
+        </svg>
+      </div>
+
+      <h3><span lang="fr">Les tables hors graphe</span><span lang="en">The tables outside the graph</span></h3>
+      <p lang="fr">Quatre tables ne portent aucune clé étrangère. Ce n'est pas un oubli — chacune a une raison :</p>
+      <p lang="en">Four tables carry no foreign key at all. That is not an oversight — each has a reason:</p>
+
+      <div class="grid two">
+        <div class="card">
+          <h4>analytics</h4>
+          <p lang="fr">Polymorphe par conception : <code>(foreign_id, table_name)</code> pointe vers n'importe quelle table, donc aucune FK n'est possible. <code>content</code> est un jsonb libre. Unique sur <code>(foreign_id, table_name, day)</code> — un instantané par jour et par entité.</p>
+          <p lang="en">Polymorphic by design: <code>(foreign_id, table_name)</code> points at any table, so no FK is possible. <code>content</code> is free-form jsonb. Unique on <code>(foreign_id, table_name, day)</code> — one snapshot per entity per day.</p>
+        </div>
+        <div class="card">
+          <h4>search_analytics</h4>
+          <p lang="fr">Un compteur d'occurrences par requête, la requête elle-même servant de clé primaire. Incrémenté à chaque <code>/search</code>, en <em>fire-and-forget</em> : l'erreur est explicitement ignorée (<code>loss.dismiss</code>) pour ne jamais faire échouer une recherche.</p>
+          <p lang="en">An occurrence counter per query, the query itself being the primary key. Incremented on every <code>/search</code>, fire-and-forget: the error is explicitly discarded (<code>loss.dismiss</code>) so it can never fail a search.</p>
+        </div>
+        <div class="card">
+          <h4>analytics_timeseries</h4>
+          <p lang="fr">L'agrégat horaire de la précédente, clé primaire <code>(query, date)</code>. Alimenté par le worker <code>store_timeseries</code>.</p>
+          <p lang="en">The hourly aggregate of the previous one, primary key <code>(query, date)</code>. Fed by the <code>store_timeseries</code> worker.</p>
+        </div>
+        <div class="card">
+          <h4>hex_read</h4>
+          <p lang="fr">Une seule ligne, un seul rôle : <code>last_check</code>, le curseur d'ingestion. C'est ce que <code>get_last_hex_date</code> lit au début de chaque cycle et que <code>upsert_most_recent_hex_timestamp</code> réécrit à la fin.</p>
+          <p lang="en">One row, one job: <code>last_check</code>, the ingestion cursor. It is what <code>get_last_hex_date</code> reads at the start of each cycle and what <code>upsert_most_recent_hex_timestamp</code> writes back at the end.</p>
+        </div>
+      </div>
+
+      <h3><span lang="fr">Les extensions Postgres</span><span lang="en">The Postgres extensions</span></h3>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Extension</th>
+              <th><span lang="fr">Ce qu'elle sert</span><span lang="en">What it serves</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">pg_trgm</td>
+              <td class="d">
+                <span lang="fr">Les index GIN trigrammes sur <code>name</code> et <code>signature_compact</code> — le tier <code>content_search</code>.</span>
+                <span lang="en">The GIN trigram indexes on <code>name</code> and <code>signature_compact</code> — the <code>content_search</code> tier.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">fuzzystrmatch</td>
+              <td class="d">
+                <span lang="fr">La résolution approximative des noms de types (<code>find_similar_type_names</code>).</span>
+                <span lang="en">Fuzzy resolution of type names (<code>find_similar_type_names</code>).</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">moddatetime</td>
+              <td class="d">
+                <span lang="fr">Les triggers <code>updated_at</code>, présents sur les 8 tables qui portent la colonne.</span>
+                <span lang="en">The <code>updated_at</code> triggers, present on the 8 tables that carry the column.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">uuid-ossp</td>
+              <td class="d">
+                <span lang="fr">Les identifiants. Le défaut réel est <code>uuidv7()</code>, natif en Postgres 18.</span>
+                <span lang="en">The identifiers. The actual default is <code>uuidv7()</code>, native in Postgres 18.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ COLONNES ══ -->
+    <section id="colonnes">
+      <h2 lang="fr"><code>package_type_fun_signature</code>, colonne par colonne</h2>
+      <h2 lang="en"><code>package_type_fun_signature</code>, column by column</h2>
+      <p class="sub" lang="fr">C'est la table qui porte tout le refactor, et la seule où la distinction source de vérité / dérivé compte vraiment. La règle : <code>signature_</code> est la racine, tout le reste se régénère en relançant l'ingestion — l'IR peut donc évoluer sans verrouiller les données.</p>
+      <p class="sub" lang="en">This is the table the whole refactor rests on, and the only one where the source-of-truth / derived distinction really matters. The rule: <code>signature_</code> is the root and everything else is regenerated by re-running ingestion — so the IR can evolve without locking the data in.</p>
+
+      <div class="scroller">
+        <pre lang="fr">signature_  <span class="c">(racine, source de vérité — la signature rendue dans le langage cible)</span>
+   ├─ (space-strip) ──────────────→ signature_compact  <span class="c">(tier trigrammes, colonne GENERATED)</span>
+   └─ front-end langage → IR (fidèle, Var(index, name)) → alpha_rename
+          ├─ ir.encode ───────────→ signature_ir       <span class="c">(jsonb ; LA colonne structurée)</span>
+          └─ fingerprint ─────────→ arity + type_names  <span class="c">(phase 1, GIN)</span></pre>
+        <pre lang="en">signature_  <span class="c">(root, source of truth — the rendered target-language signature)</span>
+   ├─ (space-strip) ──────────────→ signature_compact  <span class="c">(trigram tier, GENERATED column)</span>
+   └─ language front-end → IR (faithful, Var(index, name)) → alpha_rename
+          ├─ ir.encode ───────────→ signature_ir       <span class="c">(jsonb; THE structured column)</span>
+          └─ fingerprint ─────────→ arity + type_names  <span class="c">(phase 1, GIN)</span></pre>
+      </div>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th><span lang="fr">Colonne</span><span lang="en">Column</span></th>
+              <th>Type</th>
+              <th><span lang="fr">Statut</span><span lang="en">Status</span></th>
+              <th><span lang="fr">Rôle</span><span lang="en">Role</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">signature_</td><td class="m">text</td>
+              <td><span class="tag truth"><span lang="fr">source de vérité</span><span lang="en">source of truth</span></span></td>
+              <td class="d">
+                <span lang="fr">La signature rendue. Préservée telle quelle, et alimente aussi le plein texte.</span>
+                <span lang="en">The rendered signature. Preserved as-is, and also feeds full-text search.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">signature_compact</td><td class="m">text</td>
+              <td><span class="tag derived">GENERATED</span></td>
+              <td class="d">
+                <span lang="fr">Calculée par Postgres : <code>replace(signature_, ' ', '')</code>. Aucun code Gleam ne l'écrit.</span>
+                <span lang="en">Computed by Postgres: <code>replace(signature_, ' ', '')</code>. No Gleam code writes it.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">signature_ir</td><td class="m">jsonb</td>
+              <td><span class="tag derived"><span lang="fr">dérivé</span><span lang="en">derived</span></span></td>
+              <td class="d">
+                <span lang="fr">La seule représentation structurée cible. Auto-descriptive : chaque nœud porte un tag <code>kind</code>, donc <code>decoder()</code> fait l'aller-retour de <code>encode()</code> sans contexte.</span>
+                <span lang="en">The one target structured representation. Self-describing: each node carries a <code>kind</code> tag, so <code>decoder()</code> round-trips <code>encode()</code> standalone.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">arity</td><td class="m">integer</td>
+              <td><span class="tag derived"><span lang="fr">empreinte</span><span lang="en">fingerprint</span></span></td>
+              <td class="d">
+                <span lang="fr">Nombre de paramètres de la fonction de tête ; <code>0</code> pour les formes non-fonction.</span>
+                <span lang="en">The head function's parameter count; <code>0</code> for non-function forms.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">type_names</td><td class="m">text[]</td>
+              <td><span class="tag derived"><span lang="fr">empreinte</span><span lang="en">fingerprint</span></span></td>
+              <td class="d">
+                <span lang="fr">L'ensemble des noms nominaux mentionnés, imbrication aplatie, dédoublonné. <code>Var</code> et <code>Hole</code> n'apportent rien. v1 stocke le <code>Name.name</code> écrit.</span>
+                <span lang="en">The set of nominal names mentioned, nesting flattened, deduplicated. <code>Var</code> and <code>Hole</code> contribute nothing. v1 stores the written <code>Name.name</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">signature_json</td><td class="m">jsonb</td>
+              <td><span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></td>
+              <td class="d">
+                <span lang="fr">L'ancienne forme d'affichage. Survit uniquement jusqu'au refactor de venus.</span>
+                <span lang="en">The old display form. Survives only until the venus refactor.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">kind</td><td class="m">type_nature</td>
+              <td><span class="tag stored"><span lang="fr">métadonnée</span><span lang="en">metadata</span></span></td>
+              <td class="d">
+                <span lang="fr">Enum : <code>function</code>, <code>type_definition</code>, <code>type_alias</code>, <code>constant</code>.</span>
+                <span lang="en">Enum: <code>function</code>, <code>type_definition</code>, <code>type_alias</code>, <code>constant</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">metadata</td><td class="m">jsonb</td>
+              <td><span class="tag stored"><span lang="fr">métadonnée</span><span lang="en">metadata</span></span></td>
+              <td class="d">
+                <span lang="fr"><code>deprecation</code> + <code>implementations</code>. <strong>L'IR ne duplique jamais ça</strong> — elle est structurelle uniquement.</span>
+                <span lang="en"><code>deprecation</code> + <code>implementations</code>. <strong>The IR never duplicates this</strong> — it is structural only.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span lang="fr">Ce qui est délibérément absent</span><span lang="en">What is deliberately absent</span></h3>
+      <div class="grid two">
+        <div class="card">
+          <h4 lang="fr">La chaîne canonique de l'IR</h4>
+          <h4 lang="en">The IR's canonical string</h4>
+          <p lang="fr">Pas stockée. <code>ir.to_string(ir.decoder())</code> la régénère à la demande. Une colonne de debug pourra s'ajouter plus tard si le besoin se présente.</p>
+          <p lang="en">Not stored. <code>ir.to_string(ir.decoder())</code> regenerates it on demand. A debug column can be added later if the need shows up.</p>
+        </div>
+        <div class="card">
+          <h4 lang="fr">La référence croisée résolue (<code>ref</code>)</h4>
+          <h4 lang="en">The resolved cross-reference (<code>ref</code>)</h4>
+          <p lang="fr">Pas stockée non plus, et pour une raison de fond : une <code>ref</code> résout une plage semver contre un ensemble de versions qui évolue. Elle doit donc se calculer au moment de la requête, en respectant l'exigence de la release appelante — via une future table <code>package_dependency</code>. C'est précisément pour que cette résolution soit une jointure plutôt qu'un état stocké que <code>Name</code> porte <code>package</code> et <code>module</code>.</p>
+          <p lang="en">Not stored either, and for a fundamental reason: a <code>ref</code> resolves a semver range against an evolving set of versions. So it must be computed at query time, respecting the using release's requirement — via a future <code>package_dependency</code> table. It is precisely so that this resolution is a join rather than stored state that <code>Name</code> carries <code>package</code> and <code>module</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ INDEX ══ -->
+    <section id="index">
+      <h2><span lang="fr">Les index</span><span lang="en">The indexes</span></h2>
+      <p class="sub" lang="fr">Sept index au-delà des clés primaires, un par tier de recherche ou presque. La correspondance est directe : chaque tier de la cascade a l'index qui le sert.</p>
+      <p class="sub" lang="en">Seven indexes beyond the primary keys, roughly one per search tier. The mapping is direct: every tier of the cascade has the index that serves it.</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th><span lang="fr">Méthode</span><span lang="en">Method</span></th>
+              <th><span lang="fr">Sur</span><span lang="en">On</span></th>
+              <th><span lang="fr">Sert</span><span lang="en">Serves</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="m">package_type_fun_signature_name</td><td class="m">btree</td><td class="m">name</td>
+              <td class="d"><span lang="fr">Nom exact</span><span lang="en">Exact name</span></td>
+            </tr>
+            <tr>
+              <td class="m">package_name_index</td><td class="m">btree</td><td class="m">(name, kind)</td>
+              <td class="d"><span lang="fr">Nom exact filtré par nature</span><span lang="en">Exact name filtered by nature</span></td>
+            </tr>
+            <tr>
+              <td class="m">…_name_trgm</td><td class="m">gin trgm</td><td class="m">name</td>
+              <td class="d"><span lang="fr">Sous-chaîne sur le nom</span><span lang="en">Substring on the name</span></td>
+            </tr>
+            <tr>
+              <td class="m">…_signature_compact_trgm</td><td class="m">gin trgm</td><td class="m">signature_compact</td>
+              <td class="d"><code>content_search</code></td>
+            </tr>
+            <tr>
+              <td class="m">…_signature</td><td class="m">gin tsvector</td><td class="m">signature_</td>
+              <td class="d"><code>signature_search</code></td>
+            </tr>
+            <tr>
+              <td class="m">…_documentation</td><td class="m">gin tsvector</td><td class="m">documentation</td>
+              <td class="d"><code>documentation_search</code></td>
+            </tr>
+            <tr>
+              <td class="m">…_type_names_gin</td><td class="m">gin</td><td class="m">type_names</td>
+              <td class="d">
+                <span lang="fr"><strong>Phase 1</strong> du futur <em>fingerprint + verify</em></span>
+                <span lang="en"><strong>Phase 1</strong> of the upcoming <em>fingerprint + verify</em></span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">package_popularity_github</td>
+              <td class="m"><span lang="fr">btree partiel</span><span lang="en">partial btree</span></td>
+              <td class="m">(popularity -&gt; 'github')</td>
+              <td class="d">
+                <span lang="fr"><code>/trendings</code>. Partiel : <code>WHERE … IS NOT NULL</code></span>
+                <span lang="en"><code>/trendings</code>. Partial: <code>WHERE … IS NOT NULL</code></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="note" lang="fr">
+        <strong>Il n'existe pas encore d'index composite <code>(arity, type_names)</code>.</strong>
+        La phase 1 vise <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> ; le GIN ne couvre
+        aujourd'hui que <code>type_names</code>, et Postgres filtrera <code>arity</code> après coup.
+        À mesurer quand l'unificateur sera branché — ce sera peut-être suffisant.
+      </p>
+      <p class="note" lang="en">
+        <strong>There is no composite <code>(arity, type_names)</code> index yet.</strong>
+        Phase 1 targets <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code>; today the GIN covers
+        only <code>type_names</code>, and Postgres will filter <code>arity</code> afterwards.
+        Worth measuring once the unifier is wired in — it may well be good enough.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <span lang="fr">Généré depuis l'arbre de sources · apps/jupiter, apps/venus, packages/galaxy · signature-ir.md, signature-ir-todos.md</span>
+    <span lang="en">Generated from the source tree · apps/jupiter, apps/venus, packages/galaxy · signature-ir.md, signature-ir-todos.md</span>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll(".lang-btn");
+
+    function apply(lang) {
+      root.setAttribute("data-lang", lang);
+      root.lang = lang;
+      document.title = lang === "en"
+        ? "Gloogle — backend architecture"
+        : "Gloogle — architecture backend";
+      for (var i = 0; i < buttons.length; i++) {
+        var pressed = buttons[i].getAttribute("data-lang") === lang;
+        buttons[i].setAttribute("aria-pressed", pressed ? "true" : "false");
+      }
+      try { localStorage.setItem("gloogle-arch-lang", lang); } catch (e) {}
+    }
+
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener("click", function () {
+        apply(this.getAttribute("data-lang"));
+      });
+    }
+
+    apply(root.getAttribute("data-lang") || "fr");
+  })();
+</script>

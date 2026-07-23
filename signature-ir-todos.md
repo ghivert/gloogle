@@ -34,8 +34,98 @@ set — they are front-end lowering rules, matching-tier rules, or external data
   - [x] Fingerprint `arity` + `type_names` derived from the IR (`ir.fingerprint`); columns +
         GIN index on `type_names` (migration `20260703100004`); populated at every `api/signatures`
         call site. v1 stores bare `Name.name` (concept expansion deferred). — **done**
-- [ ] Verify unifier — unify query IR vs candidate IR (`Var` injective via `index`, `Hole` any, permutations)
-- [ ] `data/ir/parse` — query-side canonical parser (`String → Type`) for user-typed queries
+- [x] Verify unifier — unify query IR vs candidate IR (`Var` injective via `index`, `Hole` any,
+      permutations). `data/ir/unify` in galaxy (`unify` on `Type`, `unify_declaration` on the stored
+      `Declaration`; `TypeDefinition` never verifies — its constructors are found by name, not shape).
+      Exact tier only. Decisions: `Var` matches a candidate `Var` **only** (a query var is not a
+      wildcard — `($0) -> $0` asks for the identity, not for `Int -> Int`), under a bidirectionally
+      injective mapping; `Hole` is the wildcard; `is_method` is ignored (that convergence is the point
+      of receiver-first lowering); `Named` compares the written `name` alone (`package`/`module` serve
+      linkability, `concept` is the tolerant tier); a query label constrains, an omitted one does not;
+      spread markers never constrain; `Union` members always match as a set, `Record` fields by name
+      and exactly (field-superset = structural subtyping, deferred); `Tuple` stays positional.
+      `Options(permute_params:)` is off by default and falls back to positional beyond 6 params
+      (factorial search). **Not yet wired into the cascade** — gated on `data/ir/parse` below. — **done**
+- [x] **Two tiers.** `Options(tier:)` — `Exact` first, then `Lenient`, the latter a strict superset
+      (so a second pass only ever adds). `Lenient` = **directional subsumption**: one side is more
+      general than the other. `($0) -> $0` finds `Int -> Int` (query more general) *and* `(List<Int>)
+      -> Bool` finds `fn(List(a)) -> Bool` (candidate more general). Implemented as one-sided matching
+      run both ways (query-flexible, then candidate-flexible); no occurs check needed (a flexible var
+      only binds to a frozen subterm). `Hole` is the wildcard in both tiers; a once-occurring `Var`
+      behaves like a `Hole` in `Lenient` — the var/hole difference bites only on repeated variables
+      and in `Exact`. — **done**
+- [x] **Stop at level 2, not full unification.** `Lenient` deliberately rejects pairs that only share
+      a common instance without either being more general — e.g. `#(a, Int)` vs `#(Bool, b)` (common
+      instance `#(Bool, Int)`, but neither can serve the other). Rationale: `_` lets the user ask for
+      looseness *precisely*, so the blunt common-instance match is never the only route to a wanted
+      result. Note the correction: `(a, b) -> a` vs `(a, a) -> a` is **not** a common-instance-only
+      case — `(a, b) -> a` is strictly more general (substitute `b := a`), so it *is* comparable and
+      `Lenient` accepts it. Full symmetric unification is kept, tested, and isolated in
+      `unify_symmetric` (both sides bind, with the occurs check); resurrecting it = adding a `Tier`
+      value that dispatches to it, not rewriting an algorithm. — **done**
+- [x] **Cost verdict (`Match`) — supersedes the `Options(tier:, permute_params:)` API of the two
+      entries above.** `unify`/`unify_declaration` return `Result(Match, Nil)` with
+      `Equivalent(cost)` / `Subsumed(cost)`: constructors are the result buckets (equivalence above
+      subsumption), `cost` ranks inside a bucket — the Hoogle lesson (matching returns a cost, the
+      cost is the ranking) made native. Weights: 1 per concrete node absorbed by a `Hole` or a
+      variable binding (`weight`; variables and holes weigh 0, so the genuinely polymorphic
+      candidate ranks first), `label_cost` for a candidate label the query omitted,
+      `permutation_cost` when arguments had to be reordered. Permutation is no longer an option but
+      a **priced rewrite**: positional first, reordered second, still skipped beyond 6 params — and
+      the permutation search now backtracks *through the return type* (a pairing whose bindings
+      doom the return is undone; the old search stopped at the parameters). Subsumption keeps the
+      cheaper of its two directions. First-match cost, not a proven minimum. `unify_symmetric`
+      stays an isolated Bool. — **done**
+- [ ] **Property-based tests (qcheck) on the matcher.** The laws are asserted on single examples
+      today; generators over random IR would prove them universally: `unify(t, t) ==
+      Ok(Equivalent(0))` for hole-free, label-free `t`; `Equivalent(_)` ⟹ the subsumption pass
+      also accepts (the superset law that makes the second bucket only ever add);
+      `alpha_rename` idempotent; `encode`/`decoder` round-trip on random declarations;
+      `to_string`/`parse` round-trip once `data/ir/parse` exists.
+- [ ] **Phase 1 SQL — design settled in conversation ("Verify unify continuation"), to implement
+      and measure.** The core fact: `type_names @> ARRAY[...]` requires the candidate to mention
+      *every* query name — sound for `Exact` and for the query-more-general direction of `Lenient`
+      (query holes add no names, so `_` never breaks `@>`), **unsound when the candidate is more
+      general**: `list.is_empty : fn(List(a)) -> Bool` lacks `Int` for query `(List<Int>) -> Bool`.
+      Degenerate case: `fn(a) -> a`, fingerprint `{}`. What was settled (Hoogle-in-SQL, two stages):
+      - **Always `@>`** as the GIN workhorse. The fingerprint-*equality* filter (`type_names = $2`
+        for hole-free queries) was considered and **withdrawn**: equality decomposes to
+        `@> AND cardinality = $n` if ever needed, and the canonical-string lookup (below) serves
+        the exact case better.
+      - **Rank, don't hard-filter**: `WHERE arity = $1 AND type_names @> $2
+        ORDER BY cardinality(type_names) - $n LIMIT 100`, then Gleam verify (`data/ir/unify`) on
+        the ~100, truncate to 20. Cardinality measures how much the query's vars/holes had to
+        absorb — `fn(a) -> a` (cardinality 0) surfaces *first* for query `fn(_) -> _`. Stored
+        column (`type_names_count`, btree on `(arity, type_names_count)`) vs computed
+        `cardinality()`: undecided, measure.
+      - **Candidate-more-general rescue** (the direction `@>` drops), two sound options, measure:
+        `OR has_variables` (coarse — passes every generic row; boolean derived from the IR at
+        ingestion, keeps the everything-derives-from-the-IR invariant) vs `type_names <@ $2`
+        (sharp — exactly the candidates whose concrete names all appear in the query; only valid
+        for hole-free queries, since a query `_` can hide arbitrary candidate names, and `<@` is
+        one of GIN's weak operators). The pre-Hoogle options recorded here earlier (`arity` alone,
+        `&&` overlap) are superseded by these.
+      - **UI consequence, decide at wiring time**: Hoogle users will type `a` meaning `_`; the
+        lenient tier must stay visible under the exact tier (labelled result blocks, not one
+        truncated list), or exact-tier hits will bury the specializations forever.
+      Nothing is broken today: `type_names` is written at ingestion, never yet queried.
+- [ ] **`fingerprint` arity bug — `TypeAlias` is always 0.** `ir.fingerprint` returns
+      `#(0, names(aliased))` for aliases, while `unify_declaration` matches the query against
+      `aliased`: an alias of a function type (`type Callback = fn(Int) -> Bool`) is dropped by
+      `arity = 1` in phase 1 yet would verify in phase 2. Inconsistent with `Constant`, which does
+      use `type_arity`. Fix: `type_arity(aliased)`; needs a backfill of existing rows.
+- [ ] **Name-frequency table (Hoogle's rare-names insight).** A materialized `name → count` over
+      the corpus' `type_names` (one GROUP BY, refreshed at ingestion or by a worker; derived from
+      the IR like everything else). Useless while phase 1 is `@>`-only — containment is an
+      intersection, so the rarest query name dominates its selectivity automatically. Becomes
+      load-bearing the day `<@`/`&&` or signal-weighted ranking enter: prune `&&` arrays down to
+      the query's rare names, decide dynamically between `<@` and the `arity + has_variables`
+      fallback from the query's rarest name, and weight the cardinality `ORDER BY` by
+      `-log(frequency)` so surviving *signal* ranks above surviving *noise*.
+- [ ] `data/ir/parse` — query-side canonical parser (`String → Type`) for user-typed queries.
+      Must also enforce the invariants the matcher assumes: no duplicate `Union` members, no
+      duplicate `Record` field names (`equal_set`/`by_name` compare sets by length + membership
+      and are fooled by multisets — `Int | Int` would "equal" `Int | String`).
 - [ ] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,
       `ctx.search`, worker registration); it is superseded by fingerprint + verify
 
@@ -44,6 +134,12 @@ set — they are front-end lowering rules, matching-tier rules, or external data
 - [ ] **Name synonyms / concept table.** `Int`≈`int`≈`Integer`, `String`≈`str`≈`string`.
       Fills `Name.concept`. One-to-many cases (`number`→{Int,Float}) stay here, never in the
       exact form. Location undecided: static table in code vs DB table joined at ingestion.
+      **Product intent settled (2026-07-17): search is cross-language** — one query, all
+      ecosystems. Two consequences, deferred but binding: this table is a **prerequisite of
+      `from_ts`** (schedule them together, not concept-after); and it reaches phase 1 —
+      `type_names` must store concept-expanded names (or a second concept column with its own
+      GIN), otherwise the fingerprint drops every cross-language candidate before phase 2 ever
+      sees it. Bare-name matching stays correct for same-language pairs in the meantime.
 - [ ] **Wrapper transparency.** Optional async/effect-agnostic search: a bare `-> B` also
       surfaces `-> Promise<B>` / `-> Future<B>` / `-> Option(B)` by unwrapping known wrappers.
       Same mechanism gives `Option`-transparency. Lower precision than exact.
@@ -51,11 +147,28 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       table** (`Dog <: Animal`) populated at ingestion + a unifier rule that walks the edges.
 - [ ] **Structural subtyping.** TS object shapes: a candidate `Record` matches a query `Record`
       when it contains *at least* the query's fields (field superset). No table needed.
+- [ ] **Union widening.** The union analog of field-superset: a candidate `(Int | String | Bool)
+      -> X` can serve query `(Int | String) -> X` (it accepts a superset of inputs). Unions
+      currently match as equal-cardinality sets in *every* tier, so this "candidate more general"
+      case is invisible to `Lenient` despite being exactly its mandate.
+- [ ] **Repeated flexible variable vs nested `_`.** `unify`'s `bind` checks repeated-variable
+      consistency with structural `equal`, where `equal(Hole, X) = False`: query
+      `(Result<_, Int>, Result<String, Int>) -> X` vs candidate `fn(a, a) -> X` is *rejected*,
+      although each position matches individually and the user's `_` said "anything here".
+      Decide whether `equal` should be hole-tolerant; currently undiscussed and untested either way.
 
 ## Deferred — front-end lowering (per language, deterministic)
 
 - [ ] **Nullability convergence.** `Option(a)` (Gleam) ≡ `t | null` / `t?` (TS) ≡ `Optional[a]`
       (Python) — front-ends emit the nominal `Option` form. No `Optional` node.
+- [ ] **Intra-language synonym lowering (TS).** `number[]` and `Array<number>` are two syntaxes of
+      one type — `from_ts` must emit the same `Named("Array", …)` for both (same for other aliased
+      builtin spellings). A deterministic front-end rule, distinct from the cross-language concept
+      table above.
+- [ ] **No `Hole` in stored IR — keep the invariant true.** `unify` assumes holes only ever appear
+      on the query side (a candidate `Hole` matches nothing in any tier); nothing enforces it. The
+      TS front-end must **not** lower `any`/`unknown` to `Hole` — a fresh `Var` (or a decision of
+      its own) when TS lands.
 - [ ] **Receiver-first methods.** OO methods lower to `Fn` with `is_method: True`, receiver as
       first param. (Design decided; applies when TS/Java/Python front-ends land.)
 - [ ] **Classes.** A class decomposes at ingestion into: nominal head `Named`, a `Record` of its
@@ -117,6 +230,16 @@ Columns on `package_type_fun_signature`, all derived from `signature_` (the sour
 Done already on the way here: `json_signature` → `signature_json` rename + `ref` strip (migration
 `20260703100001`); write-only `parameters` column dropped (`20260703100002`). **Run `dbmate up`.**
 
-- [ ] The canonical IR **string** is not stored (derivable via `ir.to_string(ir.decoder())`); debug column only if wanted.
+- [ ] **Canonical-string shortcut for `Exact`** (supersedes the earlier "debug column only if
+      wanted" note). Since the IR is alpha-renamed at ingestion, alpha-equivalence on a hole-free,
+      fully-labelled query is **string equality**: a btree lookup on a stored canonical string
+      short-circuits both phases for the most common query shape. Prerequisite: `to_string` must
+      become a *normal form*, which is **four** changes, not the three originally listed — sort
+      `Union` members and `Record` fields (the unifier treats them as sets, the printer prints
+      list order), normalize `is_method` (one type prints two ways: `X :: (…) -> Y` vs
+      `(X, …) -> Y`), strip labels (two columns: display string vs matching string), and **drop
+      the `module.` qualification** (the printer emits `gleam/option.Option`, the unifier compares
+      bare `name` — this fourth one was missed in the original list). Queries with `_` or omitted
+      labels still go through fingerprint + verify; this is a shortcut, not a replacement.
 - [ ] Backfill existing rows (keyset): `pi`/`signature_` → IR → `alpha_rename` → fill `signature_ir` + fingerprint.
 - [ ] Multi-language: populate `package.language` / `package.registry` (migration `20260703100000`) as non-Gleam lands.

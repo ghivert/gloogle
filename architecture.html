@@ -1572,12 +1572,58 @@ pub type Type {
           <p lang="en">Each row's fingerprint — <code>arity</code> + <code>type_names</code> — answers <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> in milliseconds, narrowing ~50k rows down to a few hundred candidates.</p>
         </div>
         <div class="card">
-          <h4 lang="fr">Phase 2 · vérification <span class="tag legacy">à écrire</span></h4>
-          <h4 lang="en">Phase 2 · verification <span class="tag legacy">to write</span></h4>
-          <p lang="fr">L'IR de chaque candidat est unifiée contre l'IR de la requête : structure exacte, liaison des <code>Var</code> injective, <code>Hole</code> qui matche tout. Consomme <code>signature_ir</code> directement.</p>
-          <p lang="en">Each candidate's IR is unified against the query IR: exact structure, injective <code>Var</code> binding, <code>Hole</code> matching anything. Consumes <code>signature_ir</code> directly.</p>
+          <h4 lang="fr">Phase 2 · vérification <span class="tag legacy">écrit · non branché</span></h4>
+          <h4 lang="en">Phase 2 · verification <span class="tag legacy">written · not wired</span></h4>
+          <p lang="fr">L'IR de chaque candidat est confrontée à l'IR de la requête — <code>packages/galaxy/src/data/ir/unify.gleam</code>, qui consomme <code>signature_ir</code> directement. Le verdict n'est pas un booléen mais un <code>Match</code> porteur d'un <strong>coût</strong> — la leçon de Hoogle : le matching rend un coût, et le coût est le classement. Deux constructeurs = deux blocs de résultats, le coût ordonne à l'intérieur :</p>
+          <p lang="en">Each candidate's IR is checked against the query IR — <code>packages/galaxy/src/data/ir/unify.gleam</code>, consuming <code>signature_ir</code> directly. The verdict is not a boolean but a <code>Match</code> carrying a <strong>cost</strong> — the Hoogle lesson: matching returns a cost, and the cost is the ranking. Two constructors = two result buckets, cost orders within:</p>
+          <p lang="fr"><strong>1 · <code>Equivalent(cost)</code></strong> — alpha-équivalence. Un <code>Var</code> de requête ne matche qu'un <code>Var</code> candidat, sous une liaison injective dans les deux sens : <code>($0, $1) -> $0</code> matche <code>fn(a, b) -> a</code> à coût 0, <code>fn(a, b) -> b</code> modulo réordonnancement (surtaxé), et <code>fn(a, a) -> a</code> pas du tout — ça, c'est de la subsomption. Le coût compte ce que les <code>_</code> absorbent (1 par nœud concret) : le candidat réellement polymorphe sort premier.</p>
+          <p lang="en"><strong>1 · <code>Equivalent(cost)</code></strong> — alpha-equivalence. A query <code>Var</code> matches a candidate <code>Var</code> and nothing else, under a mapping injective both ways: <code>($0, $1) -> $0</code> matches <code>fn(a, b) -> a</code> at cost 0, <code>fn(a, b) -> b</code> modulo reordering (surcharged), and <code>fn(a, a) -> a</code> not at all — that is subsumption. The cost counts what the <code>_</code>s absorb (1 per concrete node): the genuinely polymorphic candidate surfaces first.</p>
+          <p lang="fr"><strong>2 · <code>Subsumed(cost)</code></strong> — subsomption directionnelle : l'un des deux est plus général que l'autre. <code>($0) -> $0</code> trouve aussi <code>Int -> Int</code> (requête plus générale) et <code>(List&lt;Int&gt;) -> Bool</code> trouve <code>fn(List(a)) -> Bool</code> (candidat plus général). Matching à sens unique joué dans les deux sens, direction la moins chère retenue ; le coût est la structure concrète absorbée par les liaisons — la généralisation la plus proche sort première. On <strong>ne va pas</strong> jusqu'à l'unification complète : les paires qui partagent seulement une instance commune sans que l'une généralise l'autre (<code>#(a, Int)</code> vs <code>#(Bool, b)</code>) sont écartées — c'est le <code>_</code> qui laisse l'utilisateur demander du flou précisément, donc ce match grossier n'est jamais l'unique chemin vers un résultat voulu.</p>
+          <p lang="en"><strong>2 · <code>Subsumed(cost)</code></strong> — directional subsumption: one side is more general than the other. <code>($0) -> $0</code> also finds <code>Int -> Int</code> (query more general) and <code>(List&lt;Int&gt;) -> Bool</code> finds <code>fn(List(a)) -> Bool</code> (candidate more general). One-sided matching run both ways, cheapest direction kept; the cost is the concrete structure the bindings absorbed — the closest generalization surfaces first. It <strong>stops short</strong> of full unification: pairs that only share a common instance without either being more general (<code>#(a, Int)</code> vs <code>#(Bool, b)</code>) are dropped — <code>_</code> lets the user ask for looseness precisely, so that blunt match is never the only route to a wanted result.</p>
+          <p lang="fr">L'unification symétrique complète (les deux côtés lient, avec <em>occurs check</em>) survit, testée mais <strong>isolée</strong> dans <code>unify_symmetric</code>, hors cascade. <code>Hole</code> reste le joker : il matche tout et ne lie rien — c'est ce qui le sépare de <code>Var</code> (une variable à occurrence unique se comporte comme un <code>Hole</code> en subsomption). <code>is_method</code> est ignoré : c'est la convergence que vise l'abaissement receveur-en-tête. La permutation des paramètres n'est plus une option mais une <strong>réécriture tarifée</strong> : ordre positionnel d'abord, réordonnancement surtaxé ensuite — avec backtracking jusque dans le type de retour — coupé au-delà de 6 paramètres. Un label omis dans la requête coûte ; un label écrit contraint.</p>
+          <p lang="en">Full symmetric unification (both sides bind, with an <em>occurs check</em>) survives, tested but <strong>isolated</strong> in <code>unify_symmetric</code>, outside the cascade. <code>Hole</code> stays the wildcard: it matches anything and binds nothing — that is what separates it from <code>Var</code> (a once-occurring variable behaves like a <code>Hole</code> under subsumption). <code>is_method</code> is ignored: that convergence is what receiver-first lowering is for. Parameter permutation is no longer an option but a <strong>priced rewrite</strong>: positional order first, surcharged reordering second — backtracking through the return type — skipped beyond 6 parameters. An omitted query label costs; a written one constrains.</p>
+          <p lang="fr">Il manque <code>data/ir/parse</code> — sans IR de requête, rien à unifier — puis le branchement dans la cascade.</p>
+          <p lang="en">Still missing: <code>data/ir/parse</code> — no query IR, nothing to unify — then the wiring into the cascade.</p>
         </div>
       </div>
+
+      <p class="note warn" lang="fr">
+        <strong>Les deux phases ne s'accordent pas encore.</strong> <code>type_names @&gt; ARRAY[...]</code>
+        exige que le candidat mentionne <em>tous</em> les noms de la requête. C'est vrai en tier
+        <code>Exact</code>, et vrai quand seule la requête est plus générale — mais faux dès que le
+        <em>candidat</em> est plus général, ce que le tier <code>Lenient</code> autorise justement.
+        Une requête <code>(List&lt;Int&gt;) -> Bool</code> a pour empreinte <code>{List, Int, Bool}</code>,
+        là où <code>list.is_empty : fn(List(a)) -> Bool</code> n'a que <code>{List, Bool}</code> : la
+        phase 1 l'écarte, et la phase 2 ne le voit jamais. Le cas dégénéré est <code>fn(a) -> a</code>,
+        d'empreinte <code>{}</code>, que <code>@&gt;</code> ne remontera pour aucune requête concrète.
+        Le design retenu (détaillé dans <code>signature-ir-todos.md</code>, à implémenter puis
+        mesurer) : <code>@&gt;</code> toujours, joué en <em>classement</em> plutôt qu'en filtre sec —
+        <code>ORDER BY cardinality(type_names) LIMIT 100</code>, vérification Gleam sur le lot,
+        troncature à 20 — et, pour le sens candidat-plus-général, un secours :
+        <code>OR has_variables</code> (grossier, indexable) ou <code>type_names &lt;@</code>
+        (précis, mais requêtes sans <code>_</code> seulement, et opérateur faible du GIN).
+        <strong>Rien n'est cassé aujourd'hui</strong> : la phase 1 est écrite mais pas encore
+        interrogée, <code>type_names</code> n'est qu'alimentée à l'ingestion. À mesurer avant de
+        brancher la cascade.
+      </p>
+      <p class="note warn" lang="en">
+        <strong>The two phases do not agree yet.</strong> <code>type_names @&gt; ARRAY[...]</code>
+        requires the candidate to mention <em>every</em> name in the query. That holds for the
+        <code>Exact</code> tier, and holds when only the query is more general — but breaks as soon as
+        the <em>candidate</em> is more general, which is exactly what the <code>Lenient</code> tier
+        allows. A query <code>(List&lt;Int&gt;) -> Bool</code> fingerprints as <code>{List, Int, Bool}</code>,
+        while <code>list.is_empty : fn(List(a)) -> Bool</code> only has <code>{List, Bool}</code>: phase 1
+        drops it, and phase 2 never sees it. The degenerate case is <code>fn(a) -> a</code>, fingerprint
+        <code>{}</code>, which <code>@&gt;</code> will surface for no concrete query at all.
+        The settled design (detailed in <code>signature-ir-todos.md</code>, to implement then
+        measure): always <code>@&gt;</code>, used as a <em>ranking</em> rather than a hard filter —
+        <code>ORDER BY cardinality(type_names) LIMIT 100</code>, Gleam verification over the batch,
+        truncate to 20 — plus, for the candidate-more-general direction, a rescue:
+        <code>OR has_variables</code> (coarse, indexable) or <code>type_names &lt;@</code>
+        (sharp, but hole-free queries only, and one of GIN's weak operators).
+        <strong>Nothing is broken today</strong>: phase 1 is written but not yet queried,
+        <code>type_names</code> is only populated at ingestion. To measure before wiring the cascade.
+      </p>
     </section>
 
     <!-- ══ SCHEMA ══ -->

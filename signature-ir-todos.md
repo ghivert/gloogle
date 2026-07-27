@@ -122,10 +122,24 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       the query's rare names, decide dynamically between `<@` and the `arity + has_variables`
       fallback from the query's rarest name, and weight the cardinality `ORDER BY` by
       `-log(frequency)` so surviving *signal* ranks above surviving *noise*.
-- [ ] `data/ir/parse` — query-side canonical parser (`String → Type`) for user-typed queries.
-      Must also enforce the invariants the matcher assumes: no duplicate `Union` members, no
-      duplicate `Record` field names (`equal_set`/`by_name` compare sets by length + membership
-      and are fooled by multisets — `Int | Int` would "equal" `Int | String`).
+- [ ] `data/ir/parse` — query-side parser (`String → Type`) for user-typed queries. **Gleam syntax
+      landed** (`packages/galaxy/src/data/ir/parse.gleam`): lexes with `glexer`, parses with `chomp`,
+      lowers the Gleam surface (`fn(Result(a, b), fn(a) -> c) -> Result(c, b)`, `List(a)`,
+      `#(Int, String)`, `module.Upper`) to the IR — lower-case ⇒ `Var`, `_` ⇒ `Hole` (each `_`
+      independent) — then alpha-renames to first-appearance indices in its own name-keyed pass
+      (`ir.alpha_rename` keys on `index`, which the parser has not assigned yet, so it cannot be
+      reused as-is). Placed in **galaxy, not jupiter**, so venus reuses it client-side; galaxy gained
+      `glexer` + `chomp`, both of which cross to the JS target (verified: `venus` builds on
+      `--target javascript`). Still deferred:
+  - [ ] The **canonical `$n`-notation** parser (inverse of `to_string`) — needed for the
+        `to_string`/`parse` round-trip law and the canonical-string `Exact` shortcut. Our Gleam
+        parser reads Gleam syntax, not `$n`, so those two do not round-trip yet.
+  - [ ] Other-language query syntaxes (TS, …), alongside `from_ts`.
+  - [ ] The **duplicate-invariant enforcement** the matcher assumes — no duplicate `Union` members,
+        no duplicate `Record` field names (`equal_set`/`by_name` compare sets by length + membership
+        and are fooled by multisets — `Int | Int` would "equal" `Int | String`). **Not yet needed**:
+        the Gleam surface produces neither `Union` nor `Record`. Becomes load-bearing the moment the
+        canonical/TS parser can emit them.
 - [ ] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,
       `ctx.search`, worker registration); it is superseded by fingerprint + verify
 

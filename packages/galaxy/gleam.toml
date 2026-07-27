@@ -17,6 +17,8 @@ gleam_stdlib = ">= 1.0.0 and < 2.0.0"
 gleam_json = ">= 3.0.0 and < 4.0.0"
 gleam_time = ">= 1.2.0 and < 2.0.0"
 plasma = {path = "../plasma"}
+chomp = {path = "../chomp"}
+glexer = ">= 2.0.0 and < 3.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

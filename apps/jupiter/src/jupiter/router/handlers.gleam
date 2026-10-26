@@ -178,7 +178,8 @@ fn exec_type_search(
         when: arity == 0 && list.is_empty(type_names),
         return: [],
       )
-      queries.fingerprint_candidates(ctx.db, arity, type_names)
+      let subset_keys = queries.subset_keys(type_names)
+      queries.fingerprint_candidates(ctx.db, arity, type_names, subset_keys)
       |> result.map_error(function_.tap(_, loss.log))
       |> result.unwrap([])
       |> list.filter_map(fn(candidate) {

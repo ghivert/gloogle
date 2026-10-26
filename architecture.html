@@ -929,6 +929,33 @@
         réinjectent le <code>DATABASE_URL</code> du développeur), et lire hors transaction tout ce qui
         se décode par nom de colonne (la connexion transactionnelle de <code>pog</code> rend des tuples).
       </p>
+
+      <p class="note" lang="fr">
+        <strong>Une release se réextrait depuis la base : <code>tasks/reextract</code>.</strong>
+        L'insertion en deux temps des types récursifs laisse une ligne placeholder (<code>signature_</code>
+        vide, JSON <code>null</code> dans <code>signature_json</code> et <code>metadata</code>) si le second
+        upsert n'aboutit pas — l'instantané de prod en comptait 123, sur 24 paquets et 37 releases
+        (<code>mist.Chunk</code>, <code>glisten.Connection</code>, <code>glance.Error</code>…), et une seule
+        telle ligne fait échouer le décodeur de tout un lot, donc un tier entier en silence. Depuis
+        <code>package_interface</code> et <code>gleam_toml</code> stockés, la tâche rejoue la chaîne
+        d'ingestion complète (<code>hex_repo.parse_files</code> → <code>signatures.extract_signatures</code>)
+        pour les releases concernées, sans Hex ; les 37 sont passées, zéro placeholder après. La cause
+        d'origine n'est plus reproductible avec le code actuel. En attendant, chaque tier de la cascade
+        filtre <code>signature_ &lt;&gt; ''</code>.
+      </p>
+      <p class="note" lang="en">
+        <strong>A release re-extracts from the database: <code>tasks/reextract</code>.</strong>
+        The two-step insertion of recursive types leaves a placeholder row (empty <code>signature_</code>,
+        JSON <code>null</code> in <code>signature_json</code> and <code>metadata</code>) when the second
+        upsert does not land — the production snapshot held 123 of them, over 24 packages and 37 releases
+        (<code>mist.Chunk</code>, <code>glisten.Connection</code>, <code>glance.Error</code>…), and a single
+        such row fails the decoder of a whole batch, hence an entire tier, silently. From the stored
+        <code>package_interface</code> and <code>gleam_toml</code>, the task replays the full ingestion
+        chain (<code>hex_repo.parse_files</code> → <code>signatures.extract_signatures</code>) for the
+        affected releases, without Hex; all 37 went through, zero placeholders left. The original cause
+        no longer reproduces with the current code. Meanwhile every cascade tier filters
+        <code>signature_ &lt;&gt; ''</code>.
+      </p>
       <p class="note" lang="en">
         <strong>The IR-derived columns re-derive without Hex: <code>tasks/backfill_ir</code>.</strong>
         Every release keeps its raw <code>package_interface</code> in the database. The one-shot task
@@ -1637,8 +1664,8 @@ pub type Type {
         <div class="card">
           <h4 lang="fr">Phase 1 · sélection (GIN)</h4>
           <h4 lang="en">Phase 1 · candidate selection (GIN)</h4>
-          <p lang="fr"><code>queries.fingerprint_candidates</code> : l'empreinte de chaque ligne — <code>arity</code> + <code>type_names</code> — répond à <code>WHERE arity = $1 AND type_names @&gt; $2</code> en millisecondes, fait tomber ~50 k lignes à ≤100 candidats, <code>ORDER BY cardinality(type_names)</code> (le plus proche d'abord — le moins de noms en trop à absorber), rang du paquet en départage. Chaque ligne rapporte son <code>signature_ir</code> décodée pour la phase 2 ; les lignes à IR <code>null</code> (types récursifs) sont exclues.</p>
-          <p lang="en"><code>queries.fingerprint_candidates</code>: each row's fingerprint — <code>arity</code> + <code>type_names</code> — answers <code>WHERE arity = $1 AND type_names @&gt; $2</code> in milliseconds, narrowing ~50k rows to ≤100 candidates, <code>ORDER BY cardinality(type_names)</code> (closest first — fewest extra names for the query to absorb), package rank breaking ties. Each row carries its decoded <code>signature_ir</code> for phase 2; rows with a <code>null</code> IR (recursive types) are excluded.</p>
+          <p lang="fr"><code>queries.fingerprint_candidates</code> : l'empreinte de chaque ligne — <code>arity</code> + <code>type_names</code> — répond dans les deux sens de généralité. <code>type_names @&gt; $2</code> (GIN) : le candidat mentionne tous les noms de la requête — exact, ou candidat plus spécifique. <code>type_names_key = ANY($3)</code> (btree) : ses noms sont un sous-ensemble de ceux de la requête — candidat plus général, <code>list.is_empty : fn(List(a)) -> Bool</code> pour <code>(List(Int)) -> Bool</code> ; l'appelant énumère les 2^n − 1 sous-ensembles propres (n ≤ 6). Deux gardes de forme : les <code>type_definition</code> sont exclus (la phase 2 n'en vérifie jamais — leurs constructeurs se trouvent par nom — et les 22 771 énumérations sans paramètre portent toutes la clé vide, 1,4 s → 0,4 s sur <code>List(Int)</code>), et une requête sans aucun nom (<code>fn(a) -> a</code>) ne lance pas <code>@&gt;</code> (<code>@&gt; '{}'</code> est vrai pour toute l'arité, 3 s) mais seulement la clé vide, les candidats entièrement génériques (112 ms), les seuls que le tri par distance garderait de toute façon. Une ligne par déclaration, pas par release : <code>DISTINCT ON (paquet, module, nom, kind)</code> garde la dernière version, comme les autres tiers — l'ordre de version est la colonne générée <code>package_release.version_ordering</code> (<code>20261026150000</code>), qui a retiré des six tiers un regexp de semver par ligne (385 ms sur les 33 k lignes candidates de <code>{List}</code> sur ce poste ; 910 → 710 ms au total, le reste étant le balayage du tas). Puis <code>ORDER BY abs(cardinality(type_names) − n)</code> — le nombre de noms qu'un côté doit absorber, quel que soit le côté —, rang du paquet en départage, <code>LIMIT 100</code>. Chaque ligne rapporte son <code>signature_ir</code> décodée pour la phase 2 ; les lignes à IR <code>null</code> (types récursifs) sont exclues.</p>
+          <p lang="en"><code>queries.fingerprint_candidates</code>: each row's fingerprint — <code>arity</code> + <code>type_names</code> — answers in both directions of generality. <code>type_names @&gt; $2</code> (GIN): the candidate mentions every query name — exact, or a more specific candidate. <code>type_names_key = ANY($3)</code> (btree): its names are a subset of the query's — a more general candidate, <code>list.is_empty : fn(List(a)) -> Bool</code> for <code>(List(Int)) -> Bool</code>; the caller enumerates the 2^n − 1 proper subsets (n ≤ 6). Two shape guards: <code>type_definition</code> rows are skipped (phase 2 never verifies one — its constructors are found by name — and the 22,771 parameterless enums all carry the empty key, 1.4 s → 0.4 s on <code>List(Int)</code>), and a query with no names at all (<code>fn(a) -> a</code>) does not run <code>@&gt;</code> (<code>@&gt; '{}'</code> is true for the whole arity, 3 s) but only the empty key, the fully generic candidates (112 ms), the only ones the distance ordering would keep anyway. One row per declaration, not per release: <code>DISTINCT ON (package, module, name, kind)</code> keeps the latest version, like the other tiers — version order is the generated column <code>package_release.version_ordering</code> (<code>20261026150000</code>), which removed a per-row semver regexp from all six tiers (385 ms over the 33k candidate rows of <code>{List}</code> on this machine; 910 → 710 ms in total, the rest being the heap scan). Then <code>ORDER BY abs(cardinality(type_names) − n)</code> — the number of names one side has to absorb, whichever side —, package rank breaking ties, <code>LIMIT 100</code>. Each row carries its decoded <code>signature_ir</code> for phase 2; rows with a <code>null</code> IR (recursive types) are excluded.</p>
         </div>
         <div class="card">
           <h4 lang="fr">Phase 2 · vérification <span class="tag stored">branché</span></h4>
@@ -1656,41 +1683,42 @@ pub type Type {
         </div>
       </div>
 
-      <p class="note warn" lang="fr">
-        <strong>Les deux phases ne s'accordent pas encore.</strong> <code>type_names @&gt; ARRAY[...]</code>
-        exige que le candidat mentionne <em>tous</em> les noms de la requête. C'est vrai en tier
-        <code>Exact</code>, et vrai quand seule la requête est plus générale — mais faux dès que le
-        <em>candidat</em> est plus général, ce que le tier <code>Lenient</code> autorise justement.
-        Une requête <code>(List&lt;Int&gt;) -> Bool</code> a pour empreinte <code>{List, Int, Bool}</code>,
-        là où <code>list.is_empty : fn(List(a)) -> Bool</code> n'a que <code>{List, Bool}</code> : la
-        phase 1 l'écarte, et la phase 2 ne le voit jamais. Le cas dégénéré est <code>fn(a) -> a</code>,
-        d'empreinte <code>{}</code>, que <code>@&gt;</code> ne remontera pour aucune requête concrète.
-        <code>fingerprint_candidates</code> applique déjà le cœur du design retenu : <code>@&gt;</code>
-        joué en <em>classement</em> plutôt qu'en filtre sec — <code>ORDER BY cardinality(type_names)
-        LIMIT 100</code>, vérification Gleam sur le lot, troncature à 20. Ce qui manque encore, c'est
-        le secours pour le sens candidat-plus-général : <code>OR has_variables</code> (grossier,
-        indexable) ou <code>type_names &lt;@</code> (précis, mais requêtes sans <code>_</code>
-        seulement, et opérateur faible du GIN) — à trancher en mesurant.
-        <strong>Conséquence, tier maintenant branché</strong> : un candidat plus général que la
-        requête reste invisible tant que ce secours n'est pas là. À mesurer sur données réelles.
+      <p class="note" lang="fr">
+        <strong>Les deux phases sont d'accord depuis <code>20261026140000</code>.</strong>
+        <code>type_names @&gt; ARRAY[...]</code> exige que le candidat mentionne <em>tous</em> les noms de
+        la requête : vrai pour le tier <code>Exact</code> et quand seule la requête est plus générale, faux
+        dès que le <em>candidat</em> l'est — exactement ce que le tier <code>Lenient</code> autorise, et
+        <code>list.is_empty : fn(List(a)) -> Bool</code> restait invisible pour
+        <code>(List&lt;Int&gt;) -> Bool</code>. Les noms concrets d'un tel candidat forment un
+        sous-ensemble de ceux de la requête : avec un <code>type_names</code> trié et sa clé texte
+        <code>type_names_key</code>, les 2^n − 1 sous-ensembles propres sont autant de sondes btree.
+        Les autres formes ont été mesurées et écartées sur l'instantané local : <code>&lt;@</code> sur le GIN
+        (75 à 320 ms, il revérifie toute ligne partageant un nom) et <code>type_names = '{…}'</code>
+        (le GIN s'approprie <code>=</code>, 700 ms). Coût du secours, cache chaud, requête réelle de la
+        cascade : sur <code>(List(Int)) -> Bool</code>, 12–16 ms sans, 38–52 ms avec — les ~2 300 lignes
+        génériques (<code>fn(a) -> b</code> et consorts) qu'il fait lire, classées en dernier par la
+        distance ; sur <code>{List}</code> (32 k lignes lues), ~45 ms dans les deux cas. Ce qui reste hors
+        de portée : un candidat plus général dont les noms n'apparaissent que sous un trou de la requête
+        (<code>fn(List(a)) -> b</code> pour <code>(_) -> Bool</code>) — le seul tri sûr serait
+        <code>arity</code> seule ; différé.
       </p>
-      <p class="note warn" lang="en">
-        <strong>The two phases do not agree yet.</strong> <code>type_names @&gt; ARRAY[...]</code>
-        requires the candidate to mention <em>every</em> name in the query. That holds for the
-        <code>Exact</code> tier, and holds when only the query is more general — but breaks as soon as
-        the <em>candidate</em> is more general, which is exactly what the <code>Lenient</code> tier
-        allows. A query <code>(List&lt;Int&gt;) -> Bool</code> fingerprints as <code>{List, Int, Bool}</code>,
-        while <code>list.is_empty : fn(List(a)) -> Bool</code> only has <code>{List, Bool}</code>: phase 1
-        drops it, and phase 2 never sees it. The degenerate case is <code>fn(a) -> a</code>, fingerprint
-        <code>{}</code>, which <code>@&gt;</code> will surface for no concrete query at all.
-        <code>fingerprint_candidates</code> already applies the core of the settled design:
-        <code>@&gt;</code> used as a <em>ranking</em> rather than a hard filter —
-        <code>ORDER BY cardinality(type_names) LIMIT 100</code>, Gleam verification over the batch,
-        truncate to 20. What is still missing is the rescue for the candidate-more-general direction:
-        <code>OR has_variables</code> (coarse, indexable) or <code>type_names &lt;@</code>
-        (sharp, but hole-free queries only, and one of GIN's weak operators) — to settle by measuring.
-        <strong>Consequence, now that the tier is wired</strong>: a candidate more general than the
-        query stays invisible until that rescue lands. To measure on real data.
+      <p class="note" lang="en">
+        <strong>The two phases agree since <code>20261026140000</code>.</strong>
+        <code>type_names @&gt; ARRAY[...]</code> requires the candidate to mention <em>every</em> query
+        name: true for the <code>Exact</code> tier and when only the query is more general, false as soon
+        as the <em>candidate</em> is — exactly what the <code>Lenient</code> tier allows, and
+        <code>list.is_empty : fn(List(a)) -> Bool</code> stayed invisible for
+        <code>(List&lt;Int&gt;) -> Bool</code>. Such a candidate's concrete names form a subset of the
+        query's: with a sorted <code>type_names</code> and its text key <code>type_names_key</code>, the
+        2^n − 1 proper subsets are as many btree probes. The other forms were measured and rejected on the
+        local snapshot: <code>&lt;@</code> on the GIN (75 to 320 ms, it rechecks every row sharing a name)
+        and <code>type_names = '{…}'</code> (the GIN claims <code>=</code>, 700 ms). Cost of the rescue,
+        warm cache, real cascade query: on <code>(List(Int)) -> Bool</code>, 12–16 ms without, 38–52 ms
+        with — the ~2,300 generic rows (<code>fn(a) -> b</code> and kin) it makes the scan read, ranked
+        last by the distance; on <code>{List}</code> (32k rows read), ~45 ms either way. Still out of
+        reach: a more general candidate whose names appear only under a query hole
+        (<code>fn(List(a)) -> b</code> for <code>(_) -> Bool</code>) — the only sound selection would be
+        <code>arity</code> alone; deferred.
       </p>
     </section>
 
@@ -1747,7 +1775,7 @@ pub type Type {
             <text class="t-col" x="442" y="379">version</text><text class="t-key" x="708" y="379" text-anchor="end">UQ (package_id, version)</text>
             <text class="t-col" x="442" y="396">package_interface</text>
             <text class="t-col" x="442" y="413">gleam_toml, url</text>
-            <text class="t-col" x="442" y="430">gleam_constraint</text>
+            <text class="t-col" x="442" y="430">gleam_constraint, version_ordering</text><text class="t-gen" x="708" y="430" text-anchor="end">GENERATED · STORED</text>
             <text class="t-col" x="442" y="447">retirement</text><text class="t-key" x="708" y="447" text-anchor="end">jsonb</text>
           </g>
 
@@ -1780,9 +1808,9 @@ pub type Type {
             <text class="t-col" x="362" y="916">arity</text>
             <text class="t-gen" x="788" y="916" text-anchor="end" lang="fr">empreinte · dérivé</text>
             <text class="t-gen" x="788" y="916" text-anchor="end" lang="en">fingerprint · derived</text>
-            <text class="t-col" x="362" y="933">type_names</text>
-            <text class="t-gen" x="788" y="933" text-anchor="end" lang="fr">text[] · dérivé</text>
-            <text class="t-gen" x="788" y="933" text-anchor="end" lang="en">text[] · derived</text>
+            <text class="t-col" x="362" y="933">type_names, type_names_key</text>
+            <text class="t-gen" x="788" y="933" text-anchor="end" lang="fr">text[], text · dérivé</text>
+            <text class="t-gen" x="788" y="933" text-anchor="end" lang="en">text[], text · derived</text>
             <text class="t-col" x="362" y="950">signature_json</text>
             <text class="t-key" x="788" y="950" text-anchor="end" lang="fr">jsonb · à retirer</text>
             <text class="t-key" x="788" y="950" text-anchor="end" lang="en">jsonb · to remove</text>
@@ -1959,8 +1987,16 @@ pub type Type {
               <td class="m">type_names</td><td class="m">text[]</td>
               <td><span class="tag derived"><span lang="fr">empreinte</span><span lang="en">fingerprint</span></span></td>
               <td class="d">
-                <span lang="fr">L'ensemble des noms nominaux mentionnés, imbrication aplatie, dédoublonné. <code>Var</code> et <code>Hole</code> n'apportent rien. v1 stocke le <code>Name.name</code> écrit.</span>
-                <span lang="en">The set of nominal names mentioned, nesting flattened, deduplicated. <code>Var</code> and <code>Hole</code> contribute nothing. v1 stores the written <code>Name.name</code>.</span>
+                <span lang="fr">L'ensemble des noms nominaux mentionnés, imbrication aplatie, dédoublonné et <strong>trié</strong> (canonique depuis <code>20261026140000</code>). <code>Var</code> et <code>Hole</code> n'apportent rien. v1 stocke le <code>Name.name</code> écrit.</span>
+                <span lang="en">The set of nominal names mentioned, nesting flattened, deduplicated and <strong>sorted</strong> (canonical since <code>20261026140000</code>). <code>Var</code> and <code>Hole</code> contribute nothing. v1 stores the written <code>Name.name</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">type_names_key</td><td class="m">text</td>
+              <td><span class="tag derived"><span lang="fr">empreinte</span><span lang="en">fingerprint</span></span></td>
+              <td class="d">
+                <span lang="fr">Les mêmes noms, joints par <code>,</code> — la clé canonique de l'ensemble (<code>Bool,Int,List</code>). Elle existe parce que le GIN s'approprie aussi <code>=</code> sur le tableau (avec recheck) ; sur un texte, l'égalité est un btree. Sert au sens « candidat plus général » de la phase 1 : <code>type_names_key = ANY(sous-ensembles de la requête)</code>. Écrite par <code>queries.upsert_package_type_fun_signature</code> et <code>tasks/backfill_ir</code>.</span>
+                <span lang="en">The same names joined by <code>,</code> — the set's canonical key (<code>Bool,Int,List</code>). It exists because the GIN also claims <code>=</code> on the array (with a recheck); on text, equality is a btree. Serves phase 1's candidate-more-general direction: <code>type_names_key = ANY(subsets of the query)</code>. Written by <code>queries.upsert_package_type_fun_signature</code> and <code>tasks/backfill_ir</code>.</span>
               </td>
             </tr>
             <tr>
@@ -2054,6 +2090,13 @@ pub type Type {
               <td class="d">
                 <span lang="fr"><strong>Phase 1</strong> de <em>fingerprint + verify</em> — <code>arity = $1 AND type_names @&gt; $2</code>, les deux dans la condition d'index. Remplace le GIN sur <code>type_names</code> seul (<code>20261026130000</code>).</span>
                 <span lang="en"><strong>Phase 1</strong> of <em>fingerprint + verify</em> — <code>arity = $1 AND type_names @&gt; $2</code>, both in the index condition. Replaces the GIN on <code>type_names</code> alone (<code>20261026130000</code>).</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">…_arity_type_names_key_btree</td><td class="m">btree</td><td class="m">arity, type_names_key</td>
+              <td class="d">
+                <span lang="fr"><strong>Phase 1</strong>, sens candidat-plus-général — <code>type_names_key = ANY($3)</code>, les 2^n − 1 sous-ensembles propres des n noms de la requête (n ≤ 6). Cinq sondes en 0,8 ms pour 2 319 lignes sur <code>{Bool,Int,List}</code> (<code>20261026140000</code>).</span>
+                <span lang="en"><strong>Phase 1</strong>, candidate-more-general direction — <code>type_names_key = ANY($3)</code>, the 2^n − 1 proper subsets of the query's n names (n ≤ 6). Five probes in 0.8 ms for 2,319 rows on <code>{Bool,Int,List}</code> (<code>20261026140000</code>).</span>
               </td>
             </tr>
             <tr>

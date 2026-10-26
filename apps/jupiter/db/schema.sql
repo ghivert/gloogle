@@ -214,7 +214,8 @@ CREATE TABLE public.package_release (
     package_interface text,
     gleam_toml text,
     retirement jsonb,
-    inserted_at timestamp without time zone
+    inserted_at timestamp without time zone,
+    version_ordering integer[] GENERATED ALWAYS AS ((string_to_array(regexp_replace(version, '([0-9]+).([0-9]+).([0-9]+).*'::text, '\1.\2.\3'::text), '.'::text))::integer[]) STORED
 );
 
 
@@ -238,7 +239,8 @@ CREATE TABLE public.package_type_fun_signature (
     signature_compact text GENERATED ALWAYS AS (replace(signature_, ' '::text, ''::text)) STORED,
     signature_ir jsonb,
     arity integer,
-    type_names text[]
+    type_names text[],
+    type_names_key text
 );
 
 
@@ -456,6 +458,13 @@ CREATE INDEX package_type_fun_signature_arity_type_names_gin ON public.package_t
 
 
 --
+-- Name: package_type_fun_signature_arity_type_names_key_btree; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_arity_type_names_key_btree ON public.package_type_fun_signature USING btree (arity, type_names_key);
+
+
+--
 -- Name: analytics analytics_moddatetime; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -593,4 +602,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260703100003'),
     ('20260703100004'),
     ('20261026120000'),
-    ('20261026130000');
+    ('20261026130000'),
+    ('20261026140000'),
+    ('20261026150000');

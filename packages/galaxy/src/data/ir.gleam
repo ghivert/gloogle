@@ -273,8 +273,14 @@ fn type_arity(type_: Type) -> Int {
   }
 }
 
+/// The nominal names a type mentions, deduplicated and **sorted**: the stored
+/// `type_names` is a canonical set, so two fingerprints with the same names are
+/// equal arrays — what the phase-1 subset lookup (btree equality on
+/// `(arity, type_names)`) relies on.
 fn names(type_: Type) -> List(String) {
-  collect_names(type_, []) |> list.unique
+  collect_names(type_, [])
+  |> list.unique
+  |> list.sort(string.compare)
 }
 
 fn collect_names(type_: Type, acc: List(String)) -> List(String) {

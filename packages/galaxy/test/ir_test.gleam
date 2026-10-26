@@ -71,6 +71,24 @@ pub fn fingerprint_test() {
   assert ir.fingerprint(declaration) == #(2, ["Result"])
 }
 
+// `type_names` is canonical: deduplicated and sorted, whatever order the names
+// appear in. `fn(String, Int) -> Bool` mentions them as String, Int, Bool and
+// stores Bool, Int, String — so equal name sets are equal arrays, which the
+// phase-1 subset lookup compares by btree equality.
+pub fn fingerprint_names_are_sorted_test() {
+  let named = fn(name) { ir.Named(ir.Name("", "gleam", name, None), []) }
+  let declaration =
+    ir.Function(ir.Fn(
+      params: [
+        ir.Param(None, False, named("String")),
+        ir.Param(None, False, named("Int")),
+      ],
+      return: named("Bool"),
+      is_method: False,
+    ))
+  assert ir.fingerprint(declaration) == #(2, ["Bool", "Int", "String"])
+}
+
 // A `TypeAlias` fingerprints through its aliased type, like `Constant`: an alias
 // of a function type carries that function's arity, so phase 1 (`arity = $1`)
 // keeps it for the queries phase 2 (`unify_declaration`, which matches against

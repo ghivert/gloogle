@@ -20,6 +20,14 @@ services:
   postgres:
     image: postgres:18  # the schema uses uuidv7(), native since Postgres 18
     container_name: gloogle-postgres
+    # Memory sized for the production snapshot (~800 MB heap, 500k signatures):
+    # with the 128 MB default, a frequent-name phase-1 query re-reads 150 MB of
+    # pages from the (slow, virtualised) disk every time and timings swing 10x.
+    # Kept moderate: this laptop also runs the Steerlab stack, and a 1 GB
+    # setting pushed it into swap (mist's 1 s init timeouts then fire at boot).
+    command: >
+      postgres -c shared_buffers=384MB -c effective_cache_size=1GB
+               -c work_mem=32MB -c maintenance_work_mem=256MB
     environment:
       POSTGRES_USER: gloogle
       POSTGRES_PASSWORD: gloogle

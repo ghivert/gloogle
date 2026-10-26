@@ -27,6 +27,7 @@ import gleam/package_interface as pi
 import gleam/result
 import gleam/string
 import jupiter/context/postgres
+import jupiter/postgres/queries
 import pog
 
 const page_size = 100
@@ -187,7 +188,7 @@ fn update_row(
   type_names: List(String),
 ) -> Result(Int, pog.QueryError) {
   "UPDATE package_type_fun_signature
-   SET signature_ir = $1, arity = $2, type_names = $3
+   SET signature_ir = $1, arity = $2, type_names = $3, type_names_key = $7
    WHERE package_module_id = $4 AND name = $5 AND kind = $6"
   |> pog.query
   |> pog.parameter(signature_ir |> json.to_string |> pog.text)
@@ -196,6 +197,7 @@ fn update_row(
   |> pog.parameter(pog.text(module_id))
   |> pog.parameter(pog.text(name))
   |> pog.parameter(pog.text(kind))
+  |> pog.parameter(pog.text(queries.type_names_key(type_names)))
   |> pog.returning(decode.success(Nil))
   |> pog.execute(db)
   |> result.map(fn(r) { r.count })

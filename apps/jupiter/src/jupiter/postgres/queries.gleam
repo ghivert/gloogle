@@ -540,8 +540,9 @@ pub fn upsert_package_type_fun_signature(
      implementations,
      signature_ir,
      arity,
-     type_names
-   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+     type_names,
+     type_names_key
+   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
    ON CONFLICT (package_module_id, name) DO UPDATE
      SET
        documentation = $2,
@@ -553,7 +554,8 @@ pub fn upsert_package_type_fun_signature(
        implementations = $9,
        signature_ir = $10,
        arity = $11,
-       type_names = $12
+       type_names = $12,
+       type_names_key = $13
    RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
@@ -582,6 +584,7 @@ pub fn upsert_package_type_fun_signature(
   |> pog.parameter(signature_ir |> json.to_string() |> pog.text())
   |> pog.parameter(pog.int(arity))
   |> pog.parameter(pog.array(pog.text, type_names))
+  |> pog.parameter(pog.text(type_names_key(type_names)))
   |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
@@ -623,6 +626,11 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+/// Every text tier skips the recursive-type placeholders whose second upsert
+/// never landed (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`,
+/// 123 rows over 24 packages in the 2026-07 snapshot): `type_search.decoder()`
+/// cannot decode them, and one such row fails the whole batch — a silent empty
+/// tier. The root cause is in ingestion; see `signature-ir-todos.md`.
 pub fn name_search(db: pog.Connection, query: String) {
   "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
@@ -634,7 +642,7 @@ pub fn name_search(db: pog.Connection, query: String) {
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -643,6 +651,7 @@ pub fn name_search(db: pog.Connection, query: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE s.name = $1
+     AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -666,7 +675,7 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -678,6 +687,7 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
      ON true
    WHERE s.name = s_n.full_name[2]
    AND m.name LIKE '%' || lower(s_n.full_name[1]) || '%'
+     AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -711,7 +721,7 @@ pub fn content_search(db: pog.Connection, query: String) {
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -724,6 +734,7 @@ pub fn content_search(db: pog.Connection, query: String) {
       s.name ILIKE '%' || $1 || '%'
       OR s.signature_compact ILIKE '%' || replace($2, ' ', '%') || '%'
     )
+     AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -747,7 +758,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -756,6 +767,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ websearch_to_tsquery($1)
+     AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -778,7 +790,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -787,6 +799,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.documentation) @@ websearch_to_tsquery($1)
+     AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -818,7 +831,7 @@ pub fn module_search(db: pog.Connection, q: String) {
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -830,6 +843,7 @@ pub fn module_search(db: pog.Connection, q: String) {
      -- Keep only well-formed semver releases (e.g. '1.2.3'); pre-releases such
      -- as '1.2.3-rc1' are excluded. Picking the latest version is the
      -- frontend's job, not this query's.
+     AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
   |> pog.query
@@ -840,55 +854,119 @@ pub fn module_search(db: pog.Connection, q: String) {
   |> result.map(fn(r) { r.rows })
 }
 
-/// Phase 1 of type search: the GIN fingerprint narrows the whole signature table
-/// to at most 100 candidates by shape — top-level `arity` and the set of nominal
-/// names the query mentions (`type_names @> query`). Ordered closest-first, by how
-/// few extra names a candidate carries (`cardinality(type_names)`) — what the
-/// query's holes and variables would have to absorb — with package rank breaking
-/// ties. Each row carries its decoded `signature_ir` so phase 2 (`data/ir/unify`)
-/// can verify it structurally. Rows with a null IR (recursive-type placeholders)
-/// are excluded: there is nothing to verify against.
+/// Phase 1 of type search: narrow the whole signature table to at most 100
+/// candidates by shape, in both directions of generality, then let phase 2
+/// (`data/ir/unify`) verify each one structurally. Two indexed predicates, OR-ed:
 ///
-/// Soundness note: `@>` requires the candidate to mention *every* query name. That
-/// holds for exact matches and when the query is the more general side, but drops
-/// candidates that are *more* general than the query (e.g. `fn(List(a)) -> Bool`
-/// for query `(List(Int)) -> Bool`, which lacks `Int`). That rescue is a separate,
-/// still-to-measure step — see `signature-ir-todos.md`.
+/// - `type_names @> $2` (composite GIN on `(arity, type_names)`): the candidate
+///   mentions every query name — exact matches and candidates *more specific*
+///   than the query (the query's holes and variables absorb the extra names).
+/// - `type_names_key = ANY($3)` (btree on `(arity, type_names_key)`): the
+///   candidate's names are a *subset* of the query's — candidates *more general*
+///   than the query (`fn(List(a)) -> Bool` for `(List(Int)) -> Bool`). The caller
+///   enumerates the proper subsets of the query's names as canonical keys
+///   (sorted names joined by `,`); `<@` on the GIN was measured far too slow
+///   (it rechecks every row sharing a name), equality on a text key is a
+///   handful of btree probes the GIN cannot claim.
+///
+/// One row per declaration, not per release: `DISTINCT ON (package, module,
+/// name, kind)` keeps the latest version (`package_release.version_ordering`,
+/// the semver array generated by Postgres), as the old trie tier did. Then ordered closest-first by
+/// `abs(cardinality(type_names) - n)` — the number of names one side has to
+/// absorb, whichever side is the general one — with package rank breaking ties.
+/// Rows with a null IR are excluded (nothing to verify against), and so are
+/// the recursive-type placeholders whose second upsert never landed
+/// (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`): they carry
+/// an IR since the backfill, but `type_search.decoder()` cannot decode them and
+/// one such row fails the whole batch.
+///
+/// Two shape guards, both measured: `type_definition` rows are skipped (phase 2
+/// never verifies one — its constructors are found by name — and the 22,771
+/// parameterless enums all carry the empty key, 1.4 s → 0.4 s on `List(Int)`);
+/// and a query with no names at all (`fn(a) -> a`) does not run `@>` (`@> '{}'`
+/// is true for the whole arity, 3 s) but only the empty key, the fully generic
+/// candidates (112 ms) — the only ones the distance ordering would keep anyway.
+///
+/// What this still misses: a candidate more general than the query whose names
+/// appear only under a query hole (`fn(List(a)) -> b` for `(_) -> Bool`). Sound
+/// phase-1 selection for that direction with holes is `arity` alone; deferred.
 pub fn fingerprint_candidates(
   db db: pog.Connection,
   arity arity: Int,
   type_names type_names: List(String),
+  subset_keys subset_keys: List(String),
 ) -> Loss(List(#(type_search.TypeSearch, ir.Declaration))) {
-  "SELECT
-     s.name type_name,
-     s.documentation documentation,
-     s.kind signature_kind,
-     s.metadata metadata,
-     s.signature_json AS json_signature,
-     s.signature_ir AS signature_ir,
-     m.name module_name,
-     p.name package_name,
-     r.version version
-   FROM package_type_fun_signature s
-   JOIN package_module m
-     ON m.id = s.package_module_id
-   JOIN package_release r
-     ON m.package_release_id = r.id
-   JOIN package p
-     ON p.id = r.package_id
-   WHERE s.arity = $1
-     AND s.type_names @> $2
-     AND s.signature_ir IS NOT NULL
-     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-   ORDER BY cardinality(s.type_names), p.rank DESC
+  "SELECT * FROM (
+     SELECT DISTINCT ON (p.name, m.name, s.name, s.kind)
+       s.name type_name,
+       s.documentation documentation,
+       s.kind signature_kind,
+       s.metadata metadata,
+       s.signature_json AS json_signature,
+       s.signature_ir AS signature_ir,
+       m.name module_name,
+       p.name package_name,
+       r.version version,
+       p.rank package_rank,
+       abs(cardinality(s.type_names) - $4) distance
+     FROM package_type_fun_signature s
+     JOIN package_module m
+       ON m.id = s.package_module_id
+     JOIN package_release r
+       ON m.package_release_id = r.id
+     JOIN package p
+       ON p.id = r.package_id
+     WHERE s.arity = $1
+       AND s.kind <> 'type_definition'
+       AND ((cardinality($2::text[]) > 0 AND s.type_names @> $2::text[])
+         OR s.type_names_key = ANY($3::text[]))
+       AND s.signature_ir IS NOT NULL
+       AND s.signature_ <> ''
+       AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+     ORDER BY p.name, m.name, s.name, s.kind, r.version_ordering DESC
+   ) candidates
+   ORDER BY distance, package_rank DESC
    LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.int(arity))
   |> pog.parameter(pog.array(pog.text, type_names))
+  |> pog.parameter(pog.array(pog.text, subset_keys))
+  |> pog.parameter(pog.int(list.length(type_names)))
   |> pog.returning(candidate_decoder())
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
+}
+
+/// The canonical key of a fingerprint's names: sorted (as `ir.fingerprint`
+/// emits them), joined by `,`. Stored in `type_names_key` next to the array so
+/// the subset lookup is a btree equality the GIN cannot claim.
+pub fn type_names_key(type_names: List(String)) -> String {
+  string.join(type_names, ",")
+}
+
+/// Beyond this many names the subset enumeration (2^n keys) stops paying for
+/// itself; such queries only get the `@>` direction.
+const max_subset_names = 6
+
+/// The canonical keys of every *proper* subset of the query's names, the empty
+/// set included (`fn(a) -> b` is a subset of everything) and the full set
+/// excluded (`@>` already covers it) — except for a nameless query, whose only
+/// subset is the empty key itself, since `@>` is switched off for it.
+/// `type_names` arrives sorted from `ir.fingerprint_type`, so each subset is
+/// emitted in canonical order.
+pub fn subset_keys(type_names: List(String)) -> List(String) {
+  use <- bool.guard(when: list.is_empty(type_names), return: [""])
+  use <- bool.guard(
+    when: list.length(type_names) > max_subset_names,
+    return: [],
+  )
+  type_names
+  |> list.fold([[]], fn(subsets, name) {
+    list.append(subsets, list.map(subsets, fn(s) { list.append(s, [name]) }))
+  })
+  |> list.filter(fn(s) { list.length(s) < list.length(type_names) })
+  |> list.map(type_names_key)
 }
 
 /// A phase-1 row: the display record plus the candidate's structural IR, decoded

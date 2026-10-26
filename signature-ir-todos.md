@@ -83,7 +83,7 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       also accepts (the superset law that makes the second bucket only ever add);
       `alpha_rename` idempotent; `encode`/`decoder` round-trip on random declarations;
       `to_string`/`parse` round-trip once `data/ir/parse` exists.
-- [ ] **Phase 1 SQL — core landed, rescue + measurement remain.** Implemented as
+- [x] **Phase 1 SQL — core, rescue and first measurements landed.** Implemented as
       `queries.fingerprint_candidates` and wired through `handlers.exec_type_search` (parse →
       phase 1 → phase 2 `unify_declaration` → sort by `unify.compare` → take 20). What is **live**:
       `WHERE arity = $1 AND type_names @> $2 AND signature_ir IS NOT NULL ORDER BY
@@ -99,7 +99,60 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       index landed the same day** (`20261026130000`, `btree_gin`, `gin (arity, type_names)`, replaces the
       single-column GIN): real cascade query, warm cache, `{List}` 128 → 44 ms, `{Int}` 120 → 22 ms,
       `{Decoder}` 14 → 2.5 ms, `{Request,Response}` 3 → 2 ms; no heap filter left but
-      `signature_ir IS NOT NULL`; 5 MB, < 2 s to build. Still open: `type_names_count`. Corpus facts: 8,193 distinct names; `String` 160k, `List` 113k,
+      `signature_ir IS NOT NULL`; 5 MB, < 2 s to build. Still open: `type_names_count`.
+      **Rescue landed too** (`20261026140000`): the candidate-more-general direction is
+      `type_names_key = ANY(proper subsets of the query's names)` — `type_names` is now stored sorted
+      (canonical, `ir.names` sorts), `type_names_key` is the `,`-joined key (a *text* column because the
+      GIN claims `=` on the array, with its recheck), btree on `(arity, type_names_key)`,
+      `queries.subset_keys` enumerates 2^n − 1 keys for n ≤ 6; ordering became
+      `abs(cardinality(type_names) − n)`. Measured and rejected: `<@` (75–320 ms, GIN recheck of every
+      row sharing a name), array equality (700 ms, GIN again). Cost: real cascade query, warm cache, on
+      `(List(Int)) -> Bool` 12–16 ms without → 38–52 ms with (≈2,300 generic rows fetched, ranked last);
+      on `{List}` (32k rows read) ~45 ms either way. `OR has_variables` is superseded. Still missing: a
+      more general candidate whose names sit only under a query hole (`fn(List(a)) -> b` for
+      `(_) -> Bool`) — sound selection there is `arity` alone; deferred. Note for prod: both migrations
+      mass-update the table, so bloat follows (1.6 GB → 809 MB after `VACUUM FULL` locally); let
+      autovacuum reclaim it or schedule one. **Dedupe**: phase 1 returns one row per declaration
+      (`DISTINCT ON (package, module, name, kind)`, latest semver), as the old tier and the content tiers
+      do; measured cost on `{List}` (32k candidate rows): ~45 ms → 240–300 ms, of which ~80 ms is the
+      per-row semver regexp (`string_to_array(regexp_replace(version…))`) and the rest the joins over
+      32k rows; negligible on 2–3-name queries. **`version_ordering` landed** (`20261026150000`): a
+      generated stored column on `package_release`, so all six tiers read it instead of the per-row
+      regexp (`{List}` 910 → 710 ms, `fn(List(Int)) -> Bool` 190 → 120 ms, `name_search` 63 → 48 ms on
+      this machine). What remains on frequent names is the heap scan of the 33k candidate rows
+      (~260 ms here): the follow-up, not taken, is restricting phase 1 to each package's latest
+      release with signatures (~5k rows, no `DISTINCT ON` needed; drops declarations removed from the
+      latest version — arguably what a search of the current ecosystem wants). **Placeholders**:
+      123 rows (24 packages, 37 releases) were recursive-type placeholders whose second upsert never
+      landed (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`); the backfill gave them an IR,
+      the empty subset key made them phase-1 candidates for arity-0 queries, and one undecodable row
+      fails `type_search.decoder()` for the whole batch — a silent empty tier (the name tiers were
+      already exposed in prod: "Connection", "Error"). Fixed twice over: every tier filters
+      `signature_ <> ''`, and `tasks/reextract` replays the ingestion chain from the stored
+      `package_interface`/`gleam_toml` for the affected releases (37/37 ok locally, 0 left; the
+      original failure does not reproduce with current code — run it in prod after deploy). Also
+      fixed on the way: `generate/types` wrote the *documentation* into every `signature_json.deprecation`
+      (copy-paste); it now writes the deprecation message. **Shape guards** (found by timing the
+      end-to-end run, 1–16 s per request before): `kind <> 'type_definition'` in phase 1 (phase 2 never
+      verifies one, and the 22,771 parameterless enums all carry the empty key: `List(Int)` 1.4 s →
+      0.4 s), and a nameless query (`fn(a) -> a`) skips `@>` (`@> '{}'` is true for the whole arity,
+      3 s) for the empty key alone (112 ms). The text tiers have their own, older costs
+      (`signature_search`/`documentation_search` ~140 ms each on "Error" with their tsvector GINs,
+      the trigram `content_search` worse on type-shaped strings) — not touched. Local stack: the
+      compose now gives Postgres 384 MB of `shared_buffers`; with the 128 MB default, a 32k-row
+      candidate set re-read 150 MB of pages per query and timings swung 10x (1 GB was tried and pushed
+      the laptop into swap). **End to end** (jupiter on the local stack, Hex cursor parked so the sync
+      stays idle, 2026-10-26): the type tier answers on every shape — `list.map` for the map query,
+      `list.is_empty` for `(List(Int)) -> Bool` through the rescue, `identity`/`io.debug` for
+      `fn(a) -> a`, one row per declaration at its latest version — but whole requests take 0.4–10 s
+      because the *text* tiers still run on type-shaped strings and the trigram/tsvector ones time out
+      (`pog` query timeout) on `fn(a) -> a` or `Error`. **Next step, not taken**: skip the text tiers
+      (or at least `content_search`) when the query parsed as a type, and look at the text tiers' own
+      plans. Two gotchas met on the way: `pog` sends untyped parameters, so `cardinality($2)` fails with
+      "could not determine polymorphic type" — cast (`$2::text[]`) every array parameter used outside a
+      comparison with a typed column; and jupiter's boot is flaky on this laptop under load
+      (`FailedToStartChild(2, InitFailed("shutdown"))` from mist's handler factory, 1 start in 8 at the
+      worst moment, clean the next minute) — environmental, retried by the harness. Corpus facts: 8,193 distinct names; `String` 160k, `List` 113k,
       `Attribute` 80k, `Result` 69k, `Int` 64k rows; 24,513 rows carry an empty fingerprint
       (`fn(a) -> a` shapes). The rescue is still unmeasured. Design context kept below.
       The core fact: `type_names @> ARRAY[...]` requires the candidate to mention

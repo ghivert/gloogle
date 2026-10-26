@@ -5,6 +5,7 @@
 //// `name`/`package`/`module` coordinates.
 
 import gleam/json.{type Json}
+import gleam/option.{type Option}
 import gleam/package_interface as pi
 
 pub fn type_definition_to_json(
@@ -15,7 +16,7 @@ pub fn type_definition_to_json(
     #("kind", json.string("type-definition")),
     #("name", json.string(type_name)),
     #("documentation", json.nullable(type_def.documentation, json.string)),
-    #("deprecation", json.nullable(type_def.documentation, json.string)),
+    #("deprecation", deprecation_to_json(type_def.deprecation)),
     #("parameters", json.int(type_def.parameters)),
     #(
       "constructors",
@@ -75,7 +76,7 @@ pub fn type_alias_to_json(type_name: String, type_alias: pi.TypeAlias) -> Json {
     #("kind", json.string("type-alias")),
     #("name", json.string(type_name)),
     #("documentation", json.nullable(type_alias.documentation, json.string)),
-    #("deprecation", json.nullable(type_alias.documentation, json.string)),
+    #("deprecation", deprecation_to_json(type_alias.deprecation)),
     #("parameters", json.int(type_alias.parameters)),
     #("alias", type_to_json(type_alias.alias)),
   ])
@@ -95,7 +96,7 @@ pub fn constant_to_json(constant_name: String, constant: pi.Constant) -> Json {
     #("kind", json.string("constant")),
     #("name", json.string(constant_name)),
     #("documentation", json.nullable(constant.documentation, json.string)),
-    #("deprecation", json.nullable(constant.documentation, json.string)),
+    #("deprecation", deprecation_to_json(constant.deprecation)),
     #("implementations", implementations_to_json(constant.implementations)),
     #("type", type_to_json(constant.type_)),
   ])
@@ -106,9 +107,16 @@ pub fn function_to_json(function_name: String, function: pi.Function) -> Json {
     #("kind", json.string("function")),
     #("name", json.string(function_name)),
     #("documentation", json.nullable(function.documentation, json.string)),
-    #("deprecation", json.nullable(function.documentation, json.string)),
+    #("deprecation", deprecation_to_json(function.deprecation)),
     #("implementations", implementations_to_json(function.implementations)),
     #("parameters", json.array(function.parameters, parameters_to_json)),
     #("return", type_to_json(function.return)),
   ])
+}
+
+/// The deprecation *message*, or `null`. Every kind used to write the
+/// documentation here by copy-paste — a dormant bug, since display reads the
+/// deprecation from `metadata`, but wrong data in a column nonetheless.
+fn deprecation_to_json(deprecation: Option(pi.Deprecation)) -> Json {
+  json.nullable(deprecation, fn(d) { json.string(d.message) })
 }

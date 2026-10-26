@@ -1510,13 +1510,13 @@ pub type Type {
       <p class="sub" lang="en">A query travels through six tiers, from the most precise to the broadest. Each tier receives the concatenation of every previous result and discards those (<code>exec_search</code> filters with <code>list.contains</code>), so a given item appears exactly once, in its most precise tier. Every SQL query is capped at 100 rows and ordered by <code>package_rank DESC, ordering DESC</code>, where <code>ordering</code> is the version split into an <code>int[]</code>.</p>
 
       <div class="cascade">
-        <div class="tier off">
+        <div class="tier">
           <span class="tier-k">exact-type-matches</span>
           <span class="tier-d">
-            <span lang="fr">Recherche par type via l'ancien trie. <strong>Débranchée</strong> — le code est commenté, la liste est vide en dur, en attendant <em>fingerprint + verify</em>.</span>
-            <span lang="en">Type search through the old trie. <strong>Unplugged</strong> — the code is commented out and the list is hard-coded empty, pending <em>fingerprint + verify</em>.</span>
+            <span lang="fr">Recherche par type, en deux phases : <em>fingerprint</em> (empreinte GIN) puis <em>verify</em> (unification structurelle). <strong>Branchée</strong> — <code>exec_type_search</code> parse la requête en IR, sélectionne ≤100 candidats, les vérifie, en garde 20. Une requête qui n'est pas un type (texte libre) échoue au parse et saute ce tier.</span>
+            <span lang="en">Type search, in two phases: <em>fingerprint</em> (GIN) then <em>verify</em> (structural unification). <strong>Live</strong> — <code>exec_type_search</code> parses the query to IR, selects ≤100 candidates, verifies them, keeps 20. A query that is not a type (free text) fails the parse and skips this tier.</span>
           </span>
-          <span class="tier-q">= []</span>
+          <span class="tier-q">parse → fingerprint → verify</span>
         </div>
         <div class="tier">
           <span class="tier-k">exact-matches</span>
@@ -1560,20 +1560,20 @@ pub type Type {
         </div>
       </div>
 
-      <h3><span lang="fr">Ce qui remplace le tier débranché</span><span lang="en">What replaces the unplugged tier</span></h3>
-      <p lang="fr">Le design cible est natif Postgres, en deux phases, et les deux dérivent de l'IR :</p>
-      <p lang="en">The target design is Postgres-native and two-phase, and both phases derive from the IR:</p>
+      <h3><span lang="fr">Le tier type, en deux phases</span><span lang="en">The type tier, in two phases</span></h3>
+      <p lang="fr">Natif Postgres, deux phases, toutes deux dérivées de l'IR — orchestrées par <code>exec_type_search</code> :</p>
+      <p lang="en">Postgres-native, two phases, both derived from the IR — orchestrated by <code>exec_type_search</code>:</p>
 
       <div class="grid two">
         <div class="card">
           <h4 lang="fr">Phase 1 · sélection (GIN)</h4>
           <h4 lang="en">Phase 1 · candidate selection (GIN)</h4>
-          <p lang="fr">L'empreinte de chaque ligne — <code>arity</code> + <code>type_names</code> — répond à <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> en millisecondes, et fait tomber ~50 k lignes à quelques centaines de candidats.</p>
-          <p lang="en">Each row's fingerprint — <code>arity</code> + <code>type_names</code> — answers <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> in milliseconds, narrowing ~50k rows down to a few hundred candidates.</p>
+          <p lang="fr"><code>queries.fingerprint_candidates</code> : l'empreinte de chaque ligne — <code>arity</code> + <code>type_names</code> — répond à <code>WHERE arity = $1 AND type_names @&gt; $2</code> en millisecondes, fait tomber ~50 k lignes à ≤100 candidats, <code>ORDER BY cardinality(type_names)</code> (le plus proche d'abord — le moins de noms en trop à absorber), rang du paquet en départage. Chaque ligne rapporte son <code>signature_ir</code> décodée pour la phase 2 ; les lignes à IR <code>null</code> (types récursifs) sont exclues.</p>
+          <p lang="en"><code>queries.fingerprint_candidates</code>: each row's fingerprint — <code>arity</code> + <code>type_names</code> — answers <code>WHERE arity = $1 AND type_names @&gt; $2</code> in milliseconds, narrowing ~50k rows to ≤100 candidates, <code>ORDER BY cardinality(type_names)</code> (closest first — fewest extra names for the query to absorb), package rank breaking ties. Each row carries its decoded <code>signature_ir</code> for phase 2; rows with a <code>null</code> IR (recursive types) are excluded.</p>
         </div>
         <div class="card">
-          <h4 lang="fr">Phase 2 · vérification <span class="tag legacy">écrit · non branché</span></h4>
-          <h4 lang="en">Phase 2 · verification <span class="tag legacy">written · not wired</span></h4>
+          <h4 lang="fr">Phase 2 · vérification <span class="tag stored">branché</span></h4>
+          <h4 lang="en">Phase 2 · verification <span class="tag stored">wired</span></h4>
           <p lang="fr">L'IR de chaque candidat est confrontée à l'IR de la requête — <code>packages/galaxy/src/data/ir/unify.gleam</code>, qui consomme <code>signature_ir</code> directement. Le verdict n'est pas un booléen mais un <code>Match</code> porteur d'un <strong>coût</strong> — la leçon de Hoogle : le matching rend un coût, et le coût est le classement. Deux constructeurs = deux blocs de résultats, le coût ordonne à l'intérieur :</p>
           <p lang="en">Each candidate's IR is checked against the query IR — <code>packages/galaxy/src/data/ir/unify.gleam</code>, consuming <code>signature_ir</code> directly. The verdict is not a boolean but a <code>Match</code> carrying a <strong>cost</strong> — the Hoogle lesson: matching returns a cost, and the cost is the ranking. Two constructors = two result buckets, cost orders within:</p>
           <p lang="fr"><strong>1 · <code>Equivalent(cost)</code></strong> — alpha-équivalence. Un <code>Var</code> de requête ne matche qu'un <code>Var</code> candidat, sous une liaison injective dans les deux sens : <code>($0, $1) -> $0</code> matche <code>fn(a, b) -> a</code> à coût 0, <code>fn(a, b) -> b</code> modulo réordonnancement (surtaxé), et <code>fn(a, a) -> a</code> pas du tout — ça, c'est de la subsomption. Le coût compte ce que les <code>_</code> absorbent (1 par nœud concret) : le candidat réellement polymorphe sort premier.</p>
@@ -1582,8 +1582,8 @@ pub type Type {
           <p lang="en"><strong>2 · <code>Subsumed(cost)</code></strong> — directional subsumption: one side is more general than the other. <code>($0) -> $0</code> also finds <code>Int -> Int</code> (query more general) and <code>(List&lt;Int&gt;) -> Bool</code> finds <code>fn(List(a)) -> Bool</code> (candidate more general). One-sided matching run both ways, cheapest direction kept; the cost is the concrete structure the bindings absorbed — the closest generalization surfaces first. It <strong>stops short</strong> of full unification: pairs that only share a common instance without either being more general (<code>#(a, Int)</code> vs <code>#(Bool, b)</code>) are dropped — <code>_</code> lets the user ask for looseness precisely, so that blunt match is never the only route to a wanted result.</p>
           <p lang="fr">L'unification symétrique complète (les deux côtés lient, avec <em>occurs check</em>) survit, testée mais <strong>isolée</strong> dans <code>unify_symmetric</code>, hors cascade. <code>Hole</code> reste le joker : il matche tout et ne lie rien — c'est ce qui le sépare de <code>Var</code> (une variable à occurrence unique se comporte comme un <code>Hole</code> en subsomption). <code>is_method</code> est ignoré : c'est la convergence que vise l'abaissement receveur-en-tête. La permutation des paramètres n'est plus une option mais une <strong>réécriture tarifée</strong> : ordre positionnel d'abord, réordonnancement surtaxé ensuite — avec backtracking jusque dans le type de retour — coupé au-delà de 6 paramètres. Un label omis dans la requête coûte ; un label écrit contraint.</p>
           <p lang="en">Full symmetric unification (both sides bind, with an <em>occurs check</em>) survives, tested but <strong>isolated</strong> in <code>unify_symmetric</code>, outside the cascade. <code>Hole</code> stays the wildcard: it matches anything and binds nothing — that is what separates it from <code>Var</code> (a once-occurring variable behaves like a <code>Hole</code> under subsumption). <code>is_method</code> is ignored: that convergence is what receiver-first lowering is for. Parameter permutation is no longer an option but a <strong>priced rewrite</strong>: positional order first, surcharged reordering second — backtracking through the return type — skipped beyond 6 parameters. An omitted query label costs; a written one constrains.</p>
-          <p lang="fr"><code>data/ir/parse</code> existe désormais — le front-end de requête Gleam (<code>packages/galaxy/src/data/ir/parse.gleam</code>) : il lexe la syntaxe Gleam tapée par l'utilisateur (<code>fn(Result(a, b), fn(a) -> c) -> Result(c, b)</code>) et l'abaisse vers le même IR alpha-renommé que l'ingestion — minuscule ⇒ variable, <code>_</code> ⇒ <code>Hole</code>, <code>#(…)</code> ⇒ tuple. Il vit dans <code>galaxy</code>, pas jupiter, pour que le frontend (venus) le réutilise à la saisie ; il ne tire que <code>glexer</code> + <code>chomp</code>, jamais <code>gleam_package_interface</code>, donc il franchit la cible JavaScript avec le reste de galaxy. La notation canonique <code>$n</code> et les requêtes venues d'autres langages restent à écrire. Reste alors le <strong>branchement dans la cascade</strong> : la phase 1 SQL, puis parse → phase 1 → phase 2.</p>
-          <p lang="en"><code>data/ir/parse</code> now exists — the Gleam query front-end (<code>packages/galaxy/src/data/ir/parse.gleam</code>): it lexes the Gleam type syntax a user types (<code>fn(Result(a, b), fn(a) -> c) -> Result(c, b)</code>) and lowers it to the same alpha-renamed IR ingestion produces — lower-case ⇒ variable, <code>_</code> ⇒ <code>Hole</code>, <code>#(…)</code> ⇒ tuple. It lives in <code>galaxy</code>, not jupiter, so the frontend (venus) reuses it as the user types; it pulls only <code>glexer</code> + <code>chomp</code>, never <code>gleam_package_interface</code>, so it crosses to the JavaScript target with the rest of galaxy. The canonical <code>$n</code> notation and other-language queries are still to write. What remains is the <strong>wiring into the cascade</strong>: phase 1 SQL, then parse → phase 1 → phase 2.</p>
+          <p lang="fr">L'IR de requête vient de <code>data/ir/parse</code> — le front-end de requête Gleam (<code>packages/galaxy/src/data/ir/parse.gleam</code>) : il lexe la syntaxe Gleam tapée par l'utilisateur (<code>fn(Result(a, b), fn(a) -> c) -> Result(c, b)</code>) et l'abaisse vers le même IR alpha-renommé que l'ingestion — minuscule ⇒ variable, <code>_</code> ⇒ <code>Hole</code>, <code>#(…)</code> ⇒ tuple. Il vit dans <code>galaxy</code>, pas jupiter, pour que le frontend (venus) le réutilise à la saisie ; il ne tire que <code>glexer</code> + <code>chomp</code>, jamais <code>gleam_package_interface</code>, donc il franchit la cible JavaScript avec le reste de galaxy. Restent à écrire : la notation canonique <code>$n</code> (inverse de <code>to_string</code>) et les requêtes venues d'autres langages.</p>
+          <p lang="en">The query IR comes from <code>data/ir/parse</code> — the Gleam query front-end (<code>packages/galaxy/src/data/ir/parse.gleam</code>): it lexes the Gleam type syntax a user types (<code>fn(Result(a, b), fn(a) -> c) -> Result(c, b)</code>) and lowers it to the same alpha-renamed IR ingestion produces — lower-case ⇒ variable, <code>_</code> ⇒ <code>Hole</code>, <code>#(…)</code> ⇒ tuple. It lives in <code>galaxy</code>, not jupiter, so the frontend (venus) reuses it as the user types; it pulls only <code>glexer</code> + <code>chomp</code>, never <code>gleam_package_interface</code>, so it crosses to the JavaScript target with the rest of galaxy. Still to write: the canonical <code>$n</code> notation (inverse of <code>to_string</code>) and other-language queries.</p>
         </div>
       </div>
 
@@ -1596,15 +1596,14 @@ pub type Type {
         là où <code>list.is_empty : fn(List(a)) -> Bool</code> n'a que <code>{List, Bool}</code> : la
         phase 1 l'écarte, et la phase 2 ne le voit jamais. Le cas dégénéré est <code>fn(a) -> a</code>,
         d'empreinte <code>{}</code>, que <code>@&gt;</code> ne remontera pour aucune requête concrète.
-        Le design retenu (détaillé dans <code>signature-ir-todos.md</code>, à implémenter puis
-        mesurer) : <code>@&gt;</code> toujours, joué en <em>classement</em> plutôt qu'en filtre sec —
-        <code>ORDER BY cardinality(type_names) LIMIT 100</code>, vérification Gleam sur le lot,
-        troncature à 20 — et, pour le sens candidat-plus-général, un secours :
-        <code>OR has_variables</code> (grossier, indexable) ou <code>type_names &lt;@</code>
-        (précis, mais requêtes sans <code>_</code> seulement, et opérateur faible du GIN).
-        <strong>Rien n'est cassé aujourd'hui</strong> : la phase 1 est écrite mais pas encore
-        interrogée, <code>type_names</code> n'est qu'alimentée à l'ingestion. À mesurer avant de
-        brancher la cascade.
+        <code>fingerprint_candidates</code> applique déjà le cœur du design retenu : <code>@&gt;</code>
+        joué en <em>classement</em> plutôt qu'en filtre sec — <code>ORDER BY cardinality(type_names)
+        LIMIT 100</code>, vérification Gleam sur le lot, troncature à 20. Ce qui manque encore, c'est
+        le secours pour le sens candidat-plus-général : <code>OR has_variables</code> (grossier,
+        indexable) ou <code>type_names &lt;@</code> (précis, mais requêtes sans <code>_</code>
+        seulement, et opérateur faible du GIN) — à trancher en mesurant.
+        <strong>Conséquence, tier maintenant branché</strong> : un candidat plus général que la
+        requête reste invisible tant que ce secours n'est pas là. À mesurer sur données réelles.
       </p>
       <p class="note warn" lang="en">
         <strong>The two phases do not agree yet.</strong> <code>type_names @&gt; ARRAY[...]</code>
@@ -1615,14 +1614,14 @@ pub type Type {
         while <code>list.is_empty : fn(List(a)) -> Bool</code> only has <code>{List, Bool}</code>: phase 1
         drops it, and phase 2 never sees it. The degenerate case is <code>fn(a) -> a</code>, fingerprint
         <code>{}</code>, which <code>@&gt;</code> will surface for no concrete query at all.
-        The settled design (detailed in <code>signature-ir-todos.md</code>, to implement then
-        measure): always <code>@&gt;</code>, used as a <em>ranking</em> rather than a hard filter —
+        <code>fingerprint_candidates</code> already applies the core of the settled design:
+        <code>@&gt;</code> used as a <em>ranking</em> rather than a hard filter —
         <code>ORDER BY cardinality(type_names) LIMIT 100</code>, Gleam verification over the batch,
-        truncate to 20 — plus, for the candidate-more-general direction, a rescue:
+        truncate to 20. What is still missing is the rescue for the candidate-more-general direction:
         <code>OR has_variables</code> (coarse, indexable) or <code>type_names &lt;@</code>
-        (sharp, but hole-free queries only, and one of GIN's weak operators).
-        <strong>Nothing is broken today</strong>: phase 1 is written but not yet queried,
-        <code>type_names</code> is only populated at ingestion. To measure before wiring the cascade.
+        (sharp, but hole-free queries only, and one of GIN's weak operators) — to settle by measuring.
+        <strong>Consequence, now that the tier is wired</strong>: a candidate more general than the
+        query stays invisible until that rescue lands. To measure on real data.
       </p>
     </section>
 

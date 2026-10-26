@@ -45,7 +45,8 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       spread markers never constrain; `Union` members always match as a set, `Record` fields by name
       and exactly (field-superset = structural subtyping, deferred); `Tuple` stays positional.
       `Options(permute_params:)` is off by default and falls back to positional beyond 6 params
-      (factorial search). **Not yet wired into the cascade** — gated on `data/ir/parse` below. — **done**
+      (factorial search). **Now wired into the cascade** — `handlers.exec_type_search` ranks the
+      verified candidates with the new `unify.compare` (`Equivalent` above `Subsumed`, cost within). — **done**
 - [x] **Two tiers.** `Options(tier:)` — `Exact` first, then `Lenient`, the latter a strict superset
       (so a second pass only ever adds). `Lenient` = **directional subsumption**: one side is more
       general than the other. `($0) -> $0` finds `Int -> Int` (query more general) *and* `(List<Int>)
@@ -82,8 +83,16 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       also accepts (the superset law that makes the second bucket only ever add);
       `alpha_rename` idempotent; `encode`/`decoder` round-trip on random declarations;
       `to_string`/`parse` round-trip once `data/ir/parse` exists.
-- [ ] **Phase 1 SQL — design settled in conversation ("Verify unify continuation"), to implement
-      and measure.** The core fact: `type_names @> ARRAY[...]` requires the candidate to mention
+- [ ] **Phase 1 SQL — core landed, rescue + measurement remain.** Implemented as
+      `queries.fingerprint_candidates` and wired through `handlers.exec_type_search` (parse →
+      phase 1 → phase 2 `unify_declaration` → sort by `unify.compare` → take 20). What is **live**:
+      `WHERE arity = $1 AND type_names @> $2 AND signature_ir IS NOT NULL ORDER BY
+      cardinality(type_names), p.rank DESC LIMIT 100`, verify in Gleam, truncate to 20. Used
+      computed `cardinality()` (no stored count column yet) and `@>`-only (no rescue yet). What
+      **remains**: the candidate-more-general rescue (`OR has_variables` vs `<@`, below), the
+      stored-`type_names_count`-vs-`cardinality()` decision, and the actual measurement on real
+      data — none of which is possible without a seeded DB. Design context kept below.
+      The core fact: `type_names @> ARRAY[...]` requires the candidate to mention
       *every* query name — sound for `Exact` and for the query-more-general direction of `Lenient`
       (query holes add no names, so `_` never breaks `@>`), **unsound when the candidate is more
       general**: `list.is_empty : fn(List(a)) -> Bool` lacks `Int` for query `(List<Int>) -> Bool`.
@@ -108,7 +117,7 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       - **UI consequence, decide at wiring time**: Hoogle users will type `a` meaning `_`; the
         lenient tier must stay visible under the exact tier (labelled result blocks, not one
         truncated list), or exact-tier hits will bury the specializations forever.
-      Nothing is broken today: `type_names` is written at ingestion, never yet queried.
+      Was true until this landed; `type_names` is now queried live by `fingerprint_candidates`.
 - [ ] **`fingerprint` arity bug — `TypeAlias` is always 0.** `ir.fingerprint` returns
       `#(0, names(aliased))` for aliases, while `unify_declaration` matches the query against
       `aliased`: an alias of a function type (`type Callback = fn(Int) -> Bool`) is dropped by

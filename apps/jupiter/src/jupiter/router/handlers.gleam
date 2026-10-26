@@ -1,11 +1,16 @@
 import api/hex
 import data/analytics
+import data/ir
+import data/ir/parse
+import data/ir/unify
 import data/package
 import data/type_search
+import gleam/bool
 import gleam/function_
 import gleam/int
 import gleam/json
 import gleam/list
+import gleam/pair
 import gleam/result
 import jupiter/context.{type Context}
 import jupiter/loss.{type Loss}
@@ -104,8 +109,7 @@ fn do_search(query: String, ctx: Context) {
   queries.upsert_search_analytics(ctx.db, query)
   |> loss.dismiss
 
-  // let exact_type_searches = exec_type_search(ctx, query)
-  let exact_type_searches = []
+  let exact_type_searches = exec_type_search(ctx, query)
 
   let exact_name_matches =
     exact_type_searches
@@ -155,17 +159,39 @@ fn do_search(query: String, ctx: Context) {
   ])
 }
 
-// fn exec_type_search(ctx: Context, query: String) {
-//   option.then(ctx.type_search_subject, fn(subject) {
-//     exception.rescue(fn() { actor.call(subject, 25_000, msg.Find(_, query)) })
-//     |> option.from_result
-//     |> option.flatten
-//   })
-//   |> option.unwrap([])
-//   |> queries.exact_type_search(ctx.db, _)
-//   |> result.map_error(loss.debug_log)
-//   |> result.unwrap([])
-// }
+/// The type-search tier: parse the query as a Gleam type, then run the two-phase
+/// fingerprint + verify pipeline. `parse` fails on anything that is not a type
+/// (multi-word text queries, malformed input) — those simply skip this tier and
+/// fall through to the name/content tiers below.
+fn exec_type_search(
+  ctx: Context,
+  query: String,
+) -> List(type_search.TypeSearch) {
+  case parse.parse(query) {
+    Error(_) -> []
+    Ok(type_) -> {
+      let #(arity, type_names) = ir.fingerprint_type(type_)
+      // A bare variable or hole (`a`, `_`) has no structural signal — arity 0 and
+      // no names — so its fingerprint matches nearly everything. That is a text
+      // query, not a type query; leave it to the other tiers.
+      use <- bool.guard(
+        when: arity == 0 && list.is_empty(type_names),
+        return: [],
+      )
+      queries.fingerprint_candidates(ctx.db, arity, type_names)
+      |> result.map_error(function_.tap(_, loss.log))
+      |> result.unwrap([])
+      |> list.filter_map(fn(candidate) {
+        let #(item, declaration) = candidate
+        unify.unify_declaration(type_, declaration)
+        |> result.map(fn(match) { #(item, match) })
+      })
+      |> list.sort(fn(a, b) { unify.compare(a.1, b.1) })
+      |> list.map(pair.first)
+      |> list.take(20)
+    }
+  }
+}
 
 fn exec_search(
   ctx: Context,

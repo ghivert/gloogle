@@ -1,4 +1,5 @@
 import data/analytics
+import data/ir
 import data/package
 import data/type_search
 import decrypt
@@ -838,6 +839,65 @@ pub fn module_search(db: pog.Connection, q: String) {
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
+}
+
+/// Phase 1 of type search: the GIN fingerprint narrows the whole signature table
+/// to at most 100 candidates by shape — top-level `arity` and the set of nominal
+/// names the query mentions (`type_names @> query`). Ordered closest-first, by how
+/// few extra names a candidate carries (`cardinality(type_names)`) — what the
+/// query's holes and variables would have to absorb — with package rank breaking
+/// ties. Each row carries its decoded `signature_ir` so phase 2 (`data/ir/unify`)
+/// can verify it structurally. Rows with a null IR (recursive-type placeholders)
+/// are excluded: there is nothing to verify against.
+///
+/// Soundness note: `@>` requires the candidate to mention *every* query name. That
+/// holds for exact matches and when the query is the more general side, but drops
+/// candidates that are *more* general than the query (e.g. `fn(List(a)) -> Bool`
+/// for query `(List(Int)) -> Bool`, which lacks `Int`). That rescue is a separate,
+/// still-to-measure step — see `signature-ir-todos.md`.
+pub fn fingerprint_candidates(
+  db db: pog.Connection,
+  arity arity: Int,
+  type_names type_names: List(String),
+) -> Loss(List(#(type_search.TypeSearch, ir.Declaration))) {
+  "SELECT
+     s.name type_name,
+     s.documentation documentation,
+     s.kind signature_kind,
+     s.metadata metadata,
+     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
+     m.name module_name,
+     p.name package_name,
+     r.version version
+   FROM package_type_fun_signature s
+   JOIN package_module m
+     ON m.id = s.package_module_id
+   JOIN package_release r
+     ON m.package_release_id = r.id
+   JOIN package p
+     ON p.id = r.package_id
+   WHERE s.arity = $1
+     AND s.type_names @> $2
+     AND s.signature_ir IS NOT NULL
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY cardinality(s.type_names), p.rank DESC
+   LIMIT 100"
+  |> pog.query
+  |> pog.parameter(pog.int(arity))
+  |> pog.parameter(pog.array(pog.text, type_names))
+  |> pog.returning(candidate_decoder())
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+/// A phase-1 row: the display record plus the candidate's structural IR, decoded
+/// from `signature_ir` for phase-2 verification.
+fn candidate_decoder() {
+  use item <- decode.then(type_search.decoder())
+  use declaration <- decode.field("signature_ir", decrypt.json(ir.decoder()))
+  decode.success(#(item, declaration))
 }
 
 pub fn exact_type_search(db: pog.Connection, q: List(String)) {

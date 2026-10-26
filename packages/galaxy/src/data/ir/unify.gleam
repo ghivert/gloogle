@@ -50,6 +50,7 @@ import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/order.{type Order}
 import gleam/result
 
 /// The verdict, per candidate. Bucket by constructor — `Equivalent` results sit
@@ -57,6 +58,18 @@ import gleam/result
 pub type Match {
   Equivalent(cost: Int)
   Subsumed(cost: Int)
+}
+
+/// Rank two verdicts for result ordering: every `Equivalent` sits above every
+/// `Subsumed`, and inside a bucket the lower `cost` (the closer match) comes
+/// first. Pass to `list.sort` over the verified candidates.
+pub fn compare(a: Match, b: Match) -> Order {
+  case a, b {
+    Equivalent(x), Equivalent(y) -> int.compare(x, y)
+    Subsumed(x), Subsumed(y) -> int.compare(x, y)
+    Equivalent(_), Subsumed(_) -> order.Lt
+    Subsumed(_), Equivalent(_) -> order.Gt
+  }
 }
 
 /// Flat surcharge when the parameters had to be reordered to match.

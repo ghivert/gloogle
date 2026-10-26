@@ -245,8 +245,8 @@ fn rename_fields(fields: List(Field), state: Rename) -> #(List(Field), Rename) {
 
 pub fn fingerprint(declaration: Declaration) -> #(Int, List(String)) {
   case declaration {
-    Function(signature:) -> #(type_arity(signature), names(signature))
-    Constant(type_:) -> #(type_arity(type_), names(type_))
+    Function(signature:) -> fingerprint_type(signature)
+    Constant(type_:) -> fingerprint_type(type_)
     TypeAlias(aliased:, ..) -> #(0, names(aliased))
     TypeDefinition(constructors:, ..) -> {
       let types =
@@ -256,6 +256,14 @@ pub fn fingerprint(declaration: Declaration) -> #(Int, List(String)) {
       #(0, list.flat_map(types, collect_names(_, [])) |> list.unique)
     }
   }
+}
+
+/// Fingerprint a bare `Type` — the query side, where only a parsed type is in
+/// hand and a declaration's metadata is absent. Uses the same arity and name
+/// derivation the stored `fingerprint` applies to `Function`/`Constant`, so a
+/// query and a candidate land on comparable fingerprints for the phase-1 filter.
+pub fn fingerprint_type(type_: Type) -> #(Int, List(String)) {
+  #(type_arity(type_), names(type_))
 }
 
 fn type_arity(type_: Type) -> Int {

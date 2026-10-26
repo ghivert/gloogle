@@ -2070,14 +2070,22 @@ pub type Type {
       <p class="note" lang="fr">
         <strong>Il n'existe pas encore d'index composite <code>(arity, type_names)</code>.</strong>
         La phase 1 vise <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> ; le GIN ne couvre
-        aujourd'hui que <code>type_names</code>, et Postgres filtrera <code>arity</code> après coup.
-        À mesurer quand l'unificateur sera branché — ce sera peut-être suffisant.
+        aujourd'hui que <code>type_names</code>, et Postgres filtre <code>arity</code> après coup.
+        Mesuré le 26 octobre 2026 sur l'instantané local (502 k lignes, <code>ANALYZE</code> fait) : le GIN
+        sert à chaque requête (Bitmap Index Scan), 5 à 18 ms sur un nom rare (<code>{Request,Response}</code>,
+        <code>{Decoder}</code>), 130 ms sur <code>{List}</code> (113 k lignes, en parallèle) — et dans chaque
+        plan le filtre <code>arity</code> écarte 60 à 80 % des lignes lues après l'index. L'index composite
+        est donc la première optimisation à essayer, avant la colonne <code>type_names_count</code>.
       </p>
       <p class="note" lang="en">
         <strong>There is no composite <code>(arity, type_names)</code> index yet.</strong>
         Phase 1 targets <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code>; today the GIN covers
-        only <code>type_names</code>, and Postgres will filter <code>arity</code> afterwards.
-        Worth measuring once the unifier is wired in — it may well be good enough.
+        only <code>type_names</code>, and Postgres filters <code>arity</code> afterwards.
+        Measured on 26 October 2026 on the local snapshot (502k rows, after <code>ANALYZE</code>): the GIN
+        serves every query (Bitmap Index Scan), 5 to 18 ms on a rare name (<code>{Request,Response}</code>,
+        <code>{Decoder}</code>), 130 ms on <code>{List}</code> (113k rows, in parallel) — and in every plan
+        the <code>arity</code> filter discards 60 to 80 % of the rows fetched after the index. The composite
+        index is therefore the first optimisation to try, before a <code>type_names_count</code> column.
       </p>
     </section>
 

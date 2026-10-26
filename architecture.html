@@ -894,6 +894,37 @@
         so the type already exists by the time it refers to itself. The second upsert, on the
         <code>(package_module_id, name)</code> conflict, fills in the real values.
       </p>
+
+      <p class="note" lang="fr">
+        <strong>Le cache d'archives (étape 02) a trois étages, et une stack locale.</strong>
+        <code>api/hex_repo</code> cherche le tarball d'une release d'abord sur le disque, puis dans le
+        bucket S3, et seulement ensuite sur <code>repo.hex.pm</code> — chaque niveau remplit le précédent.
+        Le client <code>aws/s3</code> lit la forme du bucket dans <code>BUCKET_URI</code> : un hôte nu
+        (<code>hex-mirror.s3.fr-par.scw.cloud</code>, la prod sur Scaleway) donne https et des objets en
+        <code>/&lt;clé&gt;</code> ; une URL complète (<code>http://localhost:29000/gloogle</code>) donne le
+        schéma et le port écrits et des objets en <code>/&lt;bucket&gt;/&lt;clé&gt;</code> (path-style).
+        C'est ce qui permet la stack locale <code>infra/local/compose.yml</code> — Postgres sur 25432,
+        RustFS sur 29000/29001, ports choisis loin de tout — alimentée depuis la prod par
+        <code>infra/local/scripts/seed-local.sh</code> : miroir du bucket Scaleway (8 083 archives,
+        576 Mio) et dump/restore de la base Postgres de prod, qui vit chez Render, pas chez Scaleway.
+        Ce qui ne se régénère pas et justifie la copie : <code>hex_read</code>, <code>analytics</code>,
+        <code>analytics_timeseries</code>, <code>search_analytics</code>, l'historique de popularité.
+      </p>
+      <p class="note" lang="en">
+        <strong>The archive cache (step 02) has three tiers, and a local stack.</strong>
+        <code>api/hex_repo</code> looks for a release tarball on disk first, then in the S3 bucket, and
+        only then on <code>repo.hex.pm</code> — each level fills the one before it. The
+        <code>aws/s3</code> client reads the bucket's shape from <code>BUCKET_URI</code>: a bare host
+        (<code>hex-mirror.s3.fr-par.scw.cloud</code>, production on Scaleway) means https and objects at
+        <code>/&lt;key&gt;</code>; a full URL (<code>http://localhost:29000/gloogle</code>) means the
+        scheme and port as written and objects at <code>/&lt;bucket&gt;/&lt;key&gt;</code> (path-style).
+        That is what enables the local stack <code>infra/local/compose.yml</code> — Postgres on 25432,
+        RustFS on 29000/29001, ports chosen far from everything — seeded from production by
+        <code>infra/local/scripts/seed-local.sh</code>: a mirror of the Scaleway bucket (8,083 archives,
+        576 MiB) and a dump/restore of the production Postgres, which lives on Render, not Scaleway.
+        What cannot be regenerated, and justifies the copy: <code>hex_read</code>, <code>analytics</code>,
+        <code>analytics_timeseries</code>, <code>search_analytics</code>, the popularity history.
+      </p>
     </section>
 
     <!-- ══ IR ══ -->

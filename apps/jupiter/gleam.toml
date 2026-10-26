@@ -3,8 +3,6 @@ version = "1.0.0"
 
 [dependencies]
 aws4_request = ">= 1.2.0 and < 2.0.0"
-cell = ">= 1.0.0 and < 2.0.0"
-chomp = {path = "../../packages/chomp"}
 cors_builder = ">= 2.0.0 and < 3.0.0"
 envoy = ">= 1.0.0 and < 2.0.0"
 exception = ">= 2.1.0 and < 3.0.0"
@@ -20,7 +18,6 @@ gleam_regexp = ">= 1.0.0 and < 2.0.0"
 gleam_stdlib = ">= 1.0.0 and < 2.0.0"
 gleam_time = ">= 1.2.0 and < 2.0.0"
 gleam_yielder = ">= 1.1.0 and < 2.0.0"
-glexer = ">= 2.0.0 and < 3.0.0"
 mist = ">= 6.0.0 and < 7.0.0"
 palabres = ">= 1.0.0 and < 2.0.0"
 plasma = {path = "../../packages/plasma"}

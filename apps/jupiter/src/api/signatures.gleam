@@ -10,7 +10,6 @@ import jupiter/gleam/context.{type Context}
 import jupiter/gleam/generate/metadata
 import jupiter/gleam/generate/sources
 import jupiter/gleam/generate/types
-import jupiter/gleam/type_search
 import jupiter/postgres/queries
 import palabres
 
@@ -197,13 +196,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
         deprecation: function.deprecation,
         implementations: Some(function.implementations),
       )
-    case content {
-      Ok([id]) -> {
-        type_search.add(signature:, id:)
-        content
-      }
-      _ -> content
-    }
+    content
   })
 }
 

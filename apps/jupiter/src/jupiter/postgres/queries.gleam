@@ -8,7 +8,6 @@ import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/hexpm
-import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -898,44 +897,6 @@ fn candidate_decoder() {
   use item <- decode.then(type_search.decoder())
   use declaration <- decode.field("signature_ir", decrypt.json(ir.decoder()))
   decode.success(#(item, declaration))
-}
-
-pub fn exact_type_search(db: pog.Connection, q: List(String)) {
-  use <- bool.guard(when: list.is_empty(q), return: Ok([]))
-  let ids =
-    list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
-    |> string.join(", ")
-  {
-    "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
-     s.name type_name,
-     s.documentation documentation,
-     s.kind signature_kind,
-     s.metadata metadata,
-     s.signature_json AS json_signature,
-     m.name module_name,
-     p.name package_name,
-     r.version version,
-     p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
-   FROM package_type_fun_signature s
-   JOIN package_module m
-     ON m.id = s.package_module_id
-   JOIN package_release r
-     ON m.package_release_id = r.id
-   JOIN package p
-     ON p.id = r.package_id
-   WHERE s.id IN ("
-    <> ids
-    <> ")
-     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
-  }
-  |> pog.query
-  |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.text(q)) })
-  |> pog.returning(type_search.decoder())
-  |> pog.execute(db)
-  |> result.map_error(loss.DatabaseError)
-  |> result.map(fn(r) { r.rows })
 }
 
 pub fn select_gleam_toml(db: pog.Connection, offset: Int) {

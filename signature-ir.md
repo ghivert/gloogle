@@ -192,9 +192,10 @@ unify.
 
 ## Type search: fingerprint + verify
 
-The in-app type search (trie + actor + `cell`, in `jupiter/gleam/type_search*`) is being
+The in-app type search (trie + actor + `cell`, in `jupiter/gleam/type_search*`) has been
 **replaced** by a Postgres-native **fingerprint + verify** design (see the "Type search
-algorithm review" work). No in-memory index, no actor, no boot-time scan.
+algorithm review" work) and removed on 2026-10-26, along with the old `jupiter/gleam/parse`
+text parser it relied on. No in-memory index, no actor, no boot-time scan.
 
 - **Phase 1 — candidate selection (GIN).** Each function row carries a fingerprint: `arity int`
   and `type_names text[]` (the bag of concrete type names it mentions, nesting flattened;
@@ -246,7 +247,7 @@ Notes:
 - **Now:** freeze the node set above; build the IR types (done) + canonical printer (done); the Gleam front-end
   (`pi.Type → ir.Type` lowering, _not_ a text parser — the structured `package_interface` is already available at
   ingestion); the fingerprint (`arity`, `type_names`) + verify unifier; and the query-side canonical parser
-  (`String → Type`). Remove the old trie/actor `type_search`.
+  (`String → Type`). Remove the old trie/actor `type_search` (done 2026-10-26).
 - **Later, per language:** TS/Python/Java front-ends; the concept/synonym table; the tolerant matching rules (wrapper
   transparency, subtyping).
 - **Out of scope v1 (extension points):** generic bounds (`<T extends Comparable>`), default parameter values,

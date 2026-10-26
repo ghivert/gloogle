@@ -792,24 +792,25 @@
                     <li><span class="node"><b>store_timeseries</b> <span><span lang="fr">3 600 s — horaire</span><span lang="en">3,600 s — hourly</span></span></span></li>
                   </ul>
                 </li>
-                <li><span class="node dim"><b>type_search.worker(ctx)</b> <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></span></li>
               </ul>
             </li>
           </ul>
         </div>
       </div>
 
-      <p class="note warn" lang="fr">
-        <strong>Le worker <code>type_search</code> est en sursis.</strong> C'est l'ancien index trie + acteur,
-        reconstruit au démarrage. Il est déjà débranché côté recherche (<code>exec_type_search</code> est
-        commenté dans <code>handlers.gleam</code>, et <code>exact_type_searches</code> vaut <code>[]</code>) ;
-        le design <em>fingerprint + verify</em> le remplace entièrement, sans index mémoire ni scan au boot.
+      <p class="note" lang="fr">
+        <strong>L'ancien worker <code>type_search</code> a été retiré</strong> (2026-10-26) : l'index trie +
+        acteur + <code>cell</code> reconstruit au démarrage, son parseur texte <code>jupiter/gleam/parse</code>, la
+        requête <code>exact_type_search</code> et l'appel <code>type_search.add</code> à l'ingestion ont disparu avec
+        lui. La recherche par type est désormais le seul tier <em>fingerprint + verify</em> de la cascade — aucun
+        index mémoire, aucun scan au boot, aucun état hors Postgres.
       </p>
-      <p class="note warn" lang="en">
-        <strong>The <code>type_search</code> worker is living on borrowed time.</strong> It is the old trie +
-        actor index, rebuilt at boot. It is already unplugged on the search side (<code>exec_type_search</code>
-        is commented out in <code>handlers.gleam</code>, and <code>exact_type_searches</code> is <code>[]</code>);
-        the <em>fingerprint + verify</em> design replaces it entirely, with no in-memory index and no boot-time scan.
+      <p class="note" lang="en">
+        <strong>The old <code>type_search</code> worker is gone</strong> (2026-10-26): the trie + actor +
+        <code>cell</code> index rebuilt at boot, its text parser <code>jupiter/gleam/parse</code>, the
+        <code>exact_type_search</code> query and the <code>type_search.add</code> call at ingestion went with it.
+        Type search is now solely the <em>fingerprint + verify</em> tier of the cascade — no in-memory index, no
+        boot-time scan, no state outside Postgres.
       </p>
     </section>
 

@@ -151,8 +151,12 @@ set — they are front-end lowering rules, matching-tier rules, or external data
         and are fooled by multisets — `Int | Int` would "equal" `Int | String`). **Not yet needed**:
         the Gleam surface produces neither `Union` nor `Record`. Becomes load-bearing the moment the
         canonical/TS parser can emit them.
-- [ ] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,
-      `ctx.search`, worker registration); it is superseded by fingerprint + verify
+- [x] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,
+      `ctx.search`, worker registration); it is superseded by fingerprint + verify. Also removed
+      with it: the old `jupiter/gleam/parse` text parser (only the trie used it), the
+      `queries.exact_type_search` id lookup, the `type_search.add` call at ingestion, and jupiter's
+      `cell`/`glexer`/`chomp` dependencies (galaxy keeps the latter two for `data/ir/parse`).
+      `jupiter_test` no longer needs a database. — **done**
 
 ## Deferred — matching tier (tolerant)
 

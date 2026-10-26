@@ -95,9 +95,11 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       (Bitmap Index Scan on `type_names`), rare names answer in 5–18 ms (`{Request,Response}` 1,597
       index hits → 4.8 ms; `{Decoder}` 14,725 hits → 18 ms), the frequent ones in 90–130 ms (`{Int}`
       63,833 hits → 89 ms; `{List}` 113,028 hits → 130 ms, parallel). In every plan the `arity = $1`
-      filter is applied *after* the index and removes 60–80 % of the heap rows fetched — the composite
-      `(arity, type_names)` question is therefore the first optimisation to try, before the
-      `type_names_count` one. Corpus facts: 8,193 distinct names; `String` 160k, `List` 113k,
+      filter is applied *after* the index and removes 60–80 % of the heap rows fetched. **Composite
+      index landed the same day** (`20261026130000`, `btree_gin`, `gin (arity, type_names)`, replaces the
+      single-column GIN): real cascade query, warm cache, `{List}` 128 → 44 ms, `{Int}` 120 → 22 ms,
+      `{Decoder}` 14 → 2.5 ms, `{Request,Response}` 3 → 2 ms; no heap filter left but
+      `signature_ir IS NOT NULL`; 5 MB, < 2 s to build. Still open: `type_names_count`. Corpus facts: 8,193 distinct names; `String` 160k, `List` 113k,
       `Attribute` 80k, `Result` 69k, `Int` 64k rows; 24,513 rows carry an empty fingerprint
       (`fn(a) -> a` shapes). The rescue is still unmeasured. Design context kept below.
       The core fact: `type_names @> ARRAY[...]` requires the candidate to mention

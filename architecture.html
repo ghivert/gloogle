@@ -2048,10 +2048,10 @@ pub type Type {
               <td class="d"><code>documentation_search</code></td>
             </tr>
             <tr>
-              <td class="m">…_type_names_gin</td><td class="m">gin</td><td class="m">type_names</td>
+              <td class="m">…_arity_type_names_gin</td><td class="m">gin (btree_gin)</td><td class="m">arity, type_names</td>
               <td class="d">
-                <span lang="fr"><strong>Phase 1</strong> du futur <em>fingerprint + verify</em></span>
-                <span lang="en"><strong>Phase 1</strong> of the upcoming <em>fingerprint + verify</em></span>
+                <span lang="fr"><strong>Phase 1</strong> de <em>fingerprint + verify</em> — <code>arity = $1 AND type_names @&gt; $2</code>, les deux dans la condition d'index. Remplace le GIN sur <code>type_names</code> seul (<code>20261026130000</code>).</span>
+                <span lang="en"><strong>Phase 1</strong> of <em>fingerprint + verify</em> — <code>arity = $1 AND type_names @&gt; $2</code>, both in the index condition. Replaces the GIN on <code>type_names</code> alone (<code>20261026130000</code>).</span>
               </td>
             </tr>
             <tr>
@@ -2068,24 +2068,24 @@ pub type Type {
       </div>
 
       <p class="note" lang="fr">
-        <strong>Il n'existe pas encore d'index composite <code>(arity, type_names)</code>.</strong>
-        La phase 1 vise <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code> ; le GIN ne couvre
-        aujourd'hui que <code>type_names</code>, et Postgres filtre <code>arity</code> après coup.
-        Mesuré le 26 octobre 2026 sur l'instantané local (502 k lignes, <code>ANALYZE</code> fait) : le GIN
-        sert à chaque requête (Bitmap Index Scan), 5 à 18 ms sur un nom rare (<code>{Request,Response}</code>,
-        <code>{Decoder}</code>), 130 ms sur <code>{List}</code> (113 k lignes, en parallèle) — et dans chaque
-        plan le filtre <code>arity</code> écarte 60 à 80 % des lignes lues après l'index. L'index composite
-        est donc la première optimisation à essayer, avant la colonne <code>type_names_count</code>.
+        <strong>L'index composite <code>(arity, type_names)</code> existe depuis <code>20261026130000</code>.</strong>
+        Avant lui, le GIN sur <code>type_names</code> seul répondait à la contenance mais laissait
+        <code>arity</code> à un filtre sur le tas qui écartait 60 à 80 % des lignes lues. Avec
+        <code>btree_gin</code>, l'entier entre dans le GIN et les deux conditions dans l'index. Mesuré le
+        26 octobre 2026 sur l'instantané local (502 k lignes), requête réelle de la cascade, cache chaud :
+        <code>{List}</code> 128 → 44 ms, <code>{Int}</code> 120 → 22 ms, <code>{Decoder}</code> 14 → 2,5 ms,
+        <code>{Request,Response}</code> 3 → 2 ms ; plus aucune ligne écartée après l'index, 5 Mo, construit en
+        moins de 2 s. Reste ouvert : <code>type_names_count</code> stocké contre <code>cardinality()</code> calculé.
       </p>
       <p class="note" lang="en">
-        <strong>There is no composite <code>(arity, type_names)</code> index yet.</strong>
-        Phase 1 targets <code>WHERE arity = $1 AND type_names @&gt; ARRAY[...]</code>; today the GIN covers
-        only <code>type_names</code>, and Postgres filters <code>arity</code> afterwards.
-        Measured on 26 October 2026 on the local snapshot (502k rows, after <code>ANALYZE</code>): the GIN
-        serves every query (Bitmap Index Scan), 5 to 18 ms on a rare name (<code>{Request,Response}</code>,
-        <code>{Decoder}</code>), 130 ms on <code>{List}</code> (113k rows, in parallel) — and in every plan
-        the <code>arity</code> filter discards 60 to 80 % of the rows fetched after the index. The composite
-        index is therefore the first optimisation to try, before a <code>type_names_count</code> column.
+        <strong>The composite <code>(arity, type_names)</code> index exists since <code>20261026130000</code>.</strong>
+        Before it, the GIN on <code>type_names</code> alone answered the containment but left
+        <code>arity</code> to a heap filter that discarded 60 to 80 % of the rows fetched. With
+        <code>btree_gin</code>, the integer enters the GIN and both conditions sit in the index. Measured on
+        26 October 2026 on the local snapshot (502k rows), the real cascade query, warm cache:
+        <code>{List}</code> 128 → 44 ms, <code>{Int}</code> 120 → 22 ms, <code>{Decoder}</code> 14 → 2.5 ms,
+        <code>{Request,Response}</code> 3 → 2 ms; no row discarded after the index any more, 5 MB, built in
+        under 2 s. Still open: a stored <code>type_names_count</code> versus computed <code>cardinality()</code>.
       </p>
     </section>
 

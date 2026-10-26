@@ -16,6 +16,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: btree_gin; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS btree_gin WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION btree_gin; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION btree_gin IS 'support for indexing common datatypes in GIN';
+
+
+--
 -- Name: fuzzystrmatch; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -435,10 +449,10 @@ CREATE INDEX package_type_fun_signature_signature_compact_trgm ON public.package
 
 
 --
--- Name: package_type_fun_signature_type_names_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: package_type_fun_signature_arity_type_names_gin; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX package_type_fun_signature_type_names_gin ON public.package_type_fun_signature USING gin (type_names);
+CREATE INDEX package_type_fun_signature_arity_type_names_gin ON public.package_type_fun_signature USING gin (arity, type_names);
 
 
 --
@@ -578,4 +592,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260703100002'),
     ('20260703100003'),
     ('20260703100004'),
-    ('20261026120000');
+    ('20261026120000'),
+    ('20261026130000');

@@ -474,13 +474,15 @@ pub fn body(model: Model) {
               title: "Internal server error",
               content: frontend_strings.internal_server_error,
             )
-          search_result.SearchResults([], [], [], [], [], []) ->
+          // A narrowed answer with no type match still shows the results view:
+          // its empty callout carries the option to widen the search.
+          search_result.SearchResults([], [], [], [], [], [], False) ->
             empty_state(
               image: images.shadow_lucy,
               title: "No match found!",
               content: frontend_strings.retry_query,
             )
-          search_result.SearchResults(_, _, _, _, _, _) -> {
+          search_result.SearchResults(_, _, _, _, _, _, _) -> {
             dict.get(state.view_cache, key)
             |> result.map(lazy.lazy)
             |> result.unwrap(el.none())

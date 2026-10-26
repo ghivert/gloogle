@@ -155,7 +155,7 @@ pub fn update_search_results(
   let index = compute_index(search_results)
   let view_cache = case search_results {
     search_result.Start | search_result.InternalServerError -> state.view_cache
-    SearchResults(types, e, m, s, d, mods) ->
+    SearchResults(types, e, m, s, d, mods, narrowed) ->
       cache.cache_search_results(
         state.submitted_input,
         index,
@@ -165,6 +165,7 @@ pub fn update_search_results(
         s,
         d,
         mods,
+        narrowed:,
       )
       |> dict.insert(state.view_cache, key, _)
   }
@@ -239,7 +240,7 @@ pub fn update_search_results_filter(state: State) {
           case search_results {
             search_result.Start | search_result.InternalServerError ->
               dict.new()
-            SearchResults(t, e, m, s, d, mods) -> {
+            SearchResults(t, e, m, s, d, mods, _) -> {
               dict.new()
               |> list.fold(t, _, extract_package_version)
               |> list.fold(e, _, extract_package_version)
@@ -299,7 +300,7 @@ pub fn update_search_results_filter(state: State) {
       let search_results = case search_results {
         search_result.Start | search_result.InternalServerError ->
           search_results
-        SearchResults(t, e, m, s, d, mods) ->
+        SearchResults(t, e, m, s, d, mods, narrowed) ->
           SearchResults(
             t |> list.filter(filter),
             e |> list.filter(filter),
@@ -313,13 +314,14 @@ pub fn update_search_results_filter(state: State) {
               True -> d |> list.filter(filter)
             },
             mods |> list.filter(filter),
+            narrowed,
           )
       }
       let index = compute_index(search_results)
       let view_cache = case search_results {
         search_result.Start | search_result.InternalServerError ->
           state.view_cache
-        SearchResults(types, e, m, s, d, mods) ->
+        SearchResults(types, e, m, s, d, mods, narrowed) ->
           cache.cache_search_results(
             state.submitted_input,
             index,
@@ -329,6 +331,7 @@ pub fn update_search_results_filter(state: State) {
             s,
             d,
             mods,
+            narrowed:,
           )
           |> dict.insert(state.view_cache, key, _)
       }
@@ -373,7 +376,7 @@ pub fn reset(state: State) {
 fn compute_index(search_results: SearchResults) -> Index {
   case search_results {
     search_result.Start | search_result.InternalServerError -> []
-    SearchResults(types, exact, others, searches, docs, modules) -> {
+    SearchResults(types, exact, others, searches, docs, modules, _) -> {
       []
       |> insert_module_names(types)
       |> insert_module_names(exact)

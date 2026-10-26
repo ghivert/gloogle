@@ -12,6 +12,11 @@ pub type SearchResults {
     vector_signature_searches: List(TypeSearch),
     docs_searches: List(TypeSearch),
     module_searches: List(TypeSearch),
+    /// `True` when the API answered a structurally typed query from the type
+    /// tier alone; the text tiers above are then empty by construction and the
+    /// view offers to widen the search (`broad=true`). Absent from older
+    /// servers, hence the default.
+    narrowed: Bool,
   )
 }
 
@@ -30,6 +35,7 @@ fn search_results_decoder_() {
   use vector_signature_searches <- decode.field("searches", results)
   use docs_searches <- decode.field("docs-searches", results)
   use module_searches <- decode.field("module-searches", results)
+  use narrowed <- decode.optional_field("narrowed", False, decode.bool)
   decode.success({
     SearchResults(
       exact_type_matches:,
@@ -38,6 +44,7 @@ fn search_results_decoder_() {
       vector_signature_searches:,
       docs_searches:,
       module_searches:,
+      narrowed:,
     )
   })
 }

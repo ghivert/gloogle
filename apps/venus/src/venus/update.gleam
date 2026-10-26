@@ -109,11 +109,20 @@ pub fn handle_submitted_search(state: State) {
       |> pair.new(new_state, _)
     }
     Error(_) -> {
-      let effects = effect.batch([api.get_search(state), window.blur()])
+      let effects =
+        effect.batch([api.get_search(state, broad: False), window.blur()])
       model.toggle_loading(new_state)
       |> pair.new(effects)
     }
   }
+}
+
+/// Re-run the submitted query with every tier. The response replaces the
+/// cached one for that query, so the widen banner disappears with it.
+pub fn handle_broad_search(state: State) {
+  use <- bool.guard(when: state.loading, return: #(state, effect.none()))
+  model.toggle_loading(state)
+  |> pair.new(api.get_search(state, broad: True))
 }
 
 pub fn handle_toggle_filter(state, filter, value) {

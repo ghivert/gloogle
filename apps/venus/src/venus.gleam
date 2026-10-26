@@ -63,6 +63,7 @@ fn update_state(state: State, msg: Msg) {
     msg.UserInputtedSearch(query:) ->
       update.handle_inputted_search(state, query)
     msg.UserPressedEscape -> update.handle_pressed_escape(state)
+    msg.UserRequestedBroadSearch -> update.handle_broad_search(state)
     msg.UserSubmittedSearch -> update.handle_submitted_search(state)
     msg.UserToggledFilter(filter:, value:) ->
       update.handle_toggle_filter(state, filter, value)

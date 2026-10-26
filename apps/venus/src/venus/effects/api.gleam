@@ -37,10 +37,16 @@ pub fn get_analytics() {
   Nil
 }
 
-pub fn get_search(state: State) {
+/// `broad: True` asks the API to run every tier even for a structurally typed
+/// query — the "widen the search" action.
+pub fn get_search(state: State, broad broad: Bool) {
   use dispatch <- effect.from
+  let query = case broad {
+    True -> [#("q", state.input), #("broad", "true")]
+    False -> [#("q", state.input)]
+  }
   discuss.about(["search"])
-  |> discuss.query([#("q", state.input)])
+  |> discuss.query(query)
   |> discuss.expect(search_result.search_results_decoder())
   |> discuss.on_success(fn(search_results) {
     state.input

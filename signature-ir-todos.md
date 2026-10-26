@@ -150,8 +150,13 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       *structurally* a type (`handlers.structural` — a `Fn`, `Tuple`, `Record`, `Union` or a `Named`
       with arguments; a bare `Named`, `Var` or `Hole` is not, so `Connection` keeps its name search)
       stops after the type tier; the response carries `"narrowed": true`, and `GET /search?q=…&broad=true`
-      runs every tier anyway — the "élargir la recherche" switch venus still has to expose (follow-up:
-      a toggle in venus, shown when `narrowed` is true). Measured end to end on the local stack: typed
+      runs every tier anyway. **Venus side done too**: `SearchResults.narrowed` (decoded with a
+      default, so older servers still work), a "Widen the search" callout with its button under the
+      type results when narrowed (also when the type tier found nothing), `UserRequestedBroadSearch`
+      → `api.get_search(broad: True)`; the widened response replaces the cached one, so the banner
+      disappears. Checked in the browser against the local stack. On the way: `vite.config.js` still
+      loaded `vite-gleam` while `venus.main.ts` imports `gleam:venus`, the `@chouquette/gleam-vite-loader`
+      scheme — the dev server could not start; switched to `gleamImportPlugin()`. Measured end to end on the local stack: typed
       queries went from 0.4–10 s to 32–334 ms (`fn(a) -> a` 10.6 s → 39 ms, `fn(List(Int)) -> Bool`
       652 → 56 ms, the map query 3.8 s → 334 ms); bare names unchanged (`Connection` 319 ms, `Error`
       587 ms, all six tiers). The text tiers' own plans (trigram on code-shaped strings, `module_search`

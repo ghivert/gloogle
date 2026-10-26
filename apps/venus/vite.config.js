@@ -1,10 +1,10 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
-import gleam from 'vite-gleam'
+import { gleamImportPlugin } from '@chouquette/gleam-vite-loader'
 
 export default defineConfig(({ mode }) => ({
   plugins: [
-    gleam(),
+    gleamImportPlugin(),
     sentryVitePlugin({
       disable: mode === 'development',
       org: process.env.SENTRY_ORG,

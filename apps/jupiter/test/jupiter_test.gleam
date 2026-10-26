@@ -1,10 +1,12 @@
 import data/ir
 import data/ir/from_gleam
+import data/ir/parse
 import gleam/list
 import gleam/option.{None}
 import gleam/package_interface as pi
 import gleeunit
 import jupiter/postgres/queries
+import jupiter/router/handlers
 
 pub fn main() {
   gleeunit.main()
@@ -42,4 +44,19 @@ pub fn subset_keys_test() {
   assert queries.subset_keys([]) == [""]
   // Beyond six names the enumeration is skipped.
   assert queries.subset_keys(["A", "B", "C", "D", "E", "F", "G"]) == []
+}
+
+// A query is structurally a type when it carries type syntax a user does not
+// type by accident; a bare identifier is not, so it keeps the text tiers.
+pub fn structural_query_test() {
+  let structural = fn(query) {
+    let assert Ok(type_) = parse.parse(query)
+    handlers.structural(type_)
+  }
+  assert structural("fn(List(a), fn(a) -> b) -> List(b)")
+  assert structural("List(Int)")
+  assert structural("#(a, b)")
+  assert !structural("Connection")
+  assert !structural("a")
+  assert !structural("_")
 }

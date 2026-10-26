@@ -34,11 +34,21 @@ pub fn analytics(_req: Request, ctx: Context) {
   |> result.unwrap(wisp.internal_server_error())
 }
 
+/// `GET /search?q=…[&broad=true]`. A query that is structurally a type —
+/// `fn(List(a)) -> Bool`, `List(Int)`, `#(a, b)` — is answered by the type tier
+/// alone; the text tiers would only grind trigram and tsvector searches over a
+/// string shaped like code (seconds, then timeouts) to return noise. `broad=true`
+/// runs every tier regardless: the "widen the search" switch. A bare identifier
+/// (`Connection`, `is_empty`) is not structural and always gets every tier.
 pub fn search(req: Request, ctx: Context) {
-  wisp.get_query(req)
-  |> list.find(fn(item) { item.0 == "q" })
+  let params = wisp.get_query(req)
+  let broad =
+    list.key_find(params, "broad")
+    |> result.map(fn(value) { value == "true" || value == "1" })
+    |> result.unwrap(False)
+  list.key_find(params, "q")
   |> result.replace_error(loss.EmptyError)
-  |> result.map(fn(item) { do_search(item.1, ctx) })
+  |> result.map(fn(query) { do_search(query, broad, ctx) })
   |> result.unwrap(json.object([#("error", json.string("internal"))]))
   |> json.to_string
   |> wisp.json_response(200)
@@ -101,15 +111,24 @@ fn select_all_analytics(ctx: Context) {
   ))
 }
 
-fn do_search(query: String, ctx: Context) {
+fn do_search(query: String, broad: Bool, ctx: Context) {
   palabres.notice("Search")
   |> palabres.string("query", query)
+  |> palabres.bool("broad", broad)
   |> palabres.at(module:, function: "do_search")
   |> palabres.log
   queries.upsert_search_analytics(ctx.db, query)
   |> loss.dismiss
 
-  let exact_type_searches = exec_type_search(ctx, query)
+  let #(exact_type_searches, structural) = exec_type_search(ctx, query)
+  // A structural type query stops here unless the caller asked to widen.
+  let narrowed = structural && !broad
+  let exec_search = fn(ctx, query, run, previous) {
+    case narrowed {
+      True -> []
+      False -> exec_search(ctx, query, run, previous)
+    }
+  }
 
   let exact_name_matches =
     exact_type_searches
@@ -150,6 +169,7 @@ fn do_search(query: String, ctx: Context) {
     |> exec_search(ctx, query, queries.module_search, _)
 
   json.object([
+    #("narrowed", json.bool(narrowed)),
     #("exact-type-matches", json.array(exact_type_searches, type_search.encode)),
     #("exact-matches", json.array(exact_matches, type_search.encode)),
     #("matches", json.array(matches, type_search.encode)),
@@ -162,21 +182,24 @@ fn do_search(query: String, ctx: Context) {
 /// The type-search tier: parse the query as a Gleam type, then run the two-phase
 /// fingerprint + verify pipeline. `parse` fails on anything that is not a type
 /// (multi-word text queries, malformed input) — those simply skip this tier and
-/// fall through to the name/content tiers below.
+/// fall through to the name/content tiers below. The second element says whether
+/// the query was *structurally* a type (see `structural`), which is what lets
+/// `do_search` skip the text tiers.
 fn exec_type_search(
   ctx: Context,
   query: String,
-) -> List(type_search.TypeSearch) {
+) -> #(List(type_search.TypeSearch), Bool) {
   case parse.parse(query) {
-    Error(_) -> []
+    Error(_) -> #([], False)
     Ok(type_) -> {
+      let structural = structural(type_)
       let #(arity, type_names) = ir.fingerprint_type(type_)
       // A bare variable or hole (`a`, `_`) has no structural signal — arity 0 and
       // no names — so its fingerprint matches nearly everything. That is a text
       // query, not a type query; leave it to the other tiers.
       use <- bool.guard(
         when: arity == 0 && list.is_empty(type_names),
-        return: [],
+        return: #([], False),
       )
       let subset_keys = queries.subset_keys(type_names)
       queries.fingerprint_candidates(ctx.db, arity, type_names, subset_keys)
@@ -190,7 +213,21 @@ fn exec_type_search(
       |> list.sort(fn(a, b) { unify.compare(a.1, b.1) })
       |> list.map(pair.first)
       |> list.take(20)
+      |> pair.new(structural)
     }
+  }
+}
+
+/// Is a parsed query unmistakably a type, rather than a word that happens to
+/// parse as one? A function, a tuple, a parameterised type (`List(Int)`), a
+/// record or a union carry type syntax a user does not type by accident. A bare
+/// name (`Connection`), variable (`a`) or hole (`_`) does not: it may well be a
+/// search by name, so the text tiers must still run for it.
+pub fn structural(type_: ir.Type) -> Bool {
+  case type_ {
+    ir.Fn(..) | ir.Tuple(..) | ir.Record(..) | ir.Union(..) -> True
+    ir.Named(args: [_, ..], ..) -> True
+    ir.Named(args: [], ..) | ir.Var(..) | ir.Hole -> False
   }
 }
 

@@ -1581,10 +1581,10 @@ pub type Type {
               </td>
             </tr>
             <tr>
-              <td class="m">GET</td><td class="m">/search?q=</td><td class="m">handlers.search</td>
+              <td class="m">GET</td><td class="m">/search?q=[&amp;broad=true]</td><td class="m">handlers.search</td>
               <td class="d">
-                <span lang="fr">Les six tiers de la cascade ci-dessous, en un seul objet.</span>
-                <span lang="en">The six tiers of the cascade below, in a single object.</span>
+                <span lang="fr">Les six tiers de la cascade ci-dessous, en un seul objet, plus <code>narrowed</code> : <code>true</code> quand la requête, structurellement un type, n'a traversé que le tier type. <code>broad=true</code> force les six tiers (« élargir la recherche »).</span>
+                <span lang="en">The six tiers of the cascade below, in a single object, plus <code>narrowed</code>: <code>true</code> when the query, structurally a type, only went through the type tier. <code>broad=true</code> forces all six tiers ("widen the search").</span>
               </td>
             </tr>
             <tr>
@@ -1602,8 +1602,8 @@ pub type Type {
     <!-- ══ RECHERCHE ══ -->
     <section id="recherche">
       <h2><span lang="fr">La cascade de recherche</span><span lang="en">The search cascade</span></h2>
-      <p class="sub" lang="fr">Une requête traverse six tiers, du plus précis au plus large. Chaque tier reçoit la concaténation de tous les résultats précédents et s'en défausse (<code>exec_search</code> filtre par <code>list.contains</code>), si bien qu'un même item n'apparaît qu'une fois, dans son tier le plus précis. Chaque requête SQL est plafonnée à 100 lignes et triée par <code>package_rank DESC, ordering DESC</code>, où <code>ordering</code> est la version découpée en <code>int[]</code>.</p>
-      <p class="sub" lang="en">A query travels through six tiers, from the most precise to the broadest. Each tier receives the concatenation of every previous result and discards those (<code>exec_search</code> filters with <code>list.contains</code>), so a given item appears exactly once, in its most precise tier. Every SQL query is capped at 100 rows and ordered by <code>package_rank DESC, ordering DESC</code>, where <code>ordering</code> is the version split into an <code>int[]</code>.</p>
+      <p class="sub" lang="fr">Une requête traverse six tiers, du plus précis au plus large. Chaque tier reçoit la concaténation de tous les résultats précédents et s'en défausse (<code>exec_search</code> filtre par <code>list.contains</code>), si bien qu'un même item n'apparaît qu'une fois, dans son tier le plus précis. Chaque requête SQL est plafonnée à 100 lignes et triée par <code>package_rank DESC, ordering DESC</code>, où <code>ordering</code> est <code>package_release.version_ordering</code>, la version découpée en <code>int[]</code> par Postgres. <strong>Une requête structurellement typée s'arrête au premier tier</strong> : si elle parse en fonction, tuple ou type paramétré (<code>fn(List(a)) -> Bool</code>, <code>List(Int)</code>, <code>#(a, b)</code>), les cinq tiers texte ne tournent pas — ils ne feraient que moudre du trigram et du tsvector sur une chaîne en forme de code, pour des secondes et des <em>timeouts</em>, et rendre du bruit — et la réponse porte <code>"narrowed": true</code>. <code>?broad=true</code> les relance tous : c'est l'interrupteur « élargir la recherche » que venus affichera. Un simple identifiant (<code>Connection</code>, <code>is_empty</code>) n'est pas structurel et traverse toujours les six tiers (<code>handlers.structural</code>).</p>
+      <p class="sub" lang="en">A query travels through six tiers, from the most precise to the broadest. Each tier receives the concatenation of every previous result and discards those (<code>exec_search</code> filters with <code>list.contains</code>), so a given item appears exactly once, in its most precise tier. Every SQL query is capped at 100 rows and ordered by <code>package_rank DESC, ordering DESC</code>, where <code>ordering</code> is <code>package_release.version_ordering</code>, the version split into an <code>int[]</code> by Postgres. <strong>A structurally typed query stops at the first tier</strong>: if it parses as a function, a tuple or a parameterised type (<code>fn(List(a)) -> Bool</code>, <code>List(Int)</code>, <code>#(a, b)</code>), the five text tiers do not run — they would only grind trigram and tsvector searches over a code-shaped string, for seconds and timeouts, and return noise — and the response carries <code>"narrowed": true</code>. <code>?broad=true</code> runs them all again: the "widen the search" switch venus will expose. A bare identifier (<code>Connection</code>, <code>is_empty</code>) is not structural and always travels the six tiers (<code>handlers.structural</code>).</p>
 
       <div class="cascade">
         <div class="tier">

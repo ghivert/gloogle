@@ -146,9 +146,16 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       `list.is_empty` for `(List(Int)) -> Bool` through the rescue, `identity`/`io.debug` for
       `fn(a) -> a`, one row per declaration at its latest version — but whole requests take 0.4–10 s
       because the *text* tiers still run on type-shaped strings and the trigram/tsvector ones time out
-      (`pog` query timeout) on `fn(a) -> a` or `Error`. **Next step, not taken**: skip the text tiers
-      (or at least `content_search`) when the query parsed as a type, and look at the text tiers' own
-      plans. Two gotchas met on the way: `pog` sends untyped parameters, so `cardinality($2)` fails with
+      (`pog` query timeout) on `fn(a) -> a` or `Error`. **Done the same day**: a query that is
+      *structurally* a type (`handlers.structural` — a `Fn`, `Tuple`, `Record`, `Union` or a `Named`
+      with arguments; a bare `Named`, `Var` or `Hole` is not, so `Connection` keeps its name search)
+      stops after the type tier; the response carries `"narrowed": true`, and `GET /search?q=…&broad=true`
+      runs every tier anyway — the "élargir la recherche" switch venus still has to expose (follow-up:
+      a toggle in venus, shown when `narrowed` is true). Measured end to end on the local stack: typed
+      queries went from 0.4–10 s to 32–334 ms (`fn(a) -> a` 10.6 s → 39 ms, `fn(List(Int)) -> Bool`
+      652 → 56 ms, the map query 3.8 s → 334 ms); bare names unchanged (`Connection` 319 ms, `Error`
+      587 ms, all six tiers). The text tiers' own plans (trigram on code-shaped strings, `module_search`
+      without an index nor a LIMIT — 1,958 rows for "Error") are untouched. Two gotchas met on the way: `pog` sends untyped parameters, so `cardinality($2)` fails with
       "could not determine polymorphic type" — cast (`$2::text[]`) every array parameter used outside a
       comparison with a typed column; and jupiter's boot is flaky on this laptop under load
       (`FailedToStartChild(2, InitFailed("shutdown"))` from mist's handler factory, 1 start in 8 at the

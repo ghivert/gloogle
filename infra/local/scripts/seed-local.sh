@@ -19,7 +19,8 @@
 #   SCALEWAY_SECRET_KEY
 #   BUCKET_URI             e.g. gloogle.s3.fr-par.scw.cloud (as jupiter reads it)
 #
-# Usage: infra/local/scripts/seed-local.sh [db|s3|all]   (default: all)
+# Usage: infra/local/scripts/seed-local.sh [db|s3|all|snapshot]   (default: all)
+#   snapshot   re-dump the local database into apps/jupiter/db/gloogle_migrated.sql.gz
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -98,9 +99,27 @@ seed_s3() {
     "$venv/bin/python" "$here/mirror_bucket.py" mirror
 }
 
+# Re-create the snapshot from the local database — after a backfill or a
+# migration has enriched it — so the next `seed-local.sh db` starts from the
+# richer state. The previous snapshot is kept under infra/local/dumps.
+snapshot() {
+  need pg_dump
+  local target="$root/apps/jupiter/db/gloogle_migrated.sql.gz"
+  if [ -s "$target" ]; then
+    local backup="$dumps/gloogle_migrated.$(date +%Y%m%d-%H%M%S).sql.gz"
+    echo "→ keeping the previous snapshot as $backup"
+    cp "$target" "$backup"
+  fi
+  echo "→ dumping the local database to $target"
+  pg_dump --no-owner --no-privileges --dbname="$LOCAL_DATABASE_URL" | gzip -9 > "$target.tmp"
+  mv "$target.tmp" "$target"
+  ls -lh "$target"
+}
+
 case "${1:-all}" in
   db) seed_db ;;
   s3) seed_s3 ;;
   all) seed_db; seed_s3 ;;
-  *) echo "usage: $0 [db|s3|all]" >&2; exit 2 ;;
+  snapshot) snapshot ;;
+  *) echo "usage: $0 [db|s3|all|snapshot]" >&2; exit 2 ;;
 esac

@@ -18,7 +18,9 @@ const module_name = "api/signatures"
 /// Alpha-rename a lowered declaration, then derive the columns that hang off the
 /// IR: the encoded `signature_ir` and its phase-1 fingerprint (`arity`,
 /// `type_names`). All three come from the one canonical declaration.
-fn structured(declaration: ir.Declaration) -> #(json.Json, Int, List(String)) {
+pub fn structured(
+  declaration: ir.Declaration,
+) -> #(json.Json, Int, List(String)) {
   let declaration = ir.alpha_rename_declaration(declaration)
   let #(arity, type_names) = ir.fingerprint(declaration)
   #(ir.encode(declaration), arity, type_names)

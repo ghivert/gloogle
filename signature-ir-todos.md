@@ -90,8 +90,16 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       cardinality(type_names), p.rank DESC LIMIT 100`, verify in Gleam, truncate to 20. Used
       computed `cardinality()` (no stored count column yet) and `@>`-only (no rescue yet). What
       **remains**: the candidate-more-general rescue (`OR has_variables` vs `<@`, below), the
-      stored-`type_names_count`-vs-`cardinality()` decision, and the actual measurement on real
-      data — none of which is possible without a seeded DB. Design context kept below.
+      stored-`type_names_count`-vs-`cardinality()` decision. **First measurement (2026-10-26, local
+      snapshot backfilled, 502k rows, Postgres 18, `ANALYZE` run):** the GIN is used for every query
+      (Bitmap Index Scan on `type_names`), rare names answer in 5–18 ms (`{Request,Response}` 1,597
+      index hits → 4.8 ms; `{Decoder}` 14,725 hits → 18 ms), the frequent ones in 90–130 ms (`{Int}`
+      63,833 hits → 89 ms; `{List}` 113,028 hits → 130 ms, parallel). In every plan the `arity = $1`
+      filter is applied *after* the index and removes 60–80 % of the heap rows fetched — the composite
+      `(arity, type_names)` question is therefore the first optimisation to try, before the
+      `type_names_count` one. Corpus facts: 8,193 distinct names; `String` 160k, `List` 113k,
+      `Attribute` 80k, `Result` 69k, `Int` 64k rows; 24,513 rows carry an empty fingerprint
+      (`fn(a) -> a` shapes). The rescue is still unmeasured. Design context kept below.
       The core fact: `type_names @> ARRAY[...]` requires the candidate to mention
       *every* query name — sound for `Exact` and for the query-more-general direction of `Lenient`
       (query holes add no names, so `_` never breaks `@>`), **unsound when the candidate is more
@@ -270,5 +278,10 @@ Done already on the way here: `json_signature` → `signature_json` rename + `re
       the `module.` qualification** (the printer emits `gleam/option.Option`, the unifier compares
       bare `name` — this fourth one was missed in the original list). Queries with `_` or omitted
       labels still go through fingerprint + verify; this is a shortcut, not a replacement.
-- [ ] Backfill existing rows (keyset): `pi`/`signature_` → IR → `alpha_rename` → fill `signature_ir` + fingerprint.
+- [x] Backfill existing rows (keyset): `tasks/backfill_ir` re-derives `signature_ir` + fingerprint from the
+      stored `package_interface` of each release through `api/signatures.structured` (now public), one
+      transaction per release, matched on `(package_module_id, name, kind)`. Run on the local snapshot
+      on 2026-10-26 (`gleam run -m tasks/backfill_ir` with the real binaries, not the mise shims):
+      502,188 of 502,237 rows filled in 3 min 26, 0 failed releases; 49 rows stay NULL (two releases whose
+      stored interface lacks some ingested modules), 3,481 interface declarations had no row. — **done**
 - [ ] Multi-language: populate `package.language` / `package.registry` (migration `20260703100000`) as non-Gleam lands.

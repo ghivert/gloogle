@@ -912,6 +912,37 @@
         Ce qui ne se régénère pas et justifie la copie : <code>hex_read</code>, <code>analytics</code>,
         <code>analytics_timeseries</code>, <code>search_analytics</code>, l'historique de popularité.
       </p>
+
+      <p class="note" lang="fr">
+        <strong>Les colonnes dérivées de l'IR se re-dérivent sans Hex : <code>tasks/backfill_ir</code>.</strong>
+        Chaque release garde son <code>package_interface</code> brut en base. La tâche ponctuelle
+        (<code>gleam run -m tasks/backfill_ir</code>, hors superviseur) parcourt les releases par keyset sur
+        <code>package_release.id</code>, décode l'interface, abaisse chaque déclaration par
+        <code>data/ir/from_gleam</code>, passe par <code>api/signatures.structured</code> — le seul endroit
+        où <code>signature_ir</code>, <code>arity</code> et <code>type_names</code> naissent de la déclaration
+        canonique, pour l'ingestion comme pour le backfill — et met à jour la ligne
+        <code>(package_module_id, name, kind)</code>, une transaction par release, sans toucher aux autres
+        colonnes. Idempotente ; c'est elle qui a rempli l'instantané local (502 188 des 502 237 lignes, en
+        3 min 26 ; les 49 restantes appartiennent à deux releases dont l'interface stockée ne décrit pas
+        tous les modules ingérés) dont les colonnes IR étaient vides. Deux pièges : la lancer avec les binaires réels (les shims mise
+        réinjectent le <code>DATABASE_URL</code> du développeur), et lire hors transaction tout ce qui
+        se décode par nom de colonne (la connexion transactionnelle de <code>pog</code> rend des tuples).
+      </p>
+      <p class="note" lang="en">
+        <strong>The IR-derived columns re-derive without Hex: <code>tasks/backfill_ir</code>.</strong>
+        Every release keeps its raw <code>package_interface</code> in the database. The one-shot task
+        (<code>gleam run -m tasks/backfill_ir</code>, outside the supervisor) walks releases by keyset on
+        <code>package_release.id</code>, decodes the interface, lowers each declaration with
+        <code>data/ir/from_gleam</code>, goes through <code>api/signatures.structured</code> — the one place
+        where <code>signature_ir</code>, <code>arity</code> and <code>type_names</code> are born from the
+        canonical declaration, for ingestion and backfill alike — and updates the row
+        <code>(package_module_id, name, kind)</code>, one transaction per release, touching no other
+        column. Idempotent; it is what filled the local snapshot (502,188 of 502,237 rows, in 3 min 26; the
+        49 left belong to two releases whose stored interface does not describe every ingested module)
+        whose IR columns were empty. Two traps: run it with the real binaries (mise shims re-inject the developer's
+        <code>DATABASE_URL</code>), and read anything decoded by column name outside the transaction
+        (<code>pog</code>'s transaction connection returns tuples).
+      </p>
       <p class="note" lang="en">
         <strong>The archive cache (step 02) has three tiers, and a local stack.</strong>
         <code>api/hex_repo</code> looks for a release tarball on disk first, then in the S3 bucket, and

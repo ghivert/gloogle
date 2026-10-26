@@ -37,8 +37,9 @@ The backend (`apps/jupiter`) needs a Postgres database and an S3-compatible
 bucket for the package-archive cache. Both run locally with Docker:
 
 ```sh
-# Postgres on localhost:25432, RustFS (S3) on localhost:29000 (console on 29001).
+# Postgres 18 on localhost:25432, RustFS (S3) on localhost:29000 (console on 29001).
 # Deliberately far from the defaults so nothing collides with other local stacks.
+# Postgres must be 18+: the schema relies on the built-in uuidv7().
 docker compose -f infra/local/compose.yml up -d
 ```
 
@@ -75,17 +76,23 @@ popularity history only exist in production. `infra/local/scripts/seed-local.sh`
 copies everything:
 
 ```sh
-# 1. Database: pg_dump from the production Postgres (Render), restore locally,
-#    then dbmate up for migrations newer than production.
+# 1. Database: restore apps/jupiter/db/gloogle_migrated.sql.gz — the production
+#    snapshot kept next to the migrations (gitignored; 2026-07-02, ~110 MB) —
+#    then dbmate up for the migrations newer than it.
 # 2. Bucket: mirror the Scaleway bucket to infra/local/dumps/, then into RustFS.
+infra/local/scripts/seed-local.sh          # or: seed-local.sh db / seed-local.sh s3
+
+# For a fresher database than the snapshot, dump production (Render) instead:
 PROD_DATABASE_URL="postgres://…render…/gloogle?sslmode=require" \
-  infra/local/scripts/seed-local.sh        # or: seed-local.sh db / seed-local.sh s3
+  infra/local/scripts/seed-local.sh db
+# …or restore any dump you have: DUMP_FILE=path/to/dump infra/local/scripts/seed-local.sh db
 ```
 
 The bucket half reads `BUCKET_URI`, `SCALEWAY_ACCESS_KEY` and
 `SCALEWAY_SECRET_KEY` from the environment (`mise env` in `apps/jupiter`
-exports them). Dumps and the bucket mirror land in `infra/local/dumps/`
-(gitignored) so a reseed does not hit production twice.
+exports them). Fresh dumps and the bucket mirror land in `infra/local/dumps/`
+(gitignored) so a reseed does not hit production twice. `apps/jupiter/db/seeds.sql`
+is an older (2024-08) snapshot of the same database, kept for history.
 
 ## Contributing
 

@@ -18,7 +18,7 @@ name: gloogle
 
 services:
   postgres:
-    image: postgres:17
+    image: postgres:18  # the schema uses uuidv7(), native since Postgres 18
     container_name: gloogle-postgres
     environment:
       POSTGRES_USER: gloogle
@@ -27,7 +27,9 @@ services:
     ports:
       - "25432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      # Postgres 18 images keep PGDATA under /var/lib/postgresql/<major>/docker,
+      # so the volume mounts the parent directory, not the old `/data` leaf.
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gloogle -d gloogle"]
       interval: 5s

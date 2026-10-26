@@ -906,7 +906,9 @@
         C'est ce qui permet la stack locale <code>infra/local/compose.yml</code> — Postgres sur 25432,
         RustFS sur 29000/29001, ports choisis loin de tout — alimentée depuis la prod par
         <code>infra/local/scripts/seed-local.sh</code> : miroir du bucket Scaleway (8 083 archives,
-        576 Mio) et dump/restore de la base Postgres de prod, qui vit chez Render, pas chez Scaleway.
+        576 Mio) et restauration de la base depuis l'instantané de prod
+        <code>apps/jupiter/db/gloogle_migrated.sql.gz</code> (2 juillet 2026, hors git ; la prod vit chez
+        Render, pas chez Scaleway), suivie de <code>dbmate up</code> pour les migrations plus récentes.
         Ce qui ne se régénère pas et justifie la copie : <code>hex_read</code>, <code>analytics</code>,
         <code>analytics_timeseries</code>, <code>search_analytics</code>, l'historique de popularité.
       </p>
@@ -921,7 +923,9 @@
         That is what enables the local stack <code>infra/local/compose.yml</code> — Postgres on 25432,
         RustFS on 29000/29001, ports chosen far from everything — seeded from production by
         <code>infra/local/scripts/seed-local.sh</code>: a mirror of the Scaleway bucket (8,083 archives,
-        576 MiB) and a dump/restore of the production Postgres, which lives on Render, not Scaleway.
+        576 MiB) and a restore of the database from the production snapshot
+        <code>apps/jupiter/db/gloogle_migrated.sql.gz</code> (2 July 2026, outside git; production lives on
+        Render, not Scaleway), followed by <code>dbmate up</code> for the newer migrations.
         What cannot be regenerated, and justifies the copy: <code>hex_read</code>, <code>analytics</code>,
         <code>analytics_timeseries</code>, <code>search_analytics</code>, the popularity history.
       </p>

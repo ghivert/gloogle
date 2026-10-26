@@ -923,8 +923,9 @@
         canonique, pour l'ingestion comme pour le backfill — et met à jour la ligne
         <code>(package_module_id, name, kind)</code>, une transaction par release, sans toucher aux autres
         colonnes. Idempotente ; c'est elle qui a rempli l'instantané local (502 188 des 502 237 lignes, en
-        3 min 26 ; les 49 restantes appartiennent à deux releases dont l'interface stockée ne décrit pas
-        tous les modules ingérés) dont les colonnes IR étaient vides. Deux pièges : la lancer avec les binaires réels (les shims mise
+        3 min 26 ; les 49 restantes appartenaient à deux releases dont l'interface stockée ne décrivait pas
+        tous les modules ingérés — supprimées de la base locale, le sync Hex les réingère puisque leurs
+        paquets ont bougé après le curseur) dont les colonnes IR étaient vides. Deux pièges : la lancer avec les binaires réels (les shims mise
         réinjectent le <code>DATABASE_URL</code> du développeur), et lire hors transaction tout ce qui
         se décode par nom de colonne (la connexion transactionnelle de <code>pog</code> rend des tuples).
       </p>
@@ -938,8 +939,9 @@
         canonical declaration, for ingestion and backfill alike — and updates the row
         <code>(package_module_id, name, kind)</code>, one transaction per release, touching no other
         column. Idempotent; it is what filled the local snapshot (502,188 of 502,237 rows, in 3 min 26; the
-        49 left belong to two releases whose stored interface does not describe every ingested module)
-        whose IR columns were empty. Two traps: run it with the real binaries (mise shims re-inject the developer's
+        49 left belonged to two releases whose stored interface did not describe every ingested module —
+        deleted from the local database, the Hex sync re-ingests them since their packages moved after
+        the cursor) whose IR columns were empty. Two traps: run it with the real binaries (mise shims re-inject the developer's
         <code>DATABASE_URL</code>), and read anything decoded by column name outside the transaction
         (<code>pog</code>'s transaction connection returns tuples).
       </p>

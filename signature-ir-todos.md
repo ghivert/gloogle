@@ -284,6 +284,9 @@ Done already on the way here: `json_signature` → `signature_json` rename + `re
       stored `package_interface` of each release through `api/signatures.structured` (now public), one
       transaction per release, matched on `(package_module_id, name, kind)`. Run on the local snapshot
       on 2026-10-26 (`gleam run -m tasks/backfill_ir` with the real binaries, not the mise shims):
-      502,188 of 502,237 rows filled in 3 min 26, 0 failed releases; 49 rows stay NULL (two releases whose
-      stored interface lacks some ingested modules), 3,481 interface declarations had no row. — **done**
+      502,188 of 502,237 rows filled in 3 min 26, 0 failed releases; the 49 rows left NULL (lustre_dev_tools
+      2.0.0 and g18n 2.0.0, whose stored interface lacked ingested modules) were deleted from the local
+      database so the Hex sync re-ingests them (both packages moved on Hex after the `hex_read` cursor;
+      `lookup_release` fails on the missing release and extraction runs again); 3,481 interface
+      declarations had no row. — **done**
 - [ ] Multi-language: populate `package.language` / `package.registry` (migration `20260703100000`) as non-Gleam lands.

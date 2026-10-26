@@ -247,7 +247,7 @@ pub fn fingerprint(declaration: Declaration) -> #(Int, List(String)) {
   case declaration {
     Function(signature:) -> fingerprint_type(signature)
     Constant(type_:) -> fingerprint_type(type_)
-    TypeAlias(aliased:, ..) -> #(0, names(aliased))
+    TypeAlias(aliased:, ..) -> fingerprint_type(aliased)
     TypeDefinition(constructors:, ..) -> {
       let types =
         list.flat_map(constructors, fn(c) {

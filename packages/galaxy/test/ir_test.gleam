@@ -71,6 +71,23 @@ pub fn fingerprint_test() {
   assert ir.fingerprint(declaration) == #(2, ["Result"])
 }
 
+// A `TypeAlias` fingerprints through its aliased type, like `Constant`: an alias
+// of a function type carries that function's arity, so phase 1 (`arity = $1`)
+// keeps it for the queries phase 2 (`unify_declaration`, which matches against
+// `aliased`) would verify. An alias of a non-function type stays at arity 0.
+pub fn fingerprint_type_alias_test() {
+  let int = ir.Named(ir.Name("gleam_stdlib", "gleam", "Int", None), [])
+  let bool = ir.Named(ir.Name("gleam_stdlib", "gleam", "Bool", None), [])
+  let callback =
+    ir.TypeAlias(
+      parameters: 0,
+      aliased: ir.Fn([ir.Param(None, False, int)], bool, False),
+    )
+  assert ir.fingerprint(callback) == #(1, ["Bool", "Int"])
+  let pair = ir.TypeAlias(parameters: 0, aliased: ir.Tuple([int, bool]))
+  assert ir.fingerprint(pair) == #(0, ["Bool", "Int"])
+}
+
 // The IR JSON codec round-trips: decode(encode(d)) == d. Exercises Named (with
 // concept), Var, nested Fn, and labelled/unlabelled Params.
 pub fn codec_round_trip_test() {

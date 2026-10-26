@@ -1882,8 +1882,8 @@ pub type Type {
               <td class="m">arity</td><td class="m">integer</td>
               <td><span class="tag derived"><span lang="fr">empreinte</span><span lang="en">fingerprint</span></span></td>
               <td class="d">
-                <span lang="fr">Nombre de paramètres de la fonction de tête ; <code>0</code> pour les formes non-fonction.</span>
-                <span lang="en">The head function's parameter count; <code>0</code> for non-function forms.</span>
+                <span lang="fr">Nombre de paramètres de la fonction de tête ; <code>0</code> pour les formes non-fonction. Un <code>TypeAlias</code> est lu à travers son type aliasé (un alias de <code>fn(Int) -> Bool</code> vaut <code>1</code>), comme <code>Constant</code> — la phase 1 garde ainsi ce que la phase 2 vérifierait.</span>
+                <span lang="en">The head function's parameter count; <code>0</code> for non-function forms. A <code>TypeAlias</code> is read through its aliased type (an alias of <code>fn(Int) -> Bool</code> is <code>1</code>), like <code>Constant</code> — so phase 1 keeps what phase 2 would verify.</span>
               </td>
             </tr>
             <tr>

@@ -118,11 +118,13 @@ set — they are front-end lowering rules, matching-tier rules, or external data
         lenient tier must stay visible under the exact tier (labelled result blocks, not one
         truncated list), or exact-tier hits will bury the specializations forever.
       Was true until this landed; `type_names` is now queried live by `fingerprint_candidates`.
-- [ ] **`fingerprint` arity bug — `TypeAlias` is always 0.** `ir.fingerprint` returns
+- [x] **`fingerprint` arity bug — `TypeAlias` was always 0.** `ir.fingerprint` returned
       `#(0, names(aliased))` for aliases, while `unify_declaration` matches the query against
-      `aliased`: an alias of a function type (`type Callback = fn(Int) -> Bool`) is dropped by
-      `arity = 1` in phase 1 yet would verify in phase 2. Inconsistent with `Constant`, which does
-      use `type_arity`. Fix: `type_arity(aliased)`; needs a backfill of existing rows.
+      `aliased`: an alias of a function type (`type Callback = fn(Int) -> Bool`) was dropped by
+      `arity = 1` in phase 1 yet would verify in phase 2. Fixed: aliases go through
+      `fingerprint_type(aliased)` like `Constant`; backfill of existing rows from the stored IR in
+      migration `20261026120000` (`jsonb_array_length(signature_ir -> 'aliased' -> 'params')` when
+      the aliased kind is `fn`, else 0). — **done**
 - [ ] **Name-frequency table (Hoogle's rare-names insight).** A materialized `name → count` over
       the corpus' `type_names` (one GROUP BY, refreshed at ingestion or by a worker; derived from
       the IR like everything else). Useless while phase 1 is `@>`-only — containment is an

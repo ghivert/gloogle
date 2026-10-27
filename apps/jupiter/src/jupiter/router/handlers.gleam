@@ -215,9 +215,8 @@ fn exec_type_search(
       queries.fingerprint_candidates(ctx.db, arity, type_names, subset_keys)
       |> result.map_error(function_.tap(_, loss.log))
       |> result.unwrap([])
-      |> list.filter_map(fn(candidate) {
-        let #(item, declaration) = candidate
-        unify.unify_declaration(type_, declaration)
+      |> list.filter_map(fn(item) {
+        unify.unify_declaration(type_, item.signature_ir)
         |> result.map(fn(match) { #(item, match) })
       })
       |> list.sort(fn(a, b) { unify.compare(a.1, b.1) })

@@ -1,5 +1,4 @@
 import data/analytics
-import data/ir
 import data/package
 import data/type_search
 import decrypt
@@ -637,7 +636,7 @@ pub fn name_search(db: pog.Connection, query: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
@@ -652,6 +651,7 @@ pub fn name_search(db: pog.Connection, query: String) {
      ON p.id = r.package_id
    WHERE s.name = $1
      AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -670,7 +670,7 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
@@ -688,6 +688,7 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
    WHERE s.name = s_n.full_name[2]
    AND m.name LIKE '%' || lower(s_n.full_name[1]) || '%'
      AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -716,7 +717,7 @@ pub fn content_search(db: pog.Connection, query: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
@@ -735,6 +736,7 @@ pub fn content_search(db: pog.Connection, query: String) {
       OR s.signature_compact ILIKE '%' || replace($2, ' ', '%') || '%'
     )
      AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -753,7 +755,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
@@ -768,6 +770,7 @@ pub fn signature_search(db: pog.Connection, q: String) {
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ websearch_to_tsquery($1)
      AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -785,7 +788,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
@@ -800,6 +803,7 @@ pub fn documentation_search(db: pog.Connection, q: String) {
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.documentation) @@ websearch_to_tsquery($1)
      AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -822,8 +826,8 @@ pub fn documentation_search(db: pog.Connection, q: String) {
 /// order the version.
 ///
 /// Capped at 100 rows like every other tier: "error" matched 1,958 rows, each
-/// carrying its documentation and `signature_json` (~1 KB), serialised, decoded
-/// and re-encoded for venus, which shows a handful. The module name is served
+/// carrying its documentation and its IR (~1 KB), serialised, decoded and
+/// re-encoded for venus, which shows a handful. The module name is served
 /// by the trigram GIN `package_module_name_trgm` (`20261027100000`).
 pub fn module_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
@@ -831,7 +835,7 @@ pub fn module_search(db: pog.Connection, q: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.signature_json AS json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
@@ -849,6 +853,7 @@ pub fn module_search(db: pog.Connection, q: String) {
      -- as '1.2.3-rc1' are excluded. Picking the latest version is the
      -- frontend's job, not this query's.
      AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -884,7 +889,9 @@ pub fn module_search(db: pog.Connection, q: String) {
 /// the recursive-type placeholders whose second upsert never landed
 /// (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`): they carry
 /// an IR since the backfill, but `type_search.decoder()` cannot decode them and
-/// one such row fails the whole batch.
+/// one such row fails the whole batch. Every tier also skips a NULL IR for the
+/// same reason: `type_search.decoder()` reads `signature_ir` since venus renders
+/// it, and a row the backfill could not fill would otherwise empty its tier.
 ///
 /// Two shape guards, both measured: `type_definition` rows are skipped (phase 2
 /// never verifies one — its constructors are found by name — and the 22,771
@@ -901,14 +908,13 @@ pub fn fingerprint_candidates(
   arity arity: Int,
   type_names type_names: List(String),
   subset_keys subset_keys: List(String),
-) -> Loss(List(#(type_search.TypeSearch, ir.Declaration))) {
+) -> Loss(List(type_search.TypeSearch)) {
   "SELECT * FROM (
      SELECT DISTINCT ON (p.name, m.name, s.name, s.kind)
        s.name type_name,
        s.documentation documentation,
        s.kind signature_kind,
        s.metadata metadata,
-       s.signature_json AS json_signature,
        s.signature_ir AS signature_ir,
        m.name module_name,
        p.name package_name,
@@ -938,7 +944,7 @@ pub fn fingerprint_candidates(
   |> pog.parameter(pog.array(pog.text, type_names))
   |> pog.parameter(pog.array(pog.text, subset_keys))
   |> pog.parameter(pog.int(list.length(type_names)))
-  |> pog.returning(candidate_decoder())
+  |> pog.returning(type_search.decoder())
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
@@ -973,14 +979,6 @@ pub fn subset_keys(type_names: List(String)) -> List(String) {
   })
   |> list.filter(fn(s) { list.length(s) < list.length(type_names) })
   |> list.map(type_names_key)
-}
-
-/// A phase-1 row: the display record plus the candidate's structural IR, decoded
-/// from `signature_ir` for phase-2 verification.
-fn candidate_decoder() {
-  use item <- decode.then(type_search.decoder())
-  use declaration <- decode.field("signature_ir", decrypt.json(ir.decoder()))
-  decode.success(#(item, declaration))
 }
 
 pub fn select_gleam_toml(db: pog.Connection, offset: Int) {

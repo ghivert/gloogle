@@ -748,8 +748,8 @@
         </div>
         <div class="card">
           <h4>packages/galaxy <span class="tag derived"><span lang="fr">partagé</span><span lang="en">shared</span></span></h4>
-          <p lang="fr">Les types de la frontière HTTP : <code>Package</code>, <code>TypeSearch</code>, <code>Signature</code>, <code>Kind</code>, <code>Metadata</code>, <code>Analytics</code>, <code>Implementations</code> — l'<code>ir</code>, et le parseur de requête <code>data/ir/parse</code> (syntaxe Gleam → IR) que venus réutilise. Dépend de <code>plasma</code> (qui apporte <code>decrypt</code>) et, pour le parseur, de <code>glexer</code> + <code>chomp</code>.</p>
-          <p lang="en">The types on the HTTP boundary: <code>Package</code>, <code>TypeSearch</code>, <code>Signature</code>, <code>Kind</code>, <code>Metadata</code>, <code>Analytics</code>, <code>Implementations</code> — the <code>ir</code>, and the <code>data/ir/parse</code> query parser (Gleam syntax → IR) that venus reuses. Depends on <code>plasma</code> (which brings <code>decrypt</code>) and, for the parser, on <code>glexer</code> + <code>chomp</code>.</p>
+          <p lang="fr">Les types de la frontière HTTP : <code>Package</code>, <code>TypeSearch</code>, <code>Kind</code>, <code>Metadata</code>, <code>Analytics</code>, <code>Implementations</code> — l'<code>ir</code>, et le parseur de requête <code>data/ir/parse</code> (syntaxe Gleam → IR) que venus réutilise. Dépend de <code>plasma</code> (qui apporte <code>decrypt</code>) et, pour le parseur, de <code>glexer</code> + <code>chomp</code>.</p>
+          <p lang="en">The types on the HTTP boundary: <code>Package</code>, <code>TypeSearch</code>, <code>Kind</code>, <code>Metadata</code>, <code>Analytics</code>, <code>Implementations</code> — the <code>ir</code>, and the <code>data/ir/parse</code> query parser (Gleam syntax → IR) that venus reuses. Depends on <code>plasma</code> (which brings <code>decrypt</code>) and, for the parser, on <code>glexer</code> + <code>chomp</code>.</p>
         </div>
         <div class="card">
           <h4>packages/plasma</h4>
@@ -1402,14 +1402,14 @@ pub type Type {
           </div>
           <pre>pub type TypeSearch {
   TypeSearch(type_name: String, documentation: String, signature_kind: Kind,
-             metadata: Metadata, json_signature: Signature,
+             metadata: Metadata, signature_ir: ir.Declaration,
              module_name: String, package_name: String, version: String)
 }</pre>
           <div class="fiche-band">
             <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
             <span class="fiche-band-c">
-              <span lang="fr"><strong>Nulle part.</strong> C'est une <em>projection</em>, jamais écrite : les cinq requêtes de recherche la fabriquent par jointure sur quatre tables, et <code>pog.returning(type_search.decoder())</code> la décode à la volée. Le seul type de la liste qui n'a aucune colonne.</span>
-              <span lang="en"><strong>Nowhere.</strong> It is a <em>projection</em>, never written: the five search queries build it by joining four tables, and <code>pog.returning(type_search.decoder())</code> decodes it on the fly. The only type here with no column at all.</span>
+              <span lang="fr"><strong>Nulle part.</strong> C'est une <em>projection</em>, jamais écrite : les sept requêtes de recherche la fabriquent par jointure sur quatre tables, et <code>pog.returning(type_search.decoder())</code> la décode à la volée — <code>signature_ir</code> compris, décodé une fois en <code>ir.Declaration</code> que la phase 2 unifie et que venus rend. Le seul type de la liste qui n'a aucune colonne.</span>
+              <span lang="en"><strong>Nowhere.</strong> It is a <em>projection</em>, never written: the seven search queries build it by joining four tables, and <code>pog.returning(type_search.decoder())</code> decodes it on the fly — <code>signature_ir</code> included, decoded once into the <code>ir.Declaration</code> that phase 2 unifies and venus renders. The only type here with no column at all.</span>
             </span>
           </div>
           <div class="fiche-band">
@@ -1417,43 +1417,11 @@ pub type Type {
             <span class="fiche-band-c">
               <div class="uses">
                 <span class="use no">ingestion</span>
-                <span class="use on"><span lang="fr">les 5 requêtes</span><span lang="en">the 5 queries</span></span>
+                <span class="use on"><span lang="fr">les 7 requêtes</span><span lang="en">the 7 queries</span></span>
                 <span class="use on">/search → venus</span>
               </div>
-              <span lang="fr">Le contrat HTTP au sens strict : jupiter l'encode, venus le décode, avec le même code.</span>
-              <span lang="en">The HTTP contract in the strict sense: jupiter encodes it, venus decodes it, with the same code.</span>
-            </span>
-          </div>
-        </div>
-
-        <div class="fiche">
-          <div class="fiche-hd">
-            <span class="fiche-name">data/signature</span>
-            <span class="fiche-path">packages/galaxy/src/data/signature.gleam <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></span>
-          </div>
-          <pre>pub type Type {
-  Tuple(width: Int, elements: List(Type))
-  Fn(width: Int, parameters: List(Type), return: Type)
-  Variable(width: Int, id: Int)
-  Named(width: Int, name: String, package: String, module: String,
-        parameters: List(Type), ref: Option(String))
-}</pre>
-          <div class="fiche-band">
-            <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
-            <span class="fiche-band-c">
-              <span lang="fr"><strong><code>signature_json</code></strong> <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span> — le doublon structuré de <code>signature_ir</code>. Sa raison d'être tient dans un champ : <code>width</code>, précalculé par nœud pour le retour à la ligne.</span>
-              <span lang="en"><strong><code>signature_json</code></strong> <span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span> — the structured duplicate of <code>signature_ir</code>. Its whole reason to exist is one field: <code>width</code>, precomputed per node for line wrapping.</span>
-            </span>
-          </div>
-          <div class="fiche-band">
-            <span class="fiche-band-l"><span lang="fr">Utilisé</span><span lang="en">Used</span></span>
-            <span class="fiche-band-c">
-              <div class="uses">
-                <span class="use on"><span lang="fr">venus · rendu</span><span lang="en">venus · rendering</span></span>
-                <span class="use no">matching</span>
-              </div>
-              <span lang="fr">Il meurt le jour où venus recalcule <code>width</code> à l'affichage. Note son <code>ref</code>, absent de l'IR : c'est la seule chose qu'il porte et que l'IR refuse de stocker.</span>
-              <span lang="en">It dies the day venus recomputes <code>width</code> at render time. Note its <code>ref</code>, absent from the IR: it is the one thing it carries that the IR refuses to store.</span>
+              <span lang="fr">Le contrat HTTP au sens strict : jupiter l'encode, venus le décode, avec le même code. Depuis le 2026-10-27, venus rend <code>signature_ir</code> directement (<code>venus/view/body/signature</code>), les largeurs de retour à la ligne recalculées sur l'arbre ; <code>data/signature</code> n'existe plus.</span>
+              <span lang="en">The HTTP contract in the strict sense: jupiter encodes it, venus decodes it, with the same code. Since 2026-10-27 venus renders <code>signature_ir</code> directly (<code>venus/view/body/signature</code>), the line-wrapping widths recomputed over the tree; <code>data/signature</code> is gone.</span>
             </span>
           </div>
         </div>
@@ -1523,18 +1491,18 @@ pub type Type {
         <code>data/ir</code> <strong>a rejoint <code>galaxy</code></strong> (commit <code>b63a44c</code>) : les deux
         formats structurés y cohabitent désormais, en attendant que le second remplace le premier. Le chemin de
         module <code>data/ir</code> est inchangé, donc aucun import n'a bougé, et galaxy n'a pas gagné de
-        dépendance — <code>decrypt</code> arrivait déjà via <code>plasma</code>. Ce qui reste : faire rendre l'IR à
-        venus en recalculant <code>width</code> à l'affichage, puis retirer <code>data/signature</code>, la colonne
-        <code>signature_json</code> et <code>generate/types</code>.
+        dépendance — <code>decrypt</code> arrivait déjà via <code>plasma</code>. Venus rend l'IR depuis le 2026-10-27
+        (<code>width</code> recalculé à l'affichage) et <code>data/signature</code> a disparu. Ce qui reste : retirer
+        la colonne <code>signature_json</code>, encore écrite à l'ingestion mais plus lue, et <code>generate/types</code>.
       </p>
       <p class="note warn" lang="en">
         <strong>The <code>signature</code> / <code>ir</code> duplication is temporary, and it is the crux of the refactor.</strong>
         <code>data/ir</code> <strong>has moved into <code>galaxy</code></strong> (commit <code>b63a44c</code>): both
         structured formats now live there, until the second replaces the first. The <code>data/ir</code> module path
         is unchanged, so no import moved, and galaxy gained no dependency — <code>decrypt</code> already came in via
-        <code>plasma</code>. What remains: have venus render the IR with <code>width</code> recomputed at display
-        time, then drop <code>data/signature</code>, the <code>signature_json</code> column and
-        <code>generate/types</code>.
+        <code>plasma</code>. Venus has rendered the IR since 2026-10-27 (<code>width</code> recomputed at display
+        time) and <code>data/signature</code> is gone. What remains: drop the <code>signature_json</code> column,
+        still written at ingestion but no longer read, and <code>generate/types</code>.
       </p>
     </section>
 
@@ -2003,8 +1971,8 @@ pub type Type {
               <td class="m">signature_json</td><td class="m">jsonb</td>
               <td><span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></td>
               <td class="d">
-                <span lang="fr">L'ancienne forme d'affichage. Survit uniquement jusqu'au refactor de venus.</span>
-                <span lang="en">The old display form. Survives only until the venus refactor.</span>
+                <span lang="fr">L'ancienne forme d'affichage. Plus lue par personne depuis que venus rend <code>signature_ir</code> (2026-10-27) ; encore écrite par <code>generate/types</code> à l'ingestion. À supprimer avec lui.</span>
+                <span lang="en">The old display form. Read by nobody since venus renders <code>signature_ir</code> (2026-10-27); still written by <code>generate/types</code> at ingestion. To drop along with it.</span>
               </td>
             </tr>
             <tr>

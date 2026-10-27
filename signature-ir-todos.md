@@ -21,16 +21,25 @@ set — they are front-end lowering rules, matching-tier rules, or external data
   - [x] Wire ingestion: `from_gleam` → `alpha_rename_declaration` → `ir.encode` → store in the
         `signature_ir` jsonb column (migration `20260703100003`). All 4 `api/signatures` call sites
         populate it; upfront recursive-type placeholders write jsonb `null`. — **done**
-  - [ ] Retire `generate/types` + the `signature_json` column once display reads the IR (gated on
-        the venus refactor below).
+  - [ ] Retire `generate/types` + the `signature_json` column: nothing reads them any more since
+        2026-10-27 (venus renders the IR), they are still written at ingestion. Next stacked PR:
+        drop the column (migration), the `json_signature` upsert parameter, `generate/types`.
   - [x] Move `data/ir` into `galaxy` (module path `data/ir` unchanged, so no import churn; no new
         galaxy dependency — `decrypt` already comes via `plasma`). The Gleam front-end
         `data/ir/from_gleam` **stays in jupiter**: it is the only piece needing
         `gleam_package_interface`, so keeping it out of galaxy is what lets venus drop `pi`.
         IR unit tests moved to `packages/galaxy/test/ir_test.gleam`; galaxy's test runner fixed
         (`interfaces_test.gleam` → `galaxy_test.gleam`, it was missing so galaxy tests never ran). — **done**
-  - [ ] Refactor venus to render the IR (drops its `pi` dependency, computes `width` at render).
-        `signature_` stays as ground truth. Gates retiring `signature_json`.
+  - [x] Refactor venus to render the IR (computes `width` at render). `signature_` stays as ground
+        truth. — **done 2026-10-27** (branch `refactor/venus-renders-ir`): `TypeSearch.signature_ir:
+        ir.Declaration` replaces `json_signature: Signature`, all seven queries select `signature_ir`
+        (and skip a NULL one, so a row the backfill could not fill never empties its tier), phase 1
+        no longer needs its own decoder, `venus/view/body/signature` renders `ir.Declaration` with
+        the widths recomputed from the tree by the legacy formulas (`Record`/`Union`/`Hole` get
+        widths of their own), `data/signature` is deleted. Checked in the browser against the local
+        stack: aliases, definitions with labelled constructors, higher-order functions, line breaks.
+        Constructor documentation, which `signature_json` carried and venus never displayed, is not
+        in the IR; the hexdocs link on a `Named` was already dead (`ref` stripped in July).
   - [x] Fingerprint `arity` + `type_names` derived from the IR (`ir.fingerprint`); columns +
         GIN index on `type_names` (migration `20260703100004`); populated at every `api/signatures`
         call site. v1 stores bare `Name.name` (concept expansion deferred). — **done**
@@ -337,7 +346,7 @@ Columns on `package_type_fun_signature`, all derived from `signature_` (the sour
 - `arity int` + `type_names text[]` — **new**; fingerprint derived from the IR; GIN index on `type_names`.
 - metadata columns (`name`, `documentation`, `kind`, `deprecation`, `implementations`, `metadata`) —
   **unchanged**, used by search filters/FTS; the IR is structural only and never duplicates them.
-- `signature_json` — **to retire** once display reads the IR (venus renders `signature_ir`). Interim only.
+- `signature_json` — **to retire**: unread since venus renders `signature_ir` (2026-10-27), still written. Next PR.
 
 Done already on the way here: `json_signature` → `signature_json` rename + `ref` strip (migration
 `20260703100001`); write-only `parameters` column dropped (`20260703100002`). **Run `dbmate up`.**

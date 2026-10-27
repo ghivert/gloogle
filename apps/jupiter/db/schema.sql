@@ -239,7 +239,8 @@ CREATE TABLE public.package_type_fun_signature (
     signature_ir jsonb,
     arity integer,
     type_names text[],
-    type_names_key text
+    type_names_key text,
+    signature_canonical text
 );
 
 
@@ -419,6 +420,13 @@ CREATE INDEX package_name_index ON public.package_type_fun_signature USING btree
 --
 
 CREATE INDEX package_popularity_github ON public.package USING btree (((popularity -> 'github'::text))) WHERE ((popularity -> 'github'::text) IS NOT NULL);
+
+
+--
+-- Name: package_type_fun_signature_canonical_btree; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_canonical_btree ON public.package_type_fun_signature USING btree (signature_canonical) WHERE (signature_canonical IS NOT NULL);
 
 
 --
@@ -612,4 +620,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20261026140000'),
     ('20261026150000'),
     ('20261027100000'),
-    ('20261027110000');
+    ('20261027110000'),
+    ('20261027120000');

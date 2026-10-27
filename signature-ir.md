@@ -235,8 +235,11 @@ Notes:
   2026-10-27 (migration `20261027110000`), together with its writer `generate/types`.
 - Metadata (`name`, `documentation`, `kind`, `deprecation`, `implementations`) stays in its own
   columns — the IR is structural only and never duplicates them.
-- The canonical IR **string** (`ir.to_string`) is **not stored** — regenerable via
-  `ir.to_string(ir.decoder())`. Add a debug column later only if wanted.
+- The *normal form* of the type (`ir.to_canonical`: sets sorted, labels, method form and
+  module qualification dropped, variables renamed in reading order) **is stored** in
+  `signature_canonical` since 2026-10-27 (migration `20261027120000`, partial btree): the exact
+  bucket of the type tier is a btree lookup on it for a hole-free, label-free query, complete
+  whatever the names' frequency. The written string (`ir.to_string`) is not stored.
 - The resolved cross-reference (`ref`) is **not stored** either — a `ref` resolves a semver range
   against an evolving version set, so it must be computed at query time (respecting the using
   release's requirement, via a `package_dependency` table). See `signature-ir-todos.md`. `Name`

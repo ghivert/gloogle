@@ -1,5 +1,6 @@
 //// One-shot backfill of the IR-derived columns — `signature_ir`, `arity`,
-//// `type_names` — for rows ingested before those columns existed.
+//// `type_names`, `type_names_key`, `signature_canonical` — for rows ingested
+//// before those columns existed.
 ////
 //// Every release keeps its raw `package_interface` JSON, so the backfill is
 //// pure re-derivation: decode the interface, lower each declaration with
@@ -162,16 +163,8 @@ fn backfill_module(
         |> list.map(fn(e) { #(e.0, "function", from_gleam.function(e.1)) }),
     ])
   use acc, #(name, kind, declaration) <- list.try_fold(declarations, acc)
-  let #(signature_ir, arity, type_names) = signatures.structured(declaration)
-  use count <- result.map(update_row(
-    db,
-    module_id,
-    name,
-    kind,
-    signature_ir,
-    arity,
-    type_names,
-  ))
+  let derived = signatures.structured(declaration)
+  use count <- result.map(update_row(db, module_id, name, kind, derived))
   case count {
     0 -> #(acc.0, acc.1 + 1)
     _ -> #(acc.0 + count, acc.1)
@@ -183,12 +176,13 @@ fn update_row(
   module_id: String,
   name: String,
   kind: String,
-  signature_ir: json.Json,
-  arity: Int,
-  type_names: List(String),
+  derived: signatures.Derived,
 ) -> Result(Int, pog.QueryError) {
+  let signatures.Derived(signature_ir:, arity:, type_names:, canonical:) =
+    derived
   "UPDATE package_type_fun_signature
-   SET signature_ir = $1, arity = $2, type_names = $3, type_names_key = $7
+   SET signature_ir = $1, arity = $2, type_names = $3, type_names_key = $7,
+       signature_canonical = $8
    WHERE package_module_id = $4 AND name = $5 AND kind = $6"
   |> pog.query
   |> pog.parameter(signature_ir |> json.to_string |> pog.text)
@@ -198,6 +192,7 @@ fn update_row(
   |> pog.parameter(pog.text(name))
   |> pog.parameter(pog.text(kind))
   |> pog.parameter(pog.text(queries.type_names_key(type_names)))
+  |> pog.parameter(pog.nullable(pog.text, canonical))
   |> pog.returning(decode.success(Nil))
   |> pog.execute(db)
   |> result.map(fn(r) { r.count })

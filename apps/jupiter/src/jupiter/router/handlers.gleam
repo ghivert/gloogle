@@ -10,6 +10,7 @@ import gleam/function_
 import gleam/int
 import gleam/json
 import gleam/list
+import gleam/option
 import gleam/pair
 import gleam/result
 import gleam/string
@@ -221,6 +222,16 @@ fn exec_type_search(
         True -> queries.EveryRelease
         False -> queries.LatestRelease
       }
+      // A closed query — no hole, no label — has a normal form, and its exact
+      // matches are a btree lookup: guaranteed complete, where phase 1 keeps
+      // the hundred candidates closest by distance and best ranked.
+      let exact = case closed(type_) {
+        False -> []
+        True ->
+          queries.canonical_matches(ctx.db, ir.to_canonical(type_), scope)
+          |> result.map_error(function_.tap(_, loss.log))
+          |> result.unwrap([])
+      }
       queries.fingerprint_candidates(
         ctx.db,
         arity,
@@ -230,6 +241,8 @@ fn exec_type_search(
       )
       |> result.map_error(function_.tap(_, loss.log))
       |> result.unwrap([])
+      |> list.filter(fn(item) { !list.contains(exact, item) })
+      |> list.append(exact, _)
       |> list.filter_map(fn(item) {
         unify.unify_declaration(type_, item.signature_ir)
         |> result.map(fn(match) { #(item, match) })
@@ -291,6 +304,26 @@ fn is_word_grapheme(grapheme: String) -> Bool {
         }
         _ -> False
       }
+  }
+}
+
+/// Has the query a normal form the exact lookup can use? A `Hole` matches
+/// anything, so it has no single spelling; a label the user wrote must match the
+/// candidate's, which the normal form drops. Everything else — variables
+/// included, since they are alpha-renamed on both sides — is closed.
+pub fn closed(type_: ir.Type) -> Bool {
+  case type_ {
+    ir.Hole -> False
+    ir.Var(..) -> True
+    ir.Named(args:, ..) -> list.all(args, closed)
+    ir.Tuple(elements:) -> list.all(elements, closed)
+    ir.Union(members:) -> list.all(members, closed)
+    ir.Record(fields:) -> list.all(fields, fn(field) { closed(field.type_) })
+    ir.Fn(params:, return:, ..) ->
+      closed(return)
+      && list.all(params, fn(param) {
+        option.is_none(param.label) && closed(param.type_)
+      })
   }
 }
 

@@ -126,3 +126,72 @@ pub fn codec_round_trip_test() {
   let encoded = ir.encode(declaration) |> json.to_string
   assert json.parse(encoded, ir.decoder()) == Ok(declaration)
 }
+
+// ─── Normal form (`to_canonical`) ────────────────────────────────────────────
+
+fn named(name: String, args: List(ir.Type)) -> ir.Type {
+  ir.Named(ir.Name("", "", name, None), args)
+}
+
+fn param(type_: ir.Type) -> ir.Param {
+  ir.Param(None, False, type_)
+}
+
+// The four liberties the unifier takes collapse to one string: union order,
+// method form, labels, module qualification.
+pub fn canonical_normalises_test() {
+  let int = named("Int", [])
+  let str = named("String", [])
+  // Union members are a set.
+  assert ir.to_canonical(ir.Union([int, str]))
+    == ir.to_canonical(ir.Union([str, int]))
+  assert ir.to_canonical(ir.Union([str, int])) == "Int | String"
+  // A method and its function form are one type.
+  let method = ir.Fn([param(int), param(str)], str, True)
+  let function = ir.Fn([param(int), param(str)], str, False)
+  assert ir.to_string(method) == "Int :: (String) -> String"
+  assert ir.to_canonical(method) == "(Int, String) -> String"
+  assert ir.to_canonical(method) == ir.to_canonical(function)
+  // Labels are dropped.
+  let labelled = ir.Fn([ir.Param(Some("with"), False, int)], str, False)
+  assert ir.to_string(labelled) == "(with: Int) -> String"
+  assert ir.to_canonical(labelled) == "(Int) -> String"
+  // The module qualification is dropped; the written form keeps it.
+  let option =
+    ir.Named(ir.Name("gleam_stdlib", "gleam/option", "Option", None), [int])
+  assert ir.to_string(option) == "gleam/option.Option<Int>"
+  assert ir.to_canonical(option) == "Option<Int>"
+  // Record fields are sorted by name.
+  let record = ir.Record([ir.Field("b", str), ir.Field("a", int)])
+  assert ir.to_canonical(record) == "{ a: Int, b: String }"
+}
+
+// Alpha-equivalent types share one spelling, whatever their source ids, and
+// variables are numbered in the normalised reading order.
+pub fn canonical_alpha_test() {
+  let var = fn(id, name) { param(ir.Var(id, name)) }
+  let a = ir.Fn([var(5, "x"), var(3, "y")], ir.Var(3, "y"), False)
+  let b = ir.Fn([var(0, "a"), var(1, "b")], ir.Var(1, "b"), False)
+  assert ir.to_canonical(a) == "($0, $1) -> $1"
+  assert ir.to_canonical(a) == ir.to_canonical(b)
+  // Union sorting is variable-blind: `List<a> | Int` and `Int | List<b>` meet.
+  let list_of = fn(t) { named("List", [t]) }
+  let u1 = ir.Union([list_of(ir.Var(9, "a")), named("Int", [])])
+  let u2 = ir.Union([named("Int", []), list_of(ir.Var(2, "b"))])
+  assert ir.to_canonical(u1) == ir.to_canonical(u2)
+  assert ir.to_canonical(u1) == "Int | List<$0>"
+  // `to_canonical` is idempotent through parse-free re-entry: normalising a
+  // normal form changes nothing.
+  assert ir.to_canonical(ir.alpha_rename(a)) == ir.to_canonical(a)
+}
+
+// A declaration's normal form is the type the unifier matches; a
+// `TypeDefinition` has none.
+pub fn canonical_declaration_test() {
+  let int = named("Int", [])
+  assert ir.canonical(ir.Function(ir.Fn([param(int)], int, False)))
+    == Some("(Int) -> Int")
+  assert ir.canonical(ir.Constant(int)) == Some("Int")
+  assert ir.canonical(ir.TypeAlias(0, int)) == Some("Int")
+  assert ir.canonical(ir.TypeDefinition(0, [])) == None
+}

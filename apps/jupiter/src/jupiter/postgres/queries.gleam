@@ -522,6 +522,7 @@ pub fn upsert_package_type_fun_signature(
   signature_ir signature_ir: json.Json,
   arity arity: Int,
   type_names type_names: List(String),
+  canonical canonical: Option(String),
   module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
@@ -538,8 +539,9 @@ pub fn upsert_package_type_fun_signature(
      signature_ir,
      arity,
      type_names,
-     type_names_key
-   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+     type_names_key,
+     signature_canonical
+   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
    ON CONFLICT (package_module_id, name) DO UPDATE
      SET
        documentation = $2,
@@ -551,7 +553,8 @@ pub fn upsert_package_type_fun_signature(
        signature_ir = $9,
        arity = $10,
        type_names = $11,
-       type_names_key = $12
+       type_names_key = $12,
+       signature_canonical = $13
    RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
@@ -580,6 +583,7 @@ pub fn upsert_package_type_fun_signature(
   |> pog.parameter(pog.int(arity))
   |> pog.parameter(pog.array(pog.text, type_names))
   |> pog.parameter(pog.text(type_names_key(type_names)))
+  |> pog.parameter(pog.nullable(pog.text, canonical))
   |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
@@ -936,8 +940,56 @@ pub fn fingerprint_candidates(
          OR s.type_names_key = ANY($3::text[]))
        AND s.signature_ir IS NOT NULL
        AND s.signature_ <> ''"
-  let columns =
-    "s.name type_name,
+  let distance = "abs(cardinality(s.type_names) - $4) distance"
+  let sql =
+    scoped_candidates(scope, result_columns <> ",\n       " <> distance, shape)
+    <> "
+   ORDER BY distance, package_rank DESC
+   LIMIT 100"
+  sql
+  |> pog.query
+  |> pog.parameter(pog.int(arity))
+  |> pog.parameter(pog.array(pog.text, type_names))
+  |> pog.parameter(pog.array(pog.text, subset_keys))
+  |> pog.parameter(pog.int(list.length(type_names)))
+  |> pog.returning(type_search.decoder())
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+/// The exact bucket of the type tier, answered by the normal form: every
+/// declaration whose `signature_canonical` is the query's (`ir.to_canonical`
+/// of a hole-free, label-free query), under the same release `scope` as phase
+/// 1. A few btree probes whatever the names' frequency — and, unlike phase 1,
+/// no `LIMIT 100` ordered by distance between the query and its exact matches:
+/// `(String) -> String` has hundreds of rows at distance 0, and phase 1 keeps
+/// the hundred best-ranked, losing exact matches from low-ranked packages.
+/// The rows join phase 1's candidates and go through phase 2 like any other.
+pub fn canonical_matches(
+  db db: pog.Connection,
+  canonical canonical: String,
+  scope scope: Scope,
+) -> Loss(List(type_search.TypeSearch)) {
+  let shape =
+    "s.signature_canonical = $1
+       AND s.signature_ir IS NOT NULL
+       AND s.signature_ <> ''"
+  let sql = scoped_candidates(scope, result_columns, shape) <> "
+   ORDER BY package_rank DESC
+   LIMIT 100"
+  sql
+  |> pog.query
+  |> pog.parameter(pog.text(canonical))
+  |> pog.returning(type_search.decoder())
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+/// The columns every type-tier query returns: a `TypeSearch` row.
+const result_columns =
+  "s.name type_name,
        s.documentation documentation,
        s.kind signature_kind,
        s.metadata metadata,
@@ -945,9 +997,15 @@ pub fn fingerprint_candidates(
        m.name module_name,
        p.name package_name,
        r.version version,
-       p.rank package_rank,
-       abs(cardinality(s.type_names) - $4) distance"
-  let sql = case scope {
+       p.rank package_rank"
+
+/// The signature rows of the releases a `Scope` covers, filtered by `shape`
+/// (a predicate over `s`), one row per declaration. `LatestRelease` joins from
+/// each package's latest semver release that has modules; `EveryRelease` reads
+/// every release and keeps the latest version of each declaration with
+/// `DISTINCT ON`. The caller appends its `ORDER BY` and `LIMIT`.
+fn scoped_candidates(scope: Scope, columns: String, shape: String) -> String {
+  case scope {
     LatestRelease -> "SELECT " <> columns <> "
    FROM (
      SELECT DISTINCT ON (r.package_id) r.id, r.package_id, r.version
@@ -962,9 +1020,7 @@ pub fn fingerprint_candidates(
      ON m.package_release_id = r.id
    JOIN package_type_fun_signature s
      ON s.package_module_id = m.id
-   WHERE " <> shape <> "
-   ORDER BY distance, package_rank DESC
-   LIMIT 100"
+   WHERE " <> shape
     EveryRelease -> "SELECT * FROM (
      SELECT DISTINCT ON (p.name, m.name, s.name, s.kind)
        " <> columns <> "
@@ -978,20 +1034,8 @@ pub fn fingerprint_candidates(
      WHERE " <> shape <> "
        AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
      ORDER BY p.name, m.name, s.name, s.kind, r.version_ordering DESC
-   ) candidates
-   ORDER BY distance, package_rank DESC
-   LIMIT 100"
+   ) candidates"
   }
-  sql
-  |> pog.query
-  |> pog.parameter(pog.int(arity))
-  |> pog.parameter(pog.array(pog.text, type_names))
-  |> pog.parameter(pog.array(pog.text, subset_keys))
-  |> pog.parameter(pog.int(list.length(type_names)))
-  |> pog.returning(type_search.decoder())
-  |> pog.execute(db)
-  |> result.map_error(loss.DatabaseError)
-  |> result.map(fn(r) { r.rows })
 }
 
 /// The canonical key of a fingerprint's names: sorted (as `ir.fingerprint`

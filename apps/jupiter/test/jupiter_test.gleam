@@ -74,3 +74,17 @@ pub fn searchable_query_test() {
   assert !handlers.searchable("io")
   assert !handlers.searchable("")
 }
+
+// A query is closed — eligible for the exact lookup by normal form — when it
+// has no hole and no label; variables are fine, they are alpha-renamed.
+pub fn closed_query_test() {
+  let closed = fn(query) {
+    let assert Ok(type_) = parse.parse(query)
+    handlers.closed(type_)
+  }
+  assert closed("fn(List(a), fn(a) -> b) -> List(b)")
+  assert closed("List(Int)")
+  assert !closed("fn(List(_)) -> Bool")
+  assert !closed("fn(with: Int) -> Bool")
+  assert !closed("_")
+}

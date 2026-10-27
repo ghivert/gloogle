@@ -3,7 +3,7 @@ import data/ir/from_gleam
 import gleam/dict
 import gleam/json
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/package_interface
 import gleam/result
 import jupiter/gleam/context.{type Context}
@@ -14,15 +14,30 @@ import palabres
 
 const module_name = "api/signatures"
 
-/// Alpha-rename a lowered declaration, then derive the columns that hang off the
-/// IR: the encoded `signature_ir` and its phase-1 fingerprint (`arity`,
-/// `type_names`). All three come from the one canonical declaration.
-pub fn structured(
-  declaration: ir.Declaration,
-) -> #(json.Json, Int, List(String)) {
+/// The columns that hang off the IR, all derived from the one alpha-renamed
+/// declaration: the encoded `signature_ir`, its phase-1 fingerprint (`arity`,
+/// `type_names`) and the normal form `signature_canonical` (`None` for a type
+/// definition, which never matches by shape).
+pub type Derived {
+  Derived(
+    signature_ir: json.Json,
+    arity: Int,
+    type_names: List(String),
+    canonical: Option(String),
+  )
+}
+
+/// Alpha-rename a lowered declaration, then derive every IR column from it —
+/// the one place this happens, shared by ingestion and `tasks/backfill_ir`.
+pub fn structured(declaration: ir.Declaration) -> Derived {
   let declaration = ir.alpha_rename_declaration(declaration)
   let #(arity, type_names) = ir.fingerprint(declaration)
-  #(ir.encode(declaration), arity, type_names)
+  Derived(
+    signature_ir: ir.encode(declaration),
+    arity:,
+    type_names:,
+    canonical: ir.canonical(declaration),
+  )
 }
 
 fn add_gleam_constraint(ctx: Context, release_id: String) {
@@ -56,11 +71,12 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         signature_ir: json.null(),
         arity: 0,
         type_names: [],
+        canonical: None,
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
-    let #(signature_ir, arity, type_names) =
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
       structured(from_gleam.type_definition(def))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -72,6 +88,7 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
       signature_ir:,
       arity:,
       type_names:,
+      canonical:,
       module_id: module.id,
       deprecation: def.deprecation,
       implementations: None,
@@ -103,11 +120,12 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         signature_ir: json.null(),
         arity: 0,
         type_names: [],
+        canonical: None,
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
-    let #(signature_ir, arity, type_names) =
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
       structured(from_gleam.type_alias(alias))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -119,6 +137,7 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
       signature_ir:,
       arity:,
       type_names:,
+      canonical:,
       module_id: module.id,
       deprecation: alias.deprecation,
       implementations: None,
@@ -137,7 +156,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   let all_constants = dict.to_list(module.module.constants)
   result.all({
     use #(name, constant) <- list.map(all_constants)
-    let #(signature_ir, arity, type_names) =
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
       structured(from_gleam.constant(constant))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
@@ -150,6 +169,7 @@ fn upsert_constants(ctx: Context, module: context.Module) {
       signature_ir:,
       arity:,
       type_names:,
+      canonical:,
       module_id: module.id,
       deprecation: constant.deprecation,
       implementations: Some(constant.implementations),
@@ -169,7 +189,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   result.all({
     use #(name, function) <- list.map(all_functions)
     let signature = sources.function_to_string(name, function)
-    let #(signature_ir, arity, type_names) =
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
       structured(from_gleam.function(function))
     let content =
       queries.upsert_package_type_fun_signature(
@@ -183,6 +203,7 @@ fn upsert_functions(ctx: Context, module: context.Module) {
         signature_ir:,
         arity:,
         type_names:,
+        canonical:,
         module_id: module.id,
         deprecation: function.deprecation,
         implementations: Some(function.implementations),

@@ -357,17 +357,26 @@ Columns on `package_type_fun_signature`, all derived from `signature_` (the sour
 Done already on the way here: `json_signature` → `signature_json` rename + `ref` strip (migration
 `20260703100001`); write-only `parameters` column dropped (`20260703100002`). **Run `dbmate up`.**
 
-- [ ] **Canonical-string shortcut for `Exact`** (supersedes the earlier "debug column only if
-      wanted" note). Since the IR is alpha-renamed at ingestion, alpha-equivalence on a hole-free,
-      fully-labelled query is **string equality**: a btree lookup on a stored canonical string
-      short-circuits both phases for the most common query shape. Prerequisite: `to_string` must
-      become a *normal form*, which is **four** changes, not the three originally listed — sort
-      `Union` members and `Record` fields (the unifier treats them as sets, the printer prints
-      list order), normalize `is_method` (one type prints two ways: `X :: (…) -> Y` vs
-      `(X, …) -> Y`), strip labels (two columns: display string vs matching string), and **drop
-      the `module.` qualification** (the printer emits `gleam/option.Option`, the unifier compares
-      bare `name` — this fourth one was missed in the original list). Queries with `_` or omitted
-      labels still go through fingerprint + verify; this is a shortcut, not a replacement.
+- [x] **Canonical-string lookup for `Exact`** — **done 2026-10-27** (branch
+      `refactor/canonical-exact`). `ir.to_canonical` is the normal form: `Union` members and
+      `Record` fields sorted (members by a variable-blind key, so the order does not depend on the
+      numbering it decides), `is_method` dropped, labels dropped, `module.` qualification dropped,
+      then alpha-renamed in the normalised reading order and printed; `to_string` stays the written
+      form. `ir.canonical(declaration)` is `None` for a `TypeDefinition`. Stored in
+      `signature_canonical` (migration `20261027120000`, partial btree), derived in
+      `api/signatures.structured` with the other IR columns (`Derived` record), written by the
+      upsert and `tasks/backfill_ir`. `queries.canonical_matches` answers a *closed* query — no
+      `Hole`, no label (`handlers.closed`) — under the same `Scope` as phase 1; its rows join phase
+      1's candidates and go through phase 2 like the others. What it buys is **recall, not
+      latency**: phase 1 keeps the 100 candidates closest by distance and best ranked, and
+      `(String) -> String` has hundreds of rows at distance 0, so exact matches from low-ranked
+      packages were lost before. Measured on the local snapshot after the backfill (505,892 rows
+      filled, 7.9 MB index): `fn(a, b) -> a` has 139 distance-0 candidates in the latest-release
+      scope, 3 of them exact, and phase 1's top 100 held 2 — the third surfaces now; the lookup on
+      `(String) -> String` (3,871 rows share it, 4,168 at distance 0) runs in 28–49 ms on a loaded
+      machine. Known limit of the normal form: `Union` members that differ only in their variables
+      can still get two spellings (irrelevant to Gleam). Running `tasks/backfill_ir` on the local
+      stack needs `GLEAM_ENV=development`, or `postgres.supervised` picks `SslVerified`.
 - [x] Backfill existing rows (keyset): `tasks/backfill_ir` re-derives `signature_ir` + fingerprint from the
       stored `package_interface` of each release through `api/signatures.structured` (now public), one
       transaction per release, matched on `(package_module_id, name, kind)`. Run on the local snapshot

@@ -71,70 +71,168 @@ pub type Constructor {
   Constructor(name: String, parameters: List(Param))
 }
 
-/// Deterministic printer: an IR `Type` → its canonical notation string.
+/// Deterministic printer: an IR `Type` → its canonical notation string, as
+/// written — module qualification, labels, the `recv :: (…)` method form.
 /// Inverse of the canonical parser. See `signature-ir.md` for the grammar.
 pub fn to_string(type_: Type) -> String {
+  print(type_, Written)
+}
+
+/// The *normal form* of a type: one string per class of types the exact tier
+/// (`unify`'s `Equivalent`) treats as equal, so that alpha-equivalence of two
+/// hole-free, label-free types is string equality. The stored
+/// `signature_canonical` column answers the exact bucket with a btree lookup,
+/// whatever the names' frequency, and never loses an exact match to phase 1's
+/// `LIMIT 100`. Four normalisations on top of `to_string`, each one a liberty
+/// the unifier takes that the written form does not:
+///
+///   - `Union` members and `Record` fields are sorted (the unifier matches them
+///     as sets, the written form keeps list order);
+///   - `is_method` is dropped (a receiver-first method and its function form
+///     are one type to the unifier);
+///   - labels are dropped (a label the query omits matches any candidate label);
+///   - the `module.` qualification is dropped (the unifier compares bare names).
+///
+/// Then alpha-renamed in the *normalised* reading order and printed. `Union`
+/// members are sorted by a variable-blind key, so the order does not depend on
+/// the variable numbering it in turn decides; members that differ only in their
+/// variables can still get two spellings for one class of types — a known
+/// limit, irrelevant to Gleam, whose surface produces no `Union`.
+pub fn to_canonical(type_: Type) -> String {
+  type_
+  |> normalise
+  |> alpha_rename
+  |> print(Canonical)
+}
+
+/// The normal form of a stored declaration — what `unify_declaration` matches
+/// the query against. `None` for a `TypeDefinition`, which never verifies by
+/// shape (its constructors are found by name).
+pub fn canonical(declaration: Declaration) -> Option(String) {
+  case declaration {
+    Function(signature:) -> Some(to_canonical(signature))
+    Constant(type_:) -> Some(to_canonical(type_))
+    TypeAlias(aliased:, ..) -> Some(to_canonical(aliased))
+    TypeDefinition(..) -> None
+  }
+}
+
+/// `to_canonical` before renaming: sets sorted, labels and `is_method` gone.
+fn normalise(type_: Type) -> Type {
   case type_ {
-    Fn(params, return, is_method) -> print_fn(params, return, is_method)
-    Named(name, args) -> print_named(name, args)
-    Var(i, _) -> "$" <> int.to_string(i)
-    Hole -> "_"
-    Tuple(elements) -> "#(" <> print_args(elements) <> ")"
-    Record(fields) -> "{ " <> print_fields(fields) <> " }"
+    Fn(params, return, _) -> {
+      let params =
+        list.map(params, fn(param) {
+          Param(
+            label: None,
+            is_spread: param.is_spread,
+            type_: normalise(param.type_),
+          )
+        })
+      Fn(params, normalise(return), False)
+    }
+    Named(name, args) -> Named(name, list.map(args, normalise))
+    Var(..) | Hole -> type_
+    Tuple(elements) -> Tuple(list.map(elements, normalise))
+    Record(fields) ->
+      fields
+      |> list.map(fn(field) { Field(field.name, normalise(field.type_)) })
+      |> list.sort(fn(a, b) { string.compare(a.name, b.name) })
+      |> Record
     Union(members) ->
       members
-      |> list.map(to_string)
+      |> list.map(normalise)
+      |> list.sort(fn(a, b) { string.compare(print(a, Blind), print(b, Blind)) })
+      |> Union
+  }
+}
+
+/// How `print` spells a type.
+type Spelling {
+  /// As written: `module.Name`, labels, `recv :: (…) -> r` for a method.
+  Written
+  /// The normal form: bare names, no labels, function form only.
+  Canonical
+  /// `Canonical` with every variable printed as `$` — the sort key that keeps
+  /// `Union` member order independent of the variable numbering.
+  Blind
+}
+
+fn print(type_: Type, spelling: Spelling) -> String {
+  case type_ {
+    Fn(params, return, is_method) ->
+      print_fn(params, return, is_method, spelling)
+    Named(name, args) -> print_named(name, args, spelling)
+    Var(i, _) ->
+      case spelling {
+        Blind -> "$"
+        _ -> "$" <> int.to_string(i)
+      }
+    Hole -> "_"
+    Tuple(elements) -> "#(" <> print_args(elements, spelling) <> ")"
+    Record(fields) -> "{ " <> print_fields(fields, spelling) <> " }"
+    Union(members) ->
+      members
+      |> list.map(print(_, spelling))
       |> string.join(" | ")
   }
 }
 
-fn print_fn(params: List(Param), return: Type, is_method: Bool) -> String {
-  let tail = ") -> " <> to_string(return)
-  case is_method, params {
-    True, [receiver, ..rest] ->
-      to_string(receiver.type_) <> " :: (" <> print_params(rest) <> tail
-    _, _ -> "(" <> print_params(params) <> tail
+fn print_fn(
+  params: List(Param),
+  return: Type,
+  is_method: Bool,
+  spelling: Spelling,
+) -> String {
+  let tail = ") -> " <> print(return, spelling)
+  case spelling, is_method, params {
+    Written, True, [receiver, ..rest] ->
+      print(receiver.type_, spelling)
+      <> " :: ("
+      <> print_params(rest, spelling)
+      <> tail
+    _, _, _ -> "(" <> print_params(params, spelling) <> tail
   }
 }
 
-fn print_params(params: List(Param)) -> String {
+fn print_params(params: List(Param), spelling: Spelling) -> String {
   params
-  |> list.map(print_param)
+  |> list.map(print_param(_, spelling))
   |> string.join(", ")
 }
 
-fn print_param(param: Param) -> String {
-  let label = case param.label {
-    Some(name) -> name <> ": "
-    None -> ""
+fn print_param(param: Param, spelling: Spelling) -> String {
+  let label = case spelling, param.label {
+    Written, Some(name) -> name <> ": "
+    _, _ -> ""
   }
   let spread = case param.is_spread {
     True -> "..."
     False -> ""
   }
-  label <> spread <> to_string(param.type_)
+  label <> spread <> print(param.type_, spelling)
 }
 
-fn print_named(named: Name, args: List(Type)) -> String {
-  let qualified = case named.module {
-    "" -> named.name
-    module -> module <> "." <> named.name
+fn print_named(named: Name, args: List(Type), spelling: Spelling) -> String {
+  let qualified = case spelling, named.module {
+    Written, module if module != "" -> module <> "." <> named.name
+    _, _ -> named.name
   }
   case args {
     [] -> qualified
-    args -> qualified <> "<" <> print_args(args) <> ">"
+    args -> qualified <> "<" <> print_args(args, spelling) <> ">"
   }
 }
 
-fn print_args(args: List(Type)) -> String {
+fn print_args(args: List(Type), spelling: Spelling) -> String {
   args
-  |> list.map(to_string)
+  |> list.map(print(_, spelling))
   |> string.join(", ")
 }
 
-fn print_fields(fields: List(Field)) -> String {
+fn print_fields(fields: List(Field), spelling: Spelling) -> String {
   fields
-  |> list.map(fn(field) { field.name <> ": " <> to_string(field.type_) })
+  |> list.map(fn(field) { field.name <> ": " <> print(field.type_, spelling) })
   |> string.join(", ")
 }
 

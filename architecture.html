@@ -1640,6 +1640,8 @@ pub type Type {
         <div class="card">
           <h4 lang="fr">Phase 2 · vérification <span class="tag stored">branché</span></h4>
           <h4 lang="en">Phase 2 · verification <span class="tag stored">wired</span></h4>
+          <p lang="fr"><strong>Avant elle, le lookup exact.</strong> Une requête <em>fermée</em> — ni <code>_</code> ni label (<code>handlers.closed</code>) — a une forme normale (<code>ir.to_canonical</code>), et ses correspondances exactes sont une égalité btree sur <code>signature_canonical</code> (<code>queries.canonical_matches</code>, même <code>Scope</code> que la phase 1). Ces lignes rejoignent les candidats de la phase 1 et passent par la vérification comme les autres : ce que le lookup garantit, c'est qu'aucune correspondance exacte n'est perdue au <code>LIMIT 100</code> de la phase 1.</p>
+          <p lang="en"><strong>Before it, the exact lookup.</strong> A <em>closed</em> query — no <code>_</code>, no label (<code>handlers.closed</code>) — has a normal form (<code>ir.to_canonical</code>), and its exact matches are a btree equality on <code>signature_canonical</code> (<code>queries.canonical_matches</code>, same <code>Scope</code> as phase 1). Those rows join phase 1's candidates and go through verification like the others: what the lookup guarantees is that no exact match is lost to phase 1's <code>LIMIT 100</code>.</p>
           <p lang="fr">L'IR de chaque candidat est confrontée à l'IR de la requête — <code>packages/galaxy/src/data/ir/unify.gleam</code>, qui consomme <code>signature_ir</code> directement. Le verdict n'est pas un booléen mais un <code>Match</code> porteur d'un <strong>coût</strong> — la leçon de Hoogle : le matching rend un coût, et le coût est le classement. Deux constructeurs = deux blocs de résultats, le coût ordonne à l'intérieur :</p>
           <p lang="en">Each candidate's IR is checked against the query IR — <code>packages/galaxy/src/data/ir/unify.gleam</code>, consuming <code>signature_ir</code> directly. The verdict is not a boolean but a <code>Match</code> carrying a <strong>cost</strong> — the Hoogle lesson: matching returns a cost, and the cost is the ranking. Two constructors = two result buckets, cost orders within:</p>
           <p lang="fr"><strong>1 · <code>Equivalent(cost)</code></strong> — alpha-équivalence. Un <code>Var</code> de requête ne matche qu'un <code>Var</code> candidat, sous une liaison injective dans les deux sens : <code>($0, $1) -> $0</code> matche <code>fn(a, b) -> a</code> à coût 0, <code>fn(a, b) -> b</code> modulo réordonnancement (surtaxé), et <code>fn(a, a) -> a</code> pas du tout — ça, c'est de la subsomption. Le coût compte ce que les <code>_</code> absorbent (1 par nœud concret) : le candidat réellement polymorphe sort premier.</p>
@@ -1781,7 +1783,10 @@ pub type Type {
             <text class="t-col" x="362" y="933">type_names, type_names_key</text>
             <text class="t-gen" x="788" y="933" text-anchor="end" lang="fr">text[], text · dérivé</text>
             <text class="t-gen" x="788" y="933" text-anchor="end" lang="en">text[], text · derived</text>
-            <text class="t-col" x="362" y="950">metadata, deprecation</text><text class="t-key" x="788" y="950" text-anchor="end">jsonb</text>
+            <text class="t-col" x="362" y="950">signature_canonical</text>
+            <text class="t-gen" x="788" y="950" text-anchor="end" lang="fr">forme normale · dérivé</text>
+            <text class="t-gen" x="788" y="950" text-anchor="end" lang="en">normal form · derived</text>
+            <text class="t-col" x="362" y="967">metadata, deprecation</text><text class="t-key" x="788" y="967" text-anchor="end">jsonb</text>
           </g>
 
           <!-- rel: package_owner -> hex_user -->
@@ -1967,6 +1972,14 @@ pub type Type {
               </td>
             </tr>
             <tr>
+              <td class="m">signature_canonical</td><td class="m">text</td>
+              <td><span class="tag derived"><span lang="fr">dérivé</span><span lang="en">derived</span></span></td>
+              <td class="d">
+                <span lang="fr">La <strong>forme normale</strong> du type (<code>ir.to_canonical</code>) : membres d'<code>Union</code> et champs de <code>Record</code> triés, labels, forme méthode et qualification <code>module.</code> retirés, variables renommées dans l'ordre de lecture — une seule chaîne par classe de types que l'unificateur juge équivalents. <code>NULL</code> pour un <code>type_definition</code>, qui ne matche jamais par forme. Btree partiel dessus (<code>20261027120000</code>) : le bucket exact du tier type est une égalité de chaîne pour une requête fermée (ni <code>_</code> ni label), complète quelle que soit la fréquence des noms. Écrite par l'upsert et <code>tasks/backfill_ir</code>, depuis <code>signatures.structured</code> comme les autres colonnes IR.</span>
+                <span lang="en">The type's <strong>normal form</strong> (<code>ir.to_canonical</code>): <code>Union</code> members and <code>Record</code> fields sorted, labels, method form and <code>module.</code> qualification dropped, variables renamed in reading order — one string per class of types the unifier deems equivalent. <code>NULL</code> for a <code>type_definition</code>, which never matches by shape. Partial btree on it (<code>20261027120000</code>): the type tier's exact bucket is a string equality for a closed query (no <code>_</code>, no label), complete whatever the names' frequency. Written by the upsert and <code>tasks/backfill_ir</code>, from <code>signatures.structured</code> like the other IR columns.</span>
+              </td>
+            </tr>
+            <tr>
               <td class="m">kind</td><td class="m">type_nature</td>
               <td><span class="tag stored"><span lang="fr">métadonnée</span><span lang="en">metadata</span></span></td>
               <td class="d">
@@ -2006,8 +2019,8 @@ pub type Type {
     <!-- ══ INDEX ══ -->
     <section id="index">
       <h2><span lang="fr">Les index</span><span lang="en">The indexes</span></h2>
-      <p class="sub" lang="fr">Huit index au-delà des clés primaires, un par tier de recherche ou presque. La correspondance est directe : chaque tier de la cascade a l'index qui le sert.</p>
-      <p class="sub" lang="en">Eight indexes beyond the primary keys, roughly one per search tier. The mapping is direct: every tier of the cascade has the index that serves it.</p>
+      <p class="sub" lang="fr">Neuf index au-delà des clés primaires, un par tier de recherche ou presque. La correspondance est directe : chaque tier de la cascade a l'index qui le sert.</p>
+      <p class="sub" lang="en">Nine indexes beyond the primary keys, roughly one per search tier. The mapping is direct: every tier of the cascade has the index that serves it.</p>
 
       <div class="scroller">
         <table>
@@ -2056,6 +2069,13 @@ pub type Type {
               <td class="d">
                 <span lang="fr"><strong>Phase 1</strong>, sens candidat-plus-général — <code>type_names_key = ANY($3)</code>, les 2^n − 1 sous-ensembles propres des n noms de la requête (n ≤ 6). Cinq sondes en 0,8 ms pour 2 319 lignes sur <code>{Bool,Int,List}</code> (<code>20261026140000</code>).</span>
                 <span lang="en"><strong>Phase 1</strong>, candidate-more-general direction — <code>type_names_key = ANY($3)</code>, the 2^n − 1 proper subsets of the query's n names (n ≤ 6). Five probes in 0.8 ms for 2,319 rows on <code>{Bool,Int,List}</code> (<code>20261026140000</code>).</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">…_canonical_btree</td><td class="m"><span lang="fr">btree partiel</span><span lang="en">partial btree</span></td><td class="m">signature_canonical</td>
+              <td class="d">
+                <span lang="fr">Le <strong>bucket exact</strong> du tier type — <code>signature_canonical = $1</code> pour une requête fermée, sous le même <code>Scope</code> que la phase 1 (<code>queries.canonical_matches</code>). Garantit le rappel : la phase 1 garde les 100 candidats les plus proches puis les mieux classés, et <code>(String) -> String</code> en a des centaines à distance 0 (<code>20261027120000</code>).</span>
+                <span lang="en">The type tier's <strong>exact bucket</strong> — <code>signature_canonical = $1</code> for a closed query, under the same <code>Scope</code> as phase 1 (<code>queries.canonical_matches</code>). Guarantees recall: phase 1 keeps the 100 candidates closest by distance then best ranked, and <code>(String) -> String</code> has hundreds at distance 0 (<code>20261027120000</code>).</span>
               </td>
             </tr>
             <tr>

@@ -130,10 +130,14 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       32k rows; negligible on 2–3-name queries. **`version_ordering` landed** (`20261026150000`): a
       generated stored column on `package_release`, so all six tiers read it instead of the per-row
       regexp (`{List}` 910 → 710 ms, `fn(List(Int)) -> Bool` 190 → 120 ms, `name_search` 63 → 48 ms on
-      this machine). What remains on frequent names is the heap scan of the 33k candidate rows
-      (~260 ms here): the follow-up, not taken, is restricting phase 1 to each package's latest
-      release with signatures (~5k rows, no `DISTINCT ON` needed; drops declarations removed from the
-      latest version — arguably what a search of the current ecosystem wants). **Placeholders**:
+      this machine). What remained on frequent names was the heap scan of the 51k candidate rows
+      before `DISTINCT ON`. **Done 2026-10-27** (branch `perf/phase1-latest-release`): `queries.Scope`
+      — `LatestRelease` (default) joins the signatures to each package's latest semver release that
+      has modules (`DISTINCT ON (package_id)`, 1,285 releases, 12k rows read for `{List}`, no dedupe:
+      200–280 ms → 70 ms; rare names at parity, ~25 ms), `EveryRelease` (`broad=true`) keeps the old
+      `DISTINCT ON (package, module, name, kind)` so a declaration removed from the latest version is
+      still found at the last version that had it. A correlated per-row latest-release subquery was
+      measured at 300–600 ms and rejected. **Placeholders**:
       123 rows (24 packages, 37 releases) were recursive-type placeholders whose second upsert never
       landed (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`); the backfill gave them an IR,
       the empty subset key made them phase-1 candidates for arity-0 queries, and one undecodable row

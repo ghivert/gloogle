@@ -39,8 +39,11 @@ pub fn analytics(_req: Request, ctx: Context) {
 /// `fn(List(a)) -> Bool`, `List(Int)`, `#(a, b)` — is answered by the type tier
 /// alone; the text tiers would only grind trigram and tsvector searches over a
 /// string shaped like code (seconds, then timeouts) to return noise. `broad=true`
-/// runs every tier regardless: the "widen the search" switch. A bare identifier
-/// (`Connection`, `is_empty`) is not structural and always gets every tier.
+/// is the "widen the search" switch: every tier runs regardless, and the type
+/// tier looks at every release instead of each package's latest one (a
+/// declaration removed from a package's latest version is found again, at the
+/// last version that had it). A bare identifier (`Connection`, `is_empty`) is
+/// not structural and always gets every tier.
 pub fn search(req: Request, ctx: Context) {
   let params = wisp.get_query(req)
   let broad =
@@ -121,7 +124,7 @@ fn do_search(query: String, broad: Bool, ctx: Context) {
   queries.upsert_search_analytics(ctx.db, query)
   |> loss.dismiss
 
-  let #(exact_type_searches, structural) = exec_type_search(ctx, query)
+  let #(exact_type_searches, structural) = exec_type_search(ctx, query, broad)
   // A structural type query stops here unless the caller asked to widen.
   let narrowed = structural && !broad
   let exec_search = fn(ctx, query, run, previous) {
@@ -194,10 +197,12 @@ fn do_search(query: String, broad: Bool, ctx: Context) {
 /// (multi-word text queries, malformed input) — those simply skip this tier and
 /// fall through to the name/content tiers below. The second element says whether
 /// the query was *structurally* a type (see `structural`), which is what lets
-/// `do_search` skip the text tiers.
+/// `do_search` skip the text tiers. Phase 1 reads each package's latest release
+/// unless the caller asked for a broad search, which reads every release.
 fn exec_type_search(
   ctx: Context,
   query: String,
+  broad: Bool,
 ) -> #(List(type_search.TypeSearch), Bool) {
   case parse.parse(query) {
     Error(_) -> #([], False)
@@ -212,7 +217,17 @@ fn exec_type_search(
         return: #([], False),
       )
       let subset_keys = queries.subset_keys(type_names)
-      queries.fingerprint_candidates(ctx.db, arity, type_names, subset_keys)
+      let scope = case broad {
+        True -> queries.EveryRelease
+        False -> queries.LatestRelease
+      }
+      queries.fingerprint_candidates(
+        ctx.db,
+        arity,
+        type_names,
+        subset_keys,
+        scope,
+      )
       |> result.map_error(function_.tap(_, loss.log))
       |> result.unwrap([])
       |> list.filter_map(fn(item) {

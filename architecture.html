@@ -1602,8 +1602,8 @@ pub type Type {
     <!-- ══ RECHERCHE ══ -->
     <section id="recherche">
       <h2><span lang="fr">La cascade de recherche</span><span lang="en">The search cascade</span></h2>
-      <p class="sub" lang="fr">Une requête traverse six tiers, du plus précis au plus large. Chaque tier reçoit la concaténation de tous les résultats précédents et s'en défausse (<code>exec_search</code> filtre par <code>list.contains</code>), si bien qu'un même item n'apparaît qu'une fois, dans son tier le plus précis. Chaque requête SQL est plafonnée à 100 lignes et triée par <code>package_rank DESC, ordering DESC</code>, où <code>ordering</code> est <code>package_release.version_ordering</code>, la version découpée en <code>int[]</code> par Postgres. <strong>Une requête structurellement typée s'arrête au premier tier</strong> : si elle parse en fonction, tuple ou type paramétré (<code>fn(List(a)) -> Bool</code>, <code>List(Int)</code>, <code>#(a, b)</code>), les cinq tiers texte ne tournent pas — ils ne feraient que moudre du trigram et du tsvector sur une chaîne en forme de code, pour des secondes et des <em>timeouts</em>, et rendre du bruit — et la réponse porte <code>"narrowed": true</code>. <code>?broad=true</code> les relance tous : c'est le bouton « Widen the search » que venus affiche sous les résultats de type quand la réponse est <code>narrowed</code> (<code>UserRequestedBroadSearch</code> → <code>api.get_search(broad: True)</code> ; la réponse élargie remplace celle en cache et le bandeau disparaît). Un simple identifiant (<code>Connection</code>, <code>is_empty</code>) n'est pas structurel et traverse toujours les six tiers (<code>handlers.structural</code>).</p>
-      <p class="sub" lang="en">A query travels through six tiers, from the most precise to the broadest. Each tier receives the concatenation of every previous result and discards those (<code>exec_search</code> filters with <code>list.contains</code>), so a given item appears exactly once, in its most precise tier. Every SQL query is capped at 100 rows and ordered by <code>package_rank DESC, ordering DESC</code>, where <code>ordering</code> is <code>package_release.version_ordering</code>, the version split into an <code>int[]</code> by Postgres. <strong>A structurally typed query stops at the first tier</strong>: if it parses as a function, a tuple or a parameterised type (<code>fn(List(a)) -> Bool</code>, <code>List(Int)</code>, <code>#(a, b)</code>), the five text tiers do not run — they would only grind trigram and tsvector searches over a code-shaped string, for seconds and timeouts, and return noise — and the response carries <code>"narrowed": true</code>. <code>?broad=true</code> runs them all again: the "Widen the search" button venus shows under the type results when the response is <code>narrowed</code> (<code>UserRequestedBroadSearch</code> → <code>api.get_search(broad: True)</code>; the widened response replaces the cached one and the banner goes away). A bare identifier (<code>Connection</code>, <code>is_empty</code>) is not structural and always travels the six tiers (<code>handlers.structural</code>).</p>
+      <p class="sub" lang="fr">Une requête traverse six tiers, du plus précis au plus large. Chaque tier reçoit la concaténation de tous les résultats précédents et s'en défausse (<code>exec_search</code> filtre par <code>list.contains</code>), si bien qu'un même item n'apparaît qu'une fois, dans son tier le plus précis. Chaque requête SQL est plafonnée à 100 lignes et triée par <code>package_rank DESC, ordering DESC</code>, où <code>ordering</code> est <code>package_release.version_ordering</code>, la version découpée en <code>int[]</code> par Postgres. <strong>Une requête structurellement typée s'arrête au premier tier</strong> : si elle parse en fonction, tuple ou type paramétré (<code>fn(List(a)) -> Bool</code>, <code>List(Int)</code>, <code>#(a, b)</code>), les cinq tiers texte ne tournent pas — ils ne feraient que moudre du trigram et du tsvector sur une chaîne en forme de code, pour des secondes et des <em>timeouts</em>, et rendre du bruit — et la réponse porte <code>"narrowed": true</code>. <code>?broad=true</code> les relance tous : c'est le bouton « Widen the search » que venus affiche sous les résultats de type quand la réponse est <code>narrowed</code> (<code>UserRequestedBroadSearch</code> → <code>api.get_search(broad: True)</code> ; la réponse élargie remplace celle en cache et le bandeau disparaît). Un simple identifiant (<code>Connection</code>, <code>is_empty</code>) n'est pas structurel et traverse toujours les six tiers (<code>handlers.structural</code>). Second garde-fou, sur les trois tiers de contenu (trigrammes et les deux tsvector) : ils ne tournent que si la requête porte un mot d'au moins trois caractères (<code>handlers.searchable</code>) — en dessous, <code>pg_trgm</code> n'extrait aucun trigramme d'un motif <code>LIKE '%io%'</code> et le GIN rend toute la table, et le tsvector anglais de <code>fn(a) -> a</code> se réduit au jeton <code>fn</code>, présent dans 377 k lignes (750 ms de bruit sur le snapshot local).</p>
+      <p class="sub" lang="en">A query travels through six tiers, from the most precise to the broadest. Each tier receives the concatenation of every previous result and discards those (<code>exec_search</code> filters with <code>list.contains</code>), so a given item appears exactly once, in its most precise tier. Every SQL query is capped at 100 rows and ordered by <code>package_rank DESC, ordering DESC</code>, where <code>ordering</code> is <code>package_release.version_ordering</code>, the version split into an <code>int[]</code> by Postgres. <strong>A structurally typed query stops at the first tier</strong>: if it parses as a function, a tuple or a parameterised type (<code>fn(List(a)) -> Bool</code>, <code>List(Int)</code>, <code>#(a, b)</code>), the five text tiers do not run — they would only grind trigram and tsvector searches over a code-shaped string, for seconds and timeouts, and return noise — and the response carries <code>"narrowed": true</code>. <code>?broad=true</code> runs them all again: the "Widen the search" button venus shows under the type results when the response is <code>narrowed</code> (<code>UserRequestedBroadSearch</code> → <code>api.get_search(broad: True)</code>; the widened response replaces the cached one and the banner goes away). A bare identifier (<code>Connection</code>, <code>is_empty</code>) is not structural and always travels the six tiers (<code>handlers.structural</code>). A second guard, on the three content tiers (trigrams and the two tsvectors): they only run when the query carries a word of three characters or more (<code>handlers.searchable</code>) — below that, <code>pg_trgm</code> extracts no trigram from a <code>LIKE '%io%'</code> pattern and the GIN returns the whole table, and the English tsvector of <code>fn(a) -> a</code> boils down to the token <code>fn</code>, present in 377k rows (750 ms of noise on the local snapshot).</p>
 
       <div class="cascade">
         <div class="tier">
@@ -1625,8 +1625,8 @@ pub type Type {
         <div class="tier">
           <span class="tier-k">matches</span>
           <span class="tier-d">
-            <span lang="fr">Sous-chaîne sur le nom, ou sur <code>signature_compact</code> — la requête est nettoyée de ses parenthèses/virgules/points et les espaces deviennent des <code>%</code>.</span>
-            <span lang="en">Substring on the name, or on <code>signature_compact</code> — the query is stripped of parentheses/commas/dots and its spaces become <code>%</code>.</span>
+            <span lang="fr">Sous-chaîne sur le nom, ou sur <code>signature_compact</code> — la requête est nettoyée de ses parenthèses/virgules/points et les espaces deviennent des <code>%</code>. Ce tier et les deux suivants exigent un mot d'au moins trois caractères (<code>searchable</code>).</span>
+            <span lang="en">Substring on the name, or on <code>signature_compact</code> — the query is stripped of parentheses/commas/dots and its spaces become <code>%</code>. This tier and the next two require a word of three characters or more (<code>searchable</code>).</span>
           </span>
           <span class="tier-q">content_search · ILIKE + <span lang="fr">trigrammes</span><span lang="en">trigrams</span></span>
         </div>
@@ -1649,10 +1649,10 @@ pub type Type {
         <div class="tier">
           <span class="tier-k">module-searches</span>
           <span class="tier-d">
-            <span lang="fr">Le filet de sécurité : correspondance sur le nom de module.</span>
-            <span lang="en">The safety net: a match on the module name.</span>
+            <span lang="fr">Le filet de sécurité : correspondance sur le nom de module. GIN trigrammes sur <code>package_module.name</code> (<code>20261027100000</code>, 45 → 10 ms sur « error ») et plafond de 100 lignes comme les autres — il n'en avait pas et rendait 1 958 lignes.</span>
+            <span lang="en">The safety net: a match on the module name. Trigram GIN on <code>package_module.name</code> (<code>20261027100000</code>, 45 → 10 ms on "error") and a 100-row cap like the others — it had none and returned 1,958 rows.</span>
           </span>
-          <span class="tier-q">module_search</span>
+          <span class="tier-q">module_search · LIKE + <span lang="fr">trigrammes</span><span lang="en">trigrams</span></span>
         </div>
       </div>
 
@@ -2047,8 +2047,8 @@ pub type Type {
     <!-- ══ INDEX ══ -->
     <section id="index">
       <h2><span lang="fr">Les index</span><span lang="en">The indexes</span></h2>
-      <p class="sub" lang="fr">Sept index au-delà des clés primaires, un par tier de recherche ou presque. La correspondance est directe : chaque tier de la cascade a l'index qui le sert.</p>
-      <p class="sub" lang="en">Seven indexes beyond the primary keys, roughly one per search tier. The mapping is direct: every tier of the cascade has the index that serves it.</p>
+      <p class="sub" lang="fr">Huit index au-delà des clés primaires, un par tier de recherche ou presque. La correspondance est directe : chaque tier de la cascade a l'index qui le sert.</p>
+      <p class="sub" lang="en">Eight indexes beyond the primary keys, roughly one per search tier. The mapping is direct: every tier of the cascade has the index that serves it.</p>
 
       <div class="scroller">
         <table>
@@ -2097,6 +2097,13 @@ pub type Type {
               <td class="d">
                 <span lang="fr"><strong>Phase 1</strong>, sens candidat-plus-général — <code>type_names_key = ANY($3)</code>, les 2^n − 1 sous-ensembles propres des n noms de la requête (n ≤ 6). Cinq sondes en 0,8 ms pour 2 319 lignes sur <code>{Bool,Int,List}</code> (<code>20261026140000</code>).</span>
                 <span lang="en"><strong>Phase 1</strong>, candidate-more-general direction — <code>type_names_key = ANY($3)</code>, the 2^n − 1 proper subsets of the query's n names (n ≤ 6). Five probes in 0.8 ms for 2,319 rows on <code>{Bool,Int,List}</code> (<code>20261026140000</code>).</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="m">package_module_name_trgm</td><td class="m">gin trgm</td><td class="m">package_module.name</td>
+              <td class="d">
+                <span lang="fr"><code>module_search</code> — <code>LIKE '%q%'</code> sur le nom de module ; le tier n'avait aucun index (<code>20261027100000</code>).</span>
+                <span lang="en"><code>module_search</code> — <code>LIKE '%q%'</code> on the module name; the tier had no index at all (<code>20261027100000</code>).</span>
               </td>
             </tr>
             <tr>

@@ -402,6 +402,13 @@ ALTER TABLE ONLY public.search_analytics
 
 
 --
+-- Name: package_module_name_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_module_name_trgm ON public.package_module USING gin (name public.gin_trgm_ops);
+
+
+--
 -- Name: package_name_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -604,4 +611,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20261026120000'),
     ('20261026130000'),
     ('20261026140000'),
-    ('20261026150000');
+    ('20261026150000'),
+    ('20261027100000');

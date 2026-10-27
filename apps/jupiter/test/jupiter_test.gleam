@@ -60,3 +60,17 @@ pub fn structural_query_test() {
   assert !structural("a")
   assert !structural("_")
 }
+
+// The content tiers (trigram, tsvectors) only run on a query carrying a word
+// of three characters or more: shorter patterns make the GIN return the whole
+// table. A word is a run of letters, digits or underscores.
+pub fn searchable_query_test() {
+  assert handlers.searchable("Error")
+  assert handlers.searchable("is_empty")
+  assert handlers.searchable("fn(List(a)) -> Bool")
+  assert handlers.searchable("a map")
+  assert !handlers.searchable("fn(a) -> a")
+  assert !handlers.searchable("fn(a, b) -> b")
+  assert !handlers.searchable("io")
+  assert !handlers.searchable("")
+}

@@ -820,6 +820,11 @@ pub fn documentation_search(db: pog.Connection, q: String) {
 /// The `SIMILAR TO` guard on `r.version` only discards non-semver releases
 /// (pre-releases, build tags, etc.), so downstream code can always parse and
 /// order the version.
+///
+/// Capped at 100 rows like every other tier: "error" matched 1,958 rows, each
+/// carrying its documentation and `signature_json` (~1 KB), serialised, decoded
+/// and re-encoded for venus, which shows a handful. The module name is served
+/// by the trigram GIN `package_module_name_trgm` (`20261027100000`).
 pub fn module_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
@@ -845,7 +850,8 @@ pub fn module_search(db: pog.Connection, q: String) {
      -- frontend's job, not this query's.
      AND s.signature_ <> ''
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
+   LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(q))
   |> pog.returning(type_search.decoder())

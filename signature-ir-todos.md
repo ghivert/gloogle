@@ -160,7 +160,15 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       queries went from 0.4–10 s to 32–334 ms (`fn(a) -> a` 10.6 s → 39 ms, `fn(List(Int)) -> Bool`
       652 → 56 ms, the map query 3.8 s → 334 ms); bare names unchanged (`Connection` 319 ms, `Error`
       587 ms, all six tiers). The text tiers' own plans (trigram on code-shaped strings, `module_search`
-      without an index nor a LIMIT — 1,958 rows for "Error") are untouched. Two gotchas met on the way: `pog` sends untyped parameters, so `cardinality($2)` fails with
+      without an index nor a LIMIT — 1,958 rows for "Error") were untouched at that point. **Done
+      2026-10-27** (branch `perf/text-tiers`, stacked on this one): trigram GIN on `package_module.name`
+      (`20261027100000`, `module_search` 45 → 10 ms on "error"), `LIMIT 100` on `module_search`, and
+      `handlers.searchable` — the three content tiers (trigram, two tsvectors) only run on a query with a
+      word of ≥ 3 characters (`fn(a) -> a` cost 750 ms of noise in `content_search`, `fn(a, b) -> b`
+      380 ms; `pg_trgm` extracts no trigram from a 2-character `LIKE` pattern). Still open there:
+      `content_search` on a frequent substring ("Error": 48k rows through the OR of two `ILIKE`s, joined
+      and sorted before the `LIMIT`, 437 ms) — the fix is a names-based tier on `type_names` rather than
+      a faster `ILIKE`. Two gotchas met on the way: `pog` sends untyped parameters, so `cardinality($2)` fails with
       "could not determine polymorphic type" — cast (`$2::text[]`) every array parameter used outside a
       comparison with a typed column; and jupiter's boot is flaky on this laptop under load
       (`FailedToStartChild(2, InitFailed("shutdown"))` from mist's handler factory, 1 start in 8 at the

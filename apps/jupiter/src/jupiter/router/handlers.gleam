@@ -12,6 +12,7 @@ import gleam/json
 import gleam/list
 import gleam/pair
 import gleam/result
+import gleam/string
 import jupiter/context.{type Context}
 import jupiter/loss.{type Loss}
 import jupiter/postgres/queries
@@ -129,6 +130,15 @@ fn do_search(query: String, broad: Bool, ctx: Context) {
       False -> exec_search(ctx, query, run, previous)
     }
   }
+  // The three content tiers (trigram, two tsvectors) need at least one word of
+  // three characters to be selective; `fn(a) -> a` or `io` would make them scan
+  // most of the table for noise (see `searchable`).
+  let exec_content_search = fn(ctx, query, run, previous) {
+    case searchable(query) {
+      True -> exec_search(ctx, query, run, previous)
+      False -> []
+    }
+  }
 
   let exact_name_matches =
     exact_type_searches
@@ -145,17 +155,17 @@ fn do_search(query: String, broad: Bool, ctx: Context) {
   let matches =
     [exact_matches, exact_type_searches]
     |> list.flatten
-    |> exec_search(ctx, query, queries.content_search, _)
+    |> exec_content_search(ctx, query, queries.content_search, _)
 
   let signature_searches =
     [exact_matches, exact_type_searches, matches]
     |> list.flatten
-    |> exec_search(ctx, query, queries.signature_search, _)
+    |> exec_content_search(ctx, query, queries.signature_search, _)
 
   let documentation_searches =
     [exact_matches, exact_type_searches, matches, signature_searches]
     |> list.flatten
-    |> exec_search(ctx, query, queries.documentation_search, _)
+    |> exec_content_search(ctx, query, queries.documentation_search, _)
 
   let module_searches =
     [
@@ -228,6 +238,45 @@ pub fn structural(type_: ir.Type) -> Bool {
     ir.Fn(..) | ir.Tuple(..) | ir.Record(..) | ir.Union(..) -> True
     ir.Named(args: [_, ..], ..) -> True
     ir.Named(args: [], ..) | ir.Var(..) | ir.Hole -> False
+  }
+}
+
+/// Does the query carry at least one word of three characters or more? Below
+/// that, the content tiers degenerate: `pg_trgm` extracts no trigram from a
+/// `LIKE '%io%'` pattern and the GIN returns the whole table, and the English
+/// tsvector of `fn(a) -> a` is the single token `fn`, present in 377k rows.
+/// Measured on the local snapshot: `content_search` on `fn(a) -> a` 750 ms,
+/// `fn(a, b) -> b` 380 ms, for results that are pure noise. A word is a run of
+/// letters, digits or underscores — `is_empty` counts, `fn(a, b)` does not.
+pub fn searchable(query: String) -> Bool {
+  query
+  |> string.to_graphemes
+  |> list.fold_until(0, fn(run, grapheme) {
+    let run = case is_word_grapheme(grapheme) {
+      True -> run + 1
+      False -> 0
+    }
+    case run >= 3 {
+      True -> list.Stop(run)
+      False -> list.Continue(run)
+    }
+  })
+  |> fn(run) { run >= 3 }
+}
+
+fn is_word_grapheme(grapheme: String) -> Bool {
+  case grapheme {
+    "_" -> True
+    _ ->
+      case string.to_utf_codepoints(grapheme) {
+        [codepoint] -> {
+          let c = string.utf_codepoint_to_int(codepoint)
+          { c >= 48 && c <= 57 }
+          || { c >= 65 && c <= 90 }
+          || { c >= 97 && c <= 122 }
+        }
+        _ -> False
+      }
   }
 }
 

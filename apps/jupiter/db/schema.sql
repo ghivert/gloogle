@@ -228,7 +228,6 @@ CREATE TABLE public.package_type_fun_signature (
     name text NOT NULL,
     documentation text NOT NULL,
     signature_ text NOT NULL,
-    signature_json jsonb CONSTRAINT package_type_fun_signature_json_signature_not_null NOT NULL,
     kind public.type_nature CONSTRAINT package_type_fun_signature_nature_not_null NOT NULL,
     deprecation text,
     implementations text,
@@ -612,4 +611,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20261026130000'),
     ('20261026140000'),
     ('20261026150000'),
-    ('20261027100000');
+    ('20261027100000'),
+    ('20261027110000');

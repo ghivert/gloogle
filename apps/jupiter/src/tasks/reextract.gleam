@@ -1,6 +1,6 @@
 //// One-shot repair: re-run signature extraction for the releases that still
 //// hold recursive-type placeholders — rows whose second upsert never landed
-//// (`signature_ = ''`, JSON `null` in `signature_json` and `metadata`). Every
+//// (`signature_ = ''`, JSON `null` in `metadata`). Every
 //// release keeps its raw `package_interface` and `gleam_toml`, so the whole
 //// ingestion chain (`api/signatures.extract_signatures`) replays from the
 //// database alone, with no call to Hex. Idempotent: the chain upserts.

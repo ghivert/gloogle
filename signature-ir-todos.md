@@ -21,9 +21,11 @@ set — they are front-end lowering rules, matching-tier rules, or external data
   - [x] Wire ingestion: `from_gleam` → `alpha_rename_declaration` → `ir.encode` → store in the
         `signature_ir` jsonb column (migration `20260703100003`). All 4 `api/signatures` call sites
         populate it; upfront recursive-type placeholders write jsonb `null`. — **done**
-  - [ ] Retire `generate/types` + the `signature_json` column: nothing reads them any more since
-        2026-10-27 (venus renders the IR), they are still written at ingestion. Next stacked PR:
-        drop the column (migration), the `json_signature` upsert parameter, `generate/types`.
+  - [x] Retire `generate/types` + the `signature_json` column — **done 2026-10-27** (branch
+        `refactor/drop-signature-json`): migration `20261027110000` drops the column, the upsert lost
+        its parameter, `generate/types` is deleted (`implementations_to_json`, its one surviving
+        function, moved into `generate/metadata`). Run a `VACUUM` after the migration in prod
+        (~900 bytes × 500k rows).
   - [x] Move `data/ir` into `galaxy` (module path `data/ir` unchanged, so no import churn; no new
         galaxy dependency — `decrypt` already comes via `plasma`). The Gleam front-end
         `data/ir/from_gleam` **stays in jupiter**: it is the only piece needing
@@ -346,7 +348,7 @@ Columns on `package_type_fun_signature`, all derived from `signature_` (the sour
 - `arity int` + `type_names text[]` — **new**; fingerprint derived from the IR; GIN index on `type_names`.
 - metadata columns (`name`, `documentation`, `kind`, `deprecation`, `implementations`, `metadata`) —
   **unchanged**, used by search filters/FTS; the IR is structural only and never duplicates them.
-- `signature_json` — **to retire**: unread since venus renders `signature_ir` (2026-10-27), still written. Next PR.
+- `signature_json` — **dropped** (`20261027110000`, 2026-10-27): venus renders `signature_ir`.
 
 Done already on the way here: `json_signature` → `signature_json` rename + `ref` strip (migration
 `20260703100001`); write-only `parameters` column dropped (`20260703100002`). **Run `dbmate up`.**

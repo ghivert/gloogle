@@ -933,7 +933,7 @@
       <p class="note" lang="fr">
         <strong>Une release se réextrait depuis la base : <code>tasks/reextract</code>.</strong>
         L'insertion en deux temps des types récursifs laisse une ligne placeholder (<code>signature_</code>
-        vide, JSON <code>null</code> dans <code>signature_json</code> et <code>metadata</code>) si le second
+        vide, JSON <code>null</code> dans <code>metadata</code>) si le second
         upsert n'aboutit pas — l'instantané de prod en comptait 123, sur 24 paquets et 37 releases
         (<code>mist.Chunk</code>, <code>glisten.Connection</code>, <code>glance.Error</code>…), et une seule
         telle ligne fait échouer le décodeur de tout un lot, donc un tier entier en silence. Depuis
@@ -946,7 +946,7 @@
       <p class="note" lang="en">
         <strong>A release re-extracts from the database: <code>tasks/reextract</code>.</strong>
         The two-step insertion of recursive types leaves a placeholder row (empty <code>signature_</code>,
-        JSON <code>null</code> in <code>signature_json</code> and <code>metadata</code>) when the second
+        JSON <code>null</code> in <code>metadata</code>) when the second
         upsert does not land — the production snapshot held 123 of them, over 24 packages and 37 releases
         (<code>mist.Chunk</code>, <code>glisten.Connection</code>, <code>glance.Error</code>…), and a single
         such row fails the decoder of a whole batch, hence an entire tier, silently. From the stored
@@ -1491,18 +1491,20 @@ pub type Type {
         <code>data/ir</code> <strong>a rejoint <code>galaxy</code></strong> (commit <code>b63a44c</code>) : les deux
         formats structurés y cohabitent désormais, en attendant que le second remplace le premier. Le chemin de
         module <code>data/ir</code> est inchangé, donc aucun import n'a bougé, et galaxy n'a pas gagné de
-        dépendance — <code>decrypt</code> arrivait déjà via <code>plasma</code>. Venus rend l'IR depuis le 2026-10-27
-        (<code>width</code> recalculé à l'affichage) et <code>data/signature</code> a disparu. Ce qui reste : retirer
-        la colonne <code>signature_json</code>, encore écrite à l'ingestion mais plus lue, et <code>generate/types</code>.
+        dépendance — <code>decrypt</code> arrivait déjà via <code>plasma</code>. <strong>Refactor terminé le 2026-10-27</strong> :
+        venus rend l'IR (<code>width</code> recalculé à l'affichage), <code>data/signature</code> a disparu, la colonne
+        <code>signature_json</code> est supprimée (<code>20261027110000</code>) et <code>generate/types</code> avec elle. L'IR
+        est la seule représentation structurée stockée.
       </p>
       <p class="note warn" lang="en">
         <strong>The <code>signature</code> / <code>ir</code> duplication is temporary, and it is the crux of the refactor.</strong>
         <code>data/ir</code> <strong>has moved into <code>galaxy</code></strong> (commit <code>b63a44c</code>): both
         structured formats now live there, until the second replaces the first. The <code>data/ir</code> module path
         is unchanged, so no import moved, and galaxy gained no dependency — <code>decrypt</code> already came in via
-        <code>plasma</code>. Venus has rendered the IR since 2026-10-27 (<code>width</code> recomputed at display
-        time) and <code>data/signature</code> is gone. What remains: drop the <code>signature_json</code> column,
-        still written at ingestion but no longer read, and <code>generate/types</code>.
+        <code>plasma</code>. <strong>Refactor completed on 2026-10-27</strong>: venus renders the IR (<code>width</code>
+        recomputed at display time), <code>data/signature</code> is gone, the <code>signature_json</code> column is
+        dropped (<code>20261027110000</code>) and <code>generate/types</code> with it. The IR is the only stored
+        structured representation.
       </p>
     </section>
 
@@ -1779,10 +1781,7 @@ pub type Type {
             <text class="t-col" x="362" y="933">type_names, type_names_key</text>
             <text class="t-gen" x="788" y="933" text-anchor="end" lang="fr">text[], text · dérivé</text>
             <text class="t-gen" x="788" y="933" text-anchor="end" lang="en">text[], text · derived</text>
-            <text class="t-col" x="362" y="950">signature_json</text>
-            <text class="t-key" x="788" y="950" text-anchor="end" lang="fr">jsonb · à retirer</text>
-            <text class="t-key" x="788" y="950" text-anchor="end" lang="en">jsonb · to remove</text>
-            <text class="t-col" x="362" y="967">metadata, deprecation</text><text class="t-key" x="788" y="967" text-anchor="end">jsonb</text>
+            <text class="t-col" x="362" y="950">metadata, deprecation</text><text class="t-key" x="788" y="950" text-anchor="end">jsonb</text>
           </g>
 
           <!-- rel: package_owner -> hex_user -->
@@ -1965,14 +1964,6 @@ pub type Type {
               <td class="d">
                 <span lang="fr">Les mêmes noms, joints par <code>,</code> — la clé canonique de l'ensemble (<code>Bool,Int,List</code>). Elle existe parce que le GIN s'approprie aussi <code>=</code> sur le tableau (avec recheck) ; sur un texte, l'égalité est un btree. Sert au sens « candidat plus général » de la phase 1 : <code>type_names_key = ANY(sous-ensembles de la requête)</code>. Écrite par <code>queries.upsert_package_type_fun_signature</code> et <code>tasks/backfill_ir</code>.</span>
                 <span lang="en">The same names joined by <code>,</code> — the set's canonical key (<code>Bool,Int,List</code>). It exists because the GIN also claims <code>=</code> on the array (with a recheck); on text, equality is a btree. Serves phase 1's candidate-more-general direction: <code>type_names_key = ANY(subsets of the query)</code>. Written by <code>queries.upsert_package_type_fun_signature</code> and <code>tasks/backfill_ir</code>.</span>
-              </td>
-            </tr>
-            <tr>
-              <td class="m">signature_json</td><td class="m">jsonb</td>
-              <td><span class="tag legacy"><span lang="fr">à retirer</span><span lang="en">to remove</span></span></td>
-              <td class="d">
-                <span lang="fr">L'ancienne forme d'affichage. Plus lue par personne depuis que venus rend <code>signature_ir</code> (2026-10-27) ; encore écrite par <code>generate/types</code> à l'ingestion. À supprimer avec lui.</span>
-                <span lang="en">The old display form. Read by nobody since venus renders <code>signature_ir</code> (2026-10-27); still written by <code>generate/types</code> at ingestion. To drop along with it.</span>
               </td>
             </tr>
             <tr>

@@ -519,7 +519,6 @@ pub fn upsert_package_type_fun_signature(
   documentation documentation: Option(String),
   metadata metadata: json.Json,
   signature signature: String,
-  json_signature json_signature: json.Json,
   signature_ir signature_ir: json.Json,
   arity arity: Int,
   type_names type_names: List(String),
@@ -531,7 +530,6 @@ pub fn upsert_package_type_fun_signature(
      name,
      documentation,
      signature_,
-     signature_json,
      kind,
      metadata,
      package_module_id,
@@ -541,20 +539,19 @@ pub fn upsert_package_type_fun_signature(
      arity,
      type_names,
      type_names_key
-   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
    ON CONFLICT (package_module_id, name) DO UPDATE
      SET
        documentation = $2,
        signature_ = $3,
-       signature_json = $4,
-       kind = $5,
-       metadata = $6,
-       deprecation = $8,
-       implementations = $9,
-       signature_ir = $10,
-       arity = $11,
-       type_names = $12,
-       type_names_key = $13
+       kind = $4,
+       metadata = $5,
+       deprecation = $7,
+       implementations = $8,
+       signature_ir = $9,
+       arity = $10,
+       type_names = $11,
+       type_names_key = $12
    RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
@@ -565,7 +562,6 @@ pub fn upsert_package_type_fun_signature(
     |> pog.text
   })
   |> pog.parameter(pog.text(signature))
-  |> pog.parameter(json_signature |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(kind_to_string(kind)))
   |> pog.parameter(metadata |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(module_id))
@@ -626,7 +622,7 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
 }
 
 /// Every text tier skips the recursive-type placeholders whose second upsert
-/// never landed (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`,
+/// never landed (`signature_ = ''`, JSON `null` in `metadata`,
 /// 123 rows over 24 packages in the 2026-07 snapshot): `type_search.decoder()`
 /// cannot decode them, and one such row fails the whole batch — a silent empty
 /// tier. The root cause is in ingestion; see `signature-ir-todos.md`.
@@ -887,7 +883,7 @@ pub fn module_search(db: pog.Connection, q: String) {
 /// absorb, whichever side is the general one — with package rank breaking ties.
 /// Rows with a null IR are excluded (nothing to verify against), and so are
 /// the recursive-type placeholders whose second upsert never landed
-/// (`signature_ = ''`, JSON `null` in `signature_json`/`metadata`): they carry
+/// (`signature_ = ''`, JSON `null` in `metadata`): they carry
 /// an IR since the backfill, but `type_search.decoder()` cannot decode them and
 /// one such row fails the whole batch. Every tier also skips a NULL IR for the
 /// same reason: `type_search.decoder()` reads `signature_ir` since venus renders

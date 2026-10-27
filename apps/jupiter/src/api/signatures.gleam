@@ -9,7 +9,6 @@ import gleam/result
 import jupiter/gleam/context.{type Context}
 import jupiter/gleam/generate/metadata
 import jupiter/gleam/generate/sources
-import jupiter/gleam/generate/types
 import jupiter/postgres/queries
 import palabres
 
@@ -54,7 +53,6 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         documentation: option.None,
         metadata: json.null(),
         signature: "",
-        json_signature: json.null(),
         signature_ir: json.null(),
         arity: 0,
         type_names: [],
@@ -62,7 +60,6 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         deprecation: option.None,
         implementations: None,
       )
-    let json_signature = types.type_definition_to_json(name, def)
     let #(signature_ir, arity, type_names) =
       structured(from_gleam.type_definition(def))
     queries.upsert_package_type_fun_signature(
@@ -72,7 +69,6 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
       documentation: def.documentation,
       metadata: metadata.generate(def.deprecation, None),
       signature: sources.type_definition_to_string(name, def),
-      json_signature:,
       signature_ir:,
       arity:,
       type_names:,
@@ -104,7 +100,6 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         documentation: option.None,
         metadata: json.null(),
         signature: "",
-        json_signature: json.null(),
         signature_ir: json.null(),
         arity: 0,
         type_names: [],
@@ -112,7 +107,6 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         deprecation: option.None,
         implementations: None,
       )
-    let json_signature = types.type_alias_to_json(name, alias)
     let #(signature_ir, arity, type_names) =
       structured(from_gleam.type_alias(alias))
     queries.upsert_package_type_fun_signature(
@@ -122,7 +116,6 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
       documentation: alias.documentation,
       metadata: metadata.generate(alias.deprecation, None),
       signature: sources.type_alias_to_string(name, alias),
-      json_signature:,
       signature_ir:,
       arity:,
       type_names:,
@@ -144,7 +137,6 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   let all_constants = dict.to_list(module.module.constants)
   result.all({
     use #(name, constant) <- list.map(all_constants)
-    let json_signature = types.constant_to_json(name, constant)
     let #(signature_ir, arity, type_names) =
       structured(from_gleam.constant(constant))
     queries.upsert_package_type_fun_signature(
@@ -155,7 +147,6 @@ fn upsert_constants(ctx: Context, module: context.Module) {
       metadata: Some(constant.implementations)
         |> metadata.generate(constant.deprecation, _),
       signature: sources.constant_to_string(name, constant),
-      json_signature:,
       signature_ir:,
       arity:,
       type_names:,
@@ -177,7 +168,6 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   let all_functions = dict.to_list(module.module.functions)
   result.all({
     use #(name, function) <- list.map(all_functions)
-    let json_signature = types.function_to_json(name, function)
     let signature = sources.function_to_string(name, function)
     let #(signature_ir, arity, type_names) =
       structured(from_gleam.function(function))
@@ -190,7 +180,6 @@ fn upsert_functions(ctx: Context, module: context.Module) {
         metadata: Some(function.implementations)
           |> metadata.generate(function.deprecation, _),
         signature:,
-        json_signature:,
         signature_ir:,
         arity:,
         type_names:,

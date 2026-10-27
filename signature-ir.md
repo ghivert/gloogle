@@ -231,8 +231,8 @@ unifies it, reading `Var.index`), and the **fingerprint**. Shape-changing normal
 
 Notes:
 
-- **`signature_json` is retired** under single-store (display renders `signature_ir`). It survives
-  only in the interim until venus is refactored.
+- **`signature_json` is retired** under single-store (display renders `signature_ir`). Dropped on
+  2026-10-27 (migration `20261027110000`), together with its writer `generate/types`.
 - Metadata (`name`, `documentation`, `kind`, `deprecation`, `implementations`) stays in its own
   columns — the IR is structural only and never duplicates them.
 - The canonical IR **string** (`ir.to_string`) is **not stored** — regenerable via

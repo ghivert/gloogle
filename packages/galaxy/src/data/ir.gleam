@@ -15,6 +15,7 @@ import gleam/int
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/set
 import gleam/string
 
 pub type Type {
@@ -73,7 +74,11 @@ pub type Constructor {
 
 /// Deterministic printer: an IR `Type` → its canonical notation string, as
 /// written — module qualification, labels, the `recv :: (…)` method form.
-/// Inverse of the canonical parser. See `signature-ir.md` for the grammar.
+/// Inverse of the canonical parser (`data/ir/canonical`): `parse(to_string(t))`
+/// is `t` up to variable names. See `signature-ir.md` for the grammar. Where the
+/// notation would be ambiguous the printer parenthesises: a function nested in
+/// a union (`((A) -> B) | C`), a union returned by a function
+/// (`(A) -> (B | C)`), a receiver that is a function or a union.
 pub fn to_string(type_: Type) -> String {
   print(type_, Written)
 }
@@ -87,7 +92,8 @@ pub fn to_string(type_: Type) -> String {
 /// the unifier takes that the written form does not:
 ///
 ///   - `Union` members and `Record` fields are sorted (the unifier matches them
-///     as sets, the written form keeps list order);
+///     as sets, the written form keeps list order); a nested union is flattened
+///     and duplicate members dropped on the way (`A | (A | B)` is `A | B`);
 ///   - `is_method` is dropped (a receiver-first method and its function form
 ///     are one type to the unifier);
 ///   - labels are dropped (a label the query omits matches any candidate label);
@@ -140,11 +146,44 @@ fn normalise(type_: Type) -> Type {
       |> list.sort(fn(a, b) { string.compare(a.name, b.name) })
       |> Record
     Union(members) ->
-      members
-      |> list.map(normalise)
-      |> list.sort(fn(a, b) { string.compare(print(a, Blind), print(b, Blind)) })
-      |> Union
+      case
+        members
+        |> list.flat_map(flatten_union)
+        |> list.map(normalise)
+        // Duplicates as the normal form spells them: `gleam.List` and `List`
+        // are one member once the qualification is gone.
+        |> unique_by(print(_, Canonical))
+        |> list.sort(fn(a, b) {
+          string.compare(print(a, Blind), print(b, Blind))
+        })
+      {
+        [single] -> single
+        members -> Union(members)
+      }
   }
+}
+
+/// A union's members are not unions: `A | (B | C)` is `A | B | C`, and the
+/// printer writes nested unions flat anyway.
+fn flatten_union(type_: Type) -> List(Type) {
+  case type_ {
+    Union(members) -> list.flat_map(members, flatten_union)
+    other -> [other]
+  }
+}
+
+/// The first item of each group sharing a key, in order.
+fn unique_by(items: List(a), key: fn(a) -> String) -> List(a) {
+  let #(kept, _) =
+    list.fold(items, #([], set.new()), fn(acc, item) {
+      let #(kept, seen) = acc
+      let k = key(item)
+      case set.contains(seen, k) {
+        True -> acc
+        False -> #([item, ..kept], set.insert(seen, k))
+      }
+    })
+  list.reverse(kept)
 }
 
 /// How `print` spells a type.
@@ -173,8 +212,17 @@ fn print(type_: Type, spelling: Spelling) -> String {
     Record(fields) -> "{ " <> print_fields(fields, spelling) <> " }"
     Union(members) ->
       members
-      |> list.map(print(_, spelling))
+      |> list.map(print_member(_, spelling))
       |> string.join(" | ")
+  }
+}
+
+/// A union member: a function is parenthesised, or `(A) -> B | C` would read as
+/// a function returning `B | C`.
+fn print_member(type_: Type, spelling: Spelling) -> String {
+  case type_ {
+    Fn(..) -> "(" <> print(type_, spelling) <> ")"
+    _ -> print(type_, spelling)
   }
 }
 
@@ -184,14 +232,43 @@ fn print_fn(
   is_method: Bool,
   spelling: Spelling,
 ) -> String {
-  let tail = ") -> " <> print(return, spelling)
+  let tail = ") -> " <> print_return(return, spelling)
   case spelling, is_method, params {
     Written, True, [receiver, ..rest] ->
-      print(receiver.type_, spelling)
+      print_receiver(receiver, spelling)
       <> " :: ("
       <> print_params(rest, spelling)
       <> tail
     _, _, _ -> "(" <> print_params(params, spelling) <> tail
+  }
+}
+
+/// The receiver is a parameter like any other — its label and spread marker
+/// are printed too, or the method form would lose them — and one that carries
+/// either is parenthesised with them, `(self: ...Int) :: (…) -> …`: written
+/// bare as a parameter's type, `self: ...Int :: (…)` would hand its label and
+/// spread to the enclosing parameter. A composite type (function, union) is
+/// parenthesised for the same reason as a return.
+fn print_receiver(receiver: Param, spelling: Spelling) -> String {
+  let label = case receiver.label {
+    Some(name) -> name <> ": "
+    None -> ""
+  }
+  let spread = case receiver.is_spread {
+    True -> "..."
+    False -> ""
+  }
+  case label <> spread, receiver.type_ {
+    "", Union(..) | "", Fn(..) -> "(" <> print(receiver.type_, spelling) <> ")"
+    "", _ -> print(receiver.type_, spelling)
+    prefix, _ -> "(" <> prefix <> print(receiver.type_, spelling) <> ")"
+  }
+}
+
+fn print_return(type_: Type, spelling: Spelling) -> String {
+  case type_ {
+    Union(..) -> "(" <> print(type_, spelling) <> ")"
+    _ -> print(type_, spelling)
   }
 }
 

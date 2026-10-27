@@ -115,7 +115,7 @@ the node it produces.
 signature  ::= type                                          ; an item is a Type (often an Fn)
 
 fn         ::= [ recv "::" ] "(" [ params ] ")" "->" type    ⟶ Fn(params, ret, method)
-recv       ::= type                                          ; present ⇒ method=True, receiver = 1st param
+recv       ::= atom | "(" [ label ":" ] [ "..." ] type ")"   ; present ⇒ method=True, receiver = 1st param
 params     ::= param { "," param }
 param      ::= [ label ":" ] [ "..." ] type                  ⟶ Param(label?, is_spread, type)
 label      ::= lower-ident
@@ -146,6 +146,14 @@ Notes:
 - `fn` is both the top level and an `atom` (higher-order params like `($0) -> $1`); the same production is reused.
 - Grouping `"(" type ")"`, tuple `"#(" … ")"`, and function `"(" params ")" "->"` are disambiguated by `#` and the
   trailing `->` (backtracking parser).
+- **Grouping the printer writes, the parser reads** (`data/ir/canonical`, the inverse of `ir.to_string`, landed
+  2026-10-27): a function nested in a union is parenthesised (`((A) -> B) | C`), a union returned by a function too
+  (`(A) -> (B | C)`), and a receiver that is a function, a union, or carries a label or a spread is parenthesised
+  *with* them (`(self: ...Int) :: (…) -> …`). Bare, `(A) -> B | C` reads as a function returning `B | C` — a return
+  extends as far as it can — and `self: ...Int :: (…)` as a parameter's type would hand `self:` and `...` to the
+  enclosing parameter. The property tests (`parse(to_string(t)) == t` up to variable names) found both.
+- **A union's members are not unions**, and are distinct: `A | (A | B)` prints flat and reads back as `A | B`; the
+  normal form (`to_canonical`) flattens and dedupes, the parser dedupes.
 
 ## Worked examples
 

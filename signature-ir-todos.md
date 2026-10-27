@@ -88,12 +88,21 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       doom the return is undone; the old search stopped at the parameters). Subsumption keeps the
       cheaper of its two directions. First-match cost, not a proven minimum. `unify_symmetric`
       stays an isolated Bool. — **done**
-- [ ] **Property-based tests (qcheck) on the matcher.** The laws are asserted on single examples
-      today; generators over random IR would prove them universally: `unify(t, t) ==
-      Ok(Equivalent(0))` for hole-free, label-free `t`; `Equivalent(_)` ⟹ the subsumption pass
-      also accepts (the superset law that makes the second bucket only ever add);
-      `alpha_rename` idempotent; `encode`/`decoder` round-trip on random declarations;
-      `to_string`/`parse` round-trip once `data/ir/parse` exists.
+- [x] **Property-based tests (qcheck) on the matcher** — **done 2026-10-27** (branch
+      `test/qcheck-laws`, `packages/galaxy/test/ir/laws_test.gleam`, generators in `ir/generators`,
+      300 runs each): `encode`/`decoder` round-trip on random declarations; `alpha_rename` and
+      `alpha_rename_declaration` idempotent; `canonical.parse(to_string(t)) == t` up to variable
+      names, holes, labels, spreads, methods and qualified names included; the normal form is a
+      fixed point through the parser, and ignores labels, the method flag and the module
+      qualification; `unify(t, t) == Ok(Equivalent(0))` for every stored-shaped `t` (labels and
+      methods included); alpha-invariance of `unify`; a hole punched anywhere in a stored type
+      still matches it exactly, at a positive cost iff it replaced concrete structure; a candidate
+      generalised at any node by a fresh variable still matches; `compare` buckets. Not provable
+      from the public API: `Equivalent(_)` ⟹ the subsumption pass accepts (the pass is private).
+      The round-trip law found two printer bugs on the first runs — a method's receiver lost its
+      label and spread, and a labelled receiver written as a parameter's type handed them to the
+      enclosing parameter — and the fixed-point law found that nested unions had two normal forms;
+      see the grouping and flattening notes in `signature-ir.md`.
 - [x] **Phase 1 SQL — core, rescue and first measurements landed.** Implemented as
       `queries.fingerprint_candidates` and wired through `handlers.exec_type_search` (parse →
       phase 1 → phase 2 `unify_declaration` → sort by `unify.compare` → take 20). What is **live**:
@@ -240,15 +249,18 @@ set — they are front-end lowering rules, matching-tier rules, or external data
       reused as-is). Placed in **galaxy, not jupiter**, so venus reuses it client-side; galaxy gained
       `glexer` + `chomp`, both of which cross to the JS target (verified: `venus` builds on
       `--target javascript`). Still deferred:
-  - [ ] The **canonical `$n`-notation** parser (inverse of `to_string`) — needed for the
-        `to_string`/`parse` round-trip law and the canonical-string `Exact` shortcut. Our Gleam
-        parser reads Gleam syntax, not `$n`, so those two do not round-trip yet.
+  - [x] The **canonical `$n`-notation** parser (inverse of `to_string`) — **done 2026-10-27**,
+        `packages/galaxy/src/data/ir/canonical.gleam` (chomp lexer + parser, no glexer): every
+        production of the BNF, the grouping the printer writes, variables read by index with no
+        source name, nested unions flattened and duplicate members dropped, duplicate record fields
+        rejected. Crosses to the JS target (venus builds). Not wired as a query syntax yet.
   - [ ] Other-language query syntaxes (TS, …), alongside `from_ts`.
-  - [ ] The **duplicate-invariant enforcement** the matcher assumes — no duplicate `Union` members,
+  - [x] The **duplicate-invariant enforcement** the matcher assumes — no duplicate `Union` members,
         no duplicate `Record` field names (`equal_set`/`by_name` compare sets by length + membership
-        and are fooled by multisets — `Int | Int` would "equal" `Int | String`). **Not yet needed**:
-        the Gleam surface produces neither `Union` nor `Record`. Becomes load-bearing the moment the
-        canonical/TS parser can emit them.
+        and are fooled by multisets). **Enforced at the one place that can now emit them**
+        (2026-10-27): `canonical.parse` dedupes union members and rejects duplicate field names,
+        `to_canonical` flattens nested unions and dedupes members, and the generators keep both
+        invariants (plus "no union inside a union"). A TS front-end must do the same.
 - [x] Remove old trie/actor type search (`jupiter/gleam/type_search*`, `search`, `cell` usage,
       `ctx.search`, worker registration); it is superseded by fingerprint + verify. Also removed
       with it: the old `jupiter/gleam/parse` text parser (only the trie used it), the

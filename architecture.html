@@ -732,8 +732,8 @@
     <!-- ══ MONOREPO ══ -->
     <section id="monorepo">
       <h2><span lang="fr">Le monorepo</span><span lang="en">The monorepo</span></h2>
-      <p class="sub" lang="fr">Deux applications, quatre paquets. <code>galaxy</code> est la charnière : c'est le seul code que le backend et le frontend partagent — les types de données avec leurs encodeurs/décodeurs JSON, et depuis <code>b63a44c</code> l'IR de signatures elle-même.</p>
-      <p class="sub" lang="en">Two applications, four packages. <code>galaxy</code> is the hinge: it is the only code the backend and the frontend share — the data types with their JSON encoders and decoders, and since <code>b63a44c</code> the signature IR itself.</p>
+      <p class="sub" lang="fr">Deux applications, quatre paquets. <code>galaxy</code> est la charnière : c'est le seul code que le backend et le frontend partagent — les types de données avec leurs encodeurs/décodeurs JSON, et depuis le commit « Move data/ir into galaxy » l'IR de signatures elle-même.</p>
+      <p class="sub" lang="en">Two applications, four packages. <code>galaxy</code> is the hinge: it is the only code the backend and the frontend share — the data types with their JSON encoders and decoders, and since the commit “Move data/ir into galaxy” the signature IR itself.</p>
 
       <div class="grid two">
         <div class="card">
@@ -1360,8 +1360,8 @@ pub type Type {
                 <span class="use soon"><span lang="fr">matching · phase 2</span><span lang="en">matching · phase 2</span></span>
                 <span class="use soon"><span lang="fr">venus · rendu</span><span lang="en">venus · rendering</span></span>
               </div>
-              <span lang="fr">Le seul type dont tout le reste dérive : affichage, vérification et empreinte. Dans galaxy depuis <code>b63a44c</code> — les deux usages « bientôt » ne tiennent qu'à ça.</span>
-              <span lang="en">The one type everything else derives from: display, verification and fingerprint. In galaxy since <code>b63a44c</code> — both "soon" usages hinge on exactly that.</span>
+              <span lang="fr">Le seul type dont tout le reste dérive : affichage, vérification et empreinte. Dans galaxy depuis le commit « Move data/ir into galaxy » — les deux usages « bientôt » ne tiennent qu'à ça.</span>
+              <span lang="en">The one type everything else derives from: display, verification and fingerprint. In galaxy since the commit “Move data/ir into galaxy” — both "soon" usages hinge on exactly that.</span>
             </span>
           </div>
         </div>
@@ -1489,7 +1489,7 @@ pub type Type {
 
       <p class="note warn" lang="fr">
         <strong>Le doublon <code>signature</code> / <code>ir</code> est temporaire, et c'est le nœud du refactor.</strong>
-        <code>data/ir</code> <strong>a rejoint <code>galaxy</code></strong> (commit <code>b63a44c</code>) : les deux
+        <code>data/ir</code> <strong>a rejoint <code>galaxy</code></strong> (commit « Move data/ir into galaxy ») : les deux
         formats structurés y cohabitent désormais, en attendant que le second remplace le premier. Le chemin de
         module <code>data/ir</code> est inchangé, donc aucun import n'a bougé, et galaxy n'a pas gagné de
         dépendance — <code>decrypt</code> arrivait déjà via <code>plasma</code>. <strong>Refactor terminé le 2026-10-27</strong> :
@@ -1499,7 +1499,7 @@ pub type Type {
       </p>
       <p class="note warn" lang="en">
         <strong>The <code>signature</code> / <code>ir</code> duplication is temporary, and it is the crux of the refactor.</strong>
-        <code>data/ir</code> <strong>has moved into <code>galaxy</code></strong> (commit <code>b63a44c</code>): both
+        <code>data/ir</code> <strong>has moved into <code>galaxy</code></strong> (commit « Move data/ir into galaxy »): both
         structured formats now live there, until the second replaces the first. The <code>data/ir</code> module path
         is unchanged, so no import moved, and galaxy gained no dependency — <code>decrypt</code> already came in via
         <code>plasma</code>. <strong>Refactor completed on 2026-10-27</strong>: venus renders the IR (<code>width</code>

@@ -2,6 +2,7 @@ import data/ir
 import data/kind.{type Kind}
 import data/metadata.{type Metadata}
 import decrypt
+import gleam/dict.{type Dict}
 import gleam/dynamic/decode
 import gleam/json
 
@@ -9,7 +10,11 @@ import gleam/json
 /// renders it. The structural part is the stored IR (`signature_ir`), decoded
 /// once here: jupiter unifies it (phase 2 of the type tier) and venus renders
 /// it. The display widths the legacy `signature_json` carried are recomputed at
-/// render time.
+/// render time. `links` maps each foreign package a `Named` of the signature
+/// comes from to the version this release's requirement resolves to today
+/// (`jupiter/links`), so venus can link the type to its hexdocs page; absent
+/// from the database row, filled by jupiter before the response, empty when
+/// unresolved.
 pub type TypeSearch {
   TypeSearch(
     type_name: String,
@@ -20,6 +25,7 @@ pub type TypeSearch {
     module_name: String,
     package_name: String,
     version: String,
+    links: Dict(String, String),
   )
 }
 
@@ -34,6 +40,11 @@ pub fn decoder() {
   use module_name <- decode.field("module_name", decode.string)
   use package_name <- decode.field("package_name", decode.string)
   use version <- decode.field("version", decode.string)
+  use links <- decode.optional_field(
+    "links",
+    dict.new(),
+    decode.dict(decode.string, decode.string),
+  )
   decode.success({
     TypeSearch(
       type_name:,
@@ -44,6 +55,7 @@ pub fn decoder() {
       module_name:,
       package_name:,
       version:,
+      links:,
     )
   })
 }
@@ -58,5 +70,6 @@ pub fn encode(item: TypeSearch) {
     #("module_name", json.string(item.module_name)),
     #("package_name", json.string(item.package_name)),
     #("version", json.string(item.version)),
+    #("links", json.dict(item.links, fn(package) { package }, json.string)),
   ])
 }

@@ -340,17 +340,26 @@ this also matches what the user resolves locally, and deletes the stateful inges
       param/INSERT/`pog.array` ($-placeholders renumbered). `generate/types` is now pure
       `pi.Type → Json` — `Loss`/`Set`/`reduce_components` removed (the chain can't fail), call sites
       in `api/signatures` de-`result.try`'d. Build warning-clean.
-- [ ] `Name` carries `package` + `qualifier` + `base` (done) → the nominal coordinates needed to resolve.
-- [ ] **`package_dependency` normalized table** (preferred over jsonb: cleaner joins, data analysis):
-      `(id, package_release_id, name, requirement, kind ['dependency'|'dev-dependency'])`,
-      `unique (package_release_id, name, kind)`, index on `name`. Populated at ingestion from the
-      already-stored `package_release.gleam_toml`; backfill existing rows.
-- [ ] Query-time resolution for displayed rows: row → release → `package_dependency` (constraint) →
-      `keep_matching_releases`/`semver.is_match` (dynamic, existing logic) → target release/signature.
-      Reuse `toml.find_package_requirement` logic, debranched from `ctx`. Self-package type → the
-      release's own version.
-- [ ] NULL `gleam_toml` (nullable column) or dependency not yet indexed → **unresolved link** (show
-      the type name un-linked / hex link).
+- [x] `Name` carries `package` + `module` + `name` → the nominal coordinates needed to resolve.
+- [x] **`package_dependency` normalized table** — **done 2026-10-28** (branch
+      `feat/package-dependency`, migration `20261028100000`): `(id, package_release_id, name,
+      requirement, kind dependency_kind)`, `unique (package_release_id, name, kind)`, index on
+      `name`, `ON DELETE CASCADE` from the release. Filled at ingestion
+      (`signatures.upsert_dependencies`, from `toml.dependencies` — string requirements only, a
+      path or git dependency has no Hex release) and by `tasks/backfill_dependencies` for the
+      existing releases.
+- [x] Query-time resolution for displayed rows — **done 2026-10-28**, `jupiter/links.attach`: for a
+      batch of results, the foreign packages their IR mentions, the declaring releases' requirements
+      (`queries.dependencies_of`, runtime kind first), the candidate versions of those packages
+      (`queries.releases_of`, newest first), then per result and package the newest version
+      `semver.is_match` accepts. Two queries per response, whatever the number of rows. Result in
+      `TypeSearch.links` (`package → version`, decoded with an empty default so pog rows still
+      decode), attached in `handlers.do_search` after the tiers deduplicated. Venus
+      (`view/body/signature.view_name`) turns it into the hexdocs link of each `Named`; a result's
+      own package links to its own version; the prelude (no package) has no link.
+- [x] Unresolved link → the type name un-linked: a package the release does not declare (a
+      transitive dependency whose type leaks into a signature), a requirement no known release
+      satisfies, or a release with no `gleam.toml`. No guessed version.
 
 ## Storage / integration
 

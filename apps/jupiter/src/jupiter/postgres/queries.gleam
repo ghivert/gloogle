@@ -21,6 +21,7 @@ import jupiter/data/hex_read
 import jupiter/data/hex_user.{type HexUser}
 import jupiter/data/interfaces.{type Interfaces, Interfaces}
 import jupiter/gleam/context
+import jupiter/gleam/toml
 import jupiter/loss.{type Loss}
 import pog
 
@@ -413,6 +414,85 @@ pub fn add_package_gleam_constraint(
   |> pog.execute(db)
   |> result.replace(Nil)
   |> result.map_error(loss.DatabaseError)
+}
+
+/// One declared dependency of a release; the requirement is replaced on
+/// conflict, so re-ingesting a release refreshes its rows.
+pub fn upsert_package_dependency(
+  db: pog.Connection,
+  release_id: String,
+  dependency: toml.Dependency,
+) -> Loss(Nil) {
+  let kind = case dependency.kind {
+    toml.Runtime -> "dependency"
+    toml.Development -> "dev-dependency"
+  }
+  "INSERT INTO package_dependency (package_release_id, name, requirement, kind)
+   VALUES ($1, $2, $3, $4::dependency_kind)
+   ON CONFLICT (package_release_id, name, kind) DO UPDATE
+     SET requirement = excluded.requirement"
+  |> pog.query
+  |> pog.parameter(pog.text(release_id))
+  |> pog.parameter(pog.text(dependency.name))
+  |> pog.parameter(pog.text(dependency.requirement))
+  |> pog.parameter(pog.text(kind))
+  |> pog.execute(db)
+  |> result.replace(Nil)
+  |> result.map_error(loss.DatabaseError)
+}
+
+/// The declared dependencies of the given releases — `(package, version)`
+/// pairs, passed as two parallel arrays — as `(package, version, dependency,
+/// requirement)` rows, runtime dependencies first so that a package listed
+/// under both kinds resolves by its runtime requirement.
+pub fn dependencies_of(
+  db: pog.Connection,
+  releases: List(#(String, String)),
+) -> Loss(List(#(String, String, String, String))) {
+  let #(packages, versions) = list.unzip(releases)
+  "SELECT p.name AS package, r.version AS version, d.name AS dependency, d.requirement AS requirement
+   FROM unnest($1::text[], $2::text[]) AS wanted(package, version)
+   JOIN package p ON p.name = wanted.package
+   JOIN package_release r ON r.package_id = p.id AND r.version = wanted.version
+   JOIN package_dependency d ON d.package_release_id = r.id
+   ORDER BY d.kind"
+  |> pog.query
+  |> pog.parameter(pog.array(pog.text, packages))
+  |> pog.parameter(pog.array(pog.text, versions))
+  |> pog.returning({
+    use package <- decode.field("package", decode.string)
+    use version <- decode.field("version", decode.string)
+    use dependency <- decode.field("dependency", decode.string)
+    use requirement <- decode.field("requirement", decode.string)
+    decode.success(#(package, version, dependency, requirement))
+  })
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+/// Every semver release known for the given packages, newest first within a
+/// package — the candidates a requirement is matched against.
+pub fn releases_of(
+  db: pog.Connection,
+  packages: List(String),
+) -> Loss(List(#(String, String))) {
+  "SELECT p.name AS package, r.version AS version
+   FROM package p
+   JOIN package_release r ON r.package_id = p.id
+   WHERE p.name = ANY($1::text[])
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY p.name, r.version_ordering DESC"
+  |> pog.query
+  |> pog.parameter(pog.array(pog.text, packages))
+  |> pog.returning({
+    use package <- decode.field("package", decode.string)
+    use version <- decode.field("version", decode.string)
+    decode.success(#(package, version))
+  })
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
 }
 
 pub fn add_package_retirement(

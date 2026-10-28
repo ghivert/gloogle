@@ -6,14 +6,59 @@
 import data/ir.{type Declaration, type Param, type Type}
 import data/type_search
 import gleam/bool
+import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/result
 import gleam/string
+import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 import venus/view/helpers
 import venus/view/types as t
+
+// ─── Links ───────────────────────────────────────────────────────────────────
+
+/// What a `Named` needs to become a hexdocs link: the result's own package and
+/// version (its own types), and the versions jupiter resolved for the foreign
+/// packages the signature mentions (`TypeSearch.links`).
+type Links {
+  Links(package: String, version: String, foreign: Dict(String, String))
+}
+
+/// The hexdocs page of a nominal type, when its version is known: the result's
+/// own version for its own package, the resolved one for a dependency. Prelude
+/// types carry no package and get no link, nor does an unresolved dependency.
+fn link(name: ir.Name, links: Links) -> Result(String, Nil) {
+  use <- bool.guard(when: name.package == "", return: Error(Nil))
+  use version <- result.map(case name.package == links.package {
+    True -> Ok(links.version)
+    False -> dict.get(links.foreign, name.package)
+  })
+  helpers.hexdocs_link(
+    package: name.package,
+    version:,
+    module: name.module,
+    name: name.name,
+  )
+}
+
+fn view_name(name: ir.Name, links: Links) -> el.Element(msg) {
+  case link(name, links) {
+    Error(_) -> t.type_(name.name)
+    Ok(href) ->
+      h.a(
+        [
+          a.class("named-type-button"),
+          a.target("_blank"),
+          a.rel("noreferrer"),
+          a.href(href),
+        ],
+        [t.type_(name.name)],
+      )
+  }
+}
 
 // ─── Widths ──────────────────────────────────────────────────────────────────
 
@@ -116,13 +161,15 @@ fn view_items(
   }
 }
 
-fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
+fn view_type(type_: Type, indent: Int, links: Links) -> List(el.Element(msg)) {
   case type_ {
     ir.Tuple(elements) -> {
       let inline = type_width(type_) + indent <= 80
       list.flatten([
         [helpers.idt(indent), h.text("#(")],
-        view_items(elements, inline, indent, view_type),
+        view_items(elements, inline, indent, fn(item, indent) {
+          view_type(item, indent, links)
+        }),
         [
           bool.guard(inline, h.text(""), fn() { helpers.idt(indent) }),
           h.text(")"),
@@ -134,17 +181,23 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
       let return_width = type_width(return)
       list.flatten([
         [helpers.idt(indent), t.keyword("fn"), h.text("(")],
-        view_items(params, inline, indent, view_param),
+        view_items(params, inline, indent, fn(item, indent) {
+          view_param(item, indent, links)
+        }),
         bool.guard(inline, [h.text("")], fn() {
           [h.text(","), helpers.newline(), helpers.idt(indent)]
         }),
         [
           h.text(")"),
           h.text(" -> "),
-          ..view_type(return, case inline {
-            False if return_width > 70 -> indent
-            _ -> 0
-          })
+          ..view_type(
+            return,
+            case inline {
+              False if return_width > 70 -> indent
+              _ -> 0
+            },
+            links,
+          )
         ],
       ])
     }
@@ -158,13 +211,15 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
       list.flatten([
         [
           helpers.idt(indent),
-          t.type_(name.name),
+          view_name(name, links),
           case has_args {
             True -> h.text("(")
             False -> el.none()
           },
         ],
-        view_items(args, inline, indent, view_type),
+        view_items(args, inline, indent, fn(item, indent) {
+          view_type(item, indent, links)
+        }),
         [
           bool.guard(inline, h.text(""), fn() { helpers.idt(indent) }),
           case has_args {
@@ -178,7 +233,9 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
       let inline = type_width(type_) + indent <= 80
       list.flatten([
         [helpers.idt(indent), h.text("{ ")],
-        view_items(fields, inline, indent, view_field),
+        view_items(fields, inline, indent, fn(item, indent) {
+          view_field(item, indent, links)
+        }),
         [
           bool.guard(inline, h.text(" "), fn() { helpers.idt(indent) }),
           h.text("}"),
@@ -188,23 +245,23 @@ fn view_type(type_: Type, indent: Int) -> List(el.Element(msg)) {
     ir.Union(members) ->
       list.flatten([
         [helpers.idt(indent)],
-        list.map(members, view_type(_, 0))
+        list.map(members, view_type(_, 0, links))
           |> list.intersperse([h.text(" | ")])
           |> list.flatten,
       ])
   }
 }
 
-fn view_field(field: ir.Field, indent: Int) {
+fn view_field(field: ir.Field, indent: Int, links: Links) {
   [
     helpers.idt(indent),
     t.label(field.name),
     h.text(": "),
-    ..view_type(field.type_, 0)
+    ..view_type(field.type_, 0, links)
   ]
 }
 
-fn view_param(param: Param, indent: Int) {
+fn view_param(param: Param, indent: Int, links: Links) {
   let spread = case param.is_spread {
     True -> [h.text("...")]
     False -> []
@@ -216,16 +273,19 @@ fn view_param(param: Param, indent: Int) {
     },
     spread,
     case param_width(param) > 80, param.label {
-      False, _ -> view_type(param.type_, 0)
-      True, Some(_) -> [helpers.newline(), ..view_type(param.type_, indent + 2)]
-      True, None -> view_type(param.type_, 0)
+      False, _ -> view_type(param.type_, 0, links)
+      True, Some(_) -> [
+        helpers.newline(),
+        ..view_type(param.type_, indent + 2, links)
+      ]
+      True, None -> view_type(param.type_, 0, links)
     },
   ])
 }
 
 // ─── Declarations ────────────────────────────────────────────────────────────
 
-fn view_constructor(constructor: ir.Constructor, indent: Int) {
+fn view_constructor(constructor: ir.Constructor, indent: Int, links: Links) {
   let params = constructor.parameters
   let inline = params_width(params) <= 70
   let has_params = !list.is_empty(params)
@@ -239,10 +299,15 @@ fn view_constructor(constructor: ir.Constructor, indent: Int) {
       },
     ],
     case inline {
-      True -> view_items(params, True, indent, view_param)
+      True ->
+        view_items(params, True, indent, fn(item, indent) {
+          view_param(item, indent, links)
+        })
       False ->
         list.flatten([
-          view_items(params, False, indent, view_param),
+          view_items(params, False, indent, fn(item, indent) {
+            view_param(item, indent, links)
+          }),
           [h.text(","), helpers.newline()],
         ])
     },
@@ -255,10 +320,16 @@ fn view_constructor(constructor: ir.Constructor, indent: Int) {
 }
 
 pub fn view_signature(item: type_search.TypeSearch) -> List(el.Element(msg)) {
-  view_declaration(item.type_name, item.signature_ir)
+  let links =
+    Links(
+      package: item.package_name,
+      version: item.version,
+      foreign: item.links,
+    )
+  view_declaration(item.type_name, item.signature_ir, links)
 }
 
-fn view_declaration(name: String, declaration: Declaration) {
+fn view_declaration(name: String, declaration: Declaration, links: Links) {
   case declaration {
     ir.TypeDefinition(parameters, constructors) ->
       list.flatten([
@@ -269,7 +340,7 @@ fn view_declaration(name: String, declaration: Declaration) {
             list.flatten([
               [h.text(" {"), helpers.newline()],
               constructors
-                |> list.map(view_constructor(_, 2))
+                |> list.map(view_constructor(_, 2, links))
                 |> list.intersperse([helpers.newline()])
                 |> list.flatten,
               [helpers.newline(), h.text("}")],
@@ -280,8 +351,8 @@ fn view_declaration(name: String, declaration: Declaration) {
       list.flatten([
         [t.keyword("const "), t.fun(name), h.text(" = ")],
         case type_width(type_) > 80 {
-          True -> [helpers.newline(), ..view_type(type_, 2)]
-          False -> view_type(type_, 0)
+          True -> [helpers.newline(), ..view_type(type_, 2, links)]
+          False -> view_type(type_, 0, links)
         },
       ])
     ir.TypeAlias(parameters, aliased) -> {
@@ -290,8 +361,8 @@ fn view_declaration(name: String, declaration: Declaration) {
         [t.keyword("type "), t.type_(name), ..render_parameters(parameters)],
         [h.text(" = ")],
         case width > 80 {
-          True -> [helpers.newline(), ..view_type(aliased, 2)]
-          False -> view_type(aliased, 0)
+          True -> [helpers.newline(), ..view_type(aliased, 2, links)]
+          False -> view_type(aliased, 0, links)
         },
       ])
     }
@@ -302,7 +373,7 @@ fn view_declaration(name: String, declaration: Declaration) {
           True ->
             list.flatten([
               [helpers.newline(), helpers.idt(2)],
-              list.map(params, view_param(_, 2))
+              list.map(params, view_param(_, 2, links))
                 |> list.intersperse([
                   h.text(","),
                   helpers.newline(),
@@ -311,13 +382,16 @@ fn view_declaration(name: String, declaration: Declaration) {
                 |> list.flatten,
               [h.text(","), helpers.newline()],
             ])
-          False -> view_items(params, True, 0, view_param)
+          False ->
+            view_items(params, True, 0, fn(item, indent) {
+              view_param(item, indent, links)
+            })
         },
         [
           h.text(") -> "),
           ..case type_width(return) + string.length(name) > 60 {
-            True -> [helpers.newline(), ..view_type(return, 2)]
-            False -> view_type(return, 0)
+            True -> [helpers.newline(), ..view_type(return, 2, links)]
+            False -> view_type(return, 0, links)
           }
         ],
       ])
@@ -326,7 +400,7 @@ fn view_declaration(name: String, declaration: Declaration) {
     ir.Function(type_) ->
       list.flatten([
         [t.keyword("fn "), t.fun(name), h.text(": ")],
-        view_type(type_, 0),
+        view_type(type_, 0, links),
       ])
   }
 }

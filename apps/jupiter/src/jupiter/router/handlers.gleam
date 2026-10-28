@@ -15,6 +15,7 @@ import gleam/pair
 import gleam/result
 import gleam/string
 import jupiter/context.{type Context}
+import jupiter/links
 import jupiter/loss.{type Loss}
 import jupiter/postgres/queries
 import palabres
@@ -182,14 +183,19 @@ fn do_search(query: String, broad: Bool, ctx: Context) {
     |> list.flatten
     |> exec_search(ctx, query, queries.module_search, _)
 
+  // Resolve the type links of every tier in one batch, once the tiers have
+  // deduplicated against each other (`links` is not part of that equality).
+  let linked = fn(items) {
+    json.array(links.attach(ctx.db, items), type_search.encode)
+  }
   json.object([
     #("narrowed", json.bool(narrowed)),
-    #("exact-type-matches", json.array(exact_type_searches, type_search.encode)),
-    #("exact-matches", json.array(exact_matches, type_search.encode)),
-    #("matches", json.array(matches, type_search.encode)),
-    #("searches", json.array(signature_searches, type_search.encode)),
-    #("docs-searches", json.array(documentation_searches, type_search.encode)),
-    #("module-searches", { json.array(module_searches, type_search.encode) }),
+    #("exact-type-matches", linked(exact_type_searches)),
+    #("exact-matches", linked(exact_matches)),
+    #("matches", linked(matches)),
+    #("searches", linked(signature_searches)),
+    #("docs-searches", linked(documentation_searches)),
+    #("module-searches", linked(module_searches)),
   ])
 }
 

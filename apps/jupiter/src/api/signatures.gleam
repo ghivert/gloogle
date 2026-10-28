@@ -9,6 +9,7 @@ import gleam/result
 import jupiter/gleam/context.{type Context}
 import jupiter/gleam/generate/metadata
 import jupiter/gleam/generate/sources
+import jupiter/gleam/toml
 import jupiter/postgres/queries
 import palabres
 
@@ -38,6 +39,13 @@ pub fn structured(declaration: ir.Declaration) -> Derived {
     type_names:,
     canonical: ir.canonical(declaration),
   )
+}
+
+/// The release's declared dependencies, from its `gleam.toml`: what the type
+/// links resolve against at query time (`jupiter/links`).
+pub fn upsert_dependencies(ctx: Context, release_id: String) {
+  toml.dependencies(ctx.gleam_toml)
+  |> list.try_each(queries.upsert_package_dependency(ctx.db, release_id, _))
 }
 
 fn add_gleam_constraint(ctx: Context, release_id: String) {
@@ -254,6 +262,7 @@ pub fn extract_signatures(ctx: Context) {
   let res = queries.get_package_release_ids(ctx.db, ctx.package_interface)
   use #(_pid, release_id) <- result.try(res)
   use _ <- result.try(add_gleam_constraint(ctx, release_id))
+  use _ <- result.try(upsert_dependencies(ctx, release_id))
   package.modules
   |> dict.to_list
   |> list.map(extract_module_signatures(ctx, release_id, _))

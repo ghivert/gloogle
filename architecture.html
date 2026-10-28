@@ -1403,7 +1403,8 @@ pub type Type {
           <pre>pub type TypeSearch {
   TypeSearch(type_name: String, documentation: String, signature_kind: Kind,
              metadata: Metadata, signature_ir: ir.Declaration,
-             module_name: String, package_name: String, version: String)
+             module_name: String, package_name: String, version: String,
+             links: Dict(String, String))
 }</pre>
           <div class="fiche-band">
             <span class="fiche-band-l"><span lang="fr">Stocké</span><span lang="en">Stored</span></span>
@@ -1420,8 +1421,8 @@ pub type Type {
                 <span class="use on"><span lang="fr">les 7 requêtes</span><span lang="en">the 7 queries</span></span>
                 <span class="use on">/search → venus</span>
               </div>
-              <span lang="fr">Le contrat HTTP au sens strict : jupiter l'encode, venus le décode, avec le même code. Depuis le 2026-10-27, venus rend <code>signature_ir</code> directement (<code>venus/view/body/signature</code>), les largeurs de retour à la ligne recalculées sur l'arbre ; <code>data/signature</code> n'existe plus.</span>
-              <span lang="en">The HTTP contract in the strict sense: jupiter encodes it, venus decodes it, with the same code. Since 2026-10-27 venus renders <code>signature_ir</code> directly (<code>venus/view/body/signature</code>), the line-wrapping widths recomputed over the tree; <code>data/signature</code> is gone.</span>
+              <span lang="fr">Le contrat HTTP au sens strict : jupiter l'encode, venus le décode, avec le même code. Depuis le 2026-10-27, venus rend <code>signature_ir</code> directement (<code>venus/view/body/signature</code>), les largeurs de retour à la ligne recalculées sur l'arbre ; <code>data/signature</code> n'existe plus. <code>links</code> (2026-10-28) est le seul champ absent de la ligne SQL : décodé avec un défaut vide, rempli par <code>jupiter/links</code> avant la réponse — la version résolue de chaque paquet étranger que la signature mentionne.</span>
+              <span lang="en">The HTTP contract in the strict sense: jupiter encodes it, venus decodes it, with the same code. Since 2026-10-27 venus renders <code>signature_ir</code> directly (<code>venus/view/body/signature</code>), the line-wrapping widths recomputed over the tree; <code>data/signature</code> is gone. <code>links</code> (2026-10-28) is the one field absent from the SQL row: decoded with an empty default, filled by <code>jupiter/links</code> before the response — the resolved version of every foreign package the signature mentions.</span>
             </span>
           </div>
         </div>
@@ -1697,8 +1698,8 @@ pub type Type {
     <!-- ══ SCHEMA ══ -->
     <section id="schema">
       <h2><span lang="fr">Le schéma relationnel</span><span lang="en">The relational schema</span></h2>
-      <p class="sub" lang="fr">Une colonne vertébrale à quatre niveaux — <code>package → package_release → package_module → package_type_fun_signature</code> — plus la propriété des paquets en table de jonction. Tous les identifiants sont des UUIDv7 générés en base (<code>uuidv7()</code>), donc triables par date de création. Chaque table porte un trigger <code>moddatetime</code> qui tient <code>updated_at</code> à jour.</p>
-      <p class="sub" lang="en">A four-level spine — <code>package → package_release → package_module → package_type_fun_signature</code> — plus package ownership as a join table. Every id is a UUIDv7 generated in the database (<code>uuidv7()</code>), hence sortable by creation date. Each table carries a <code>moddatetime</code> trigger that keeps <code>updated_at</code> current.</p>
+      <p class="sub" lang="fr">Une colonne vertébrale à quatre niveaux — <code>package → package_release → package_module → package_type_fun_signature</code> — plus la propriété des paquets en table de jonction, et les dépendances que chaque release déclare (<code>package_dependency</code>, <code>20261028100000</code>), d'où les liens entre types se résolvent à la requête. Tous les identifiants sont des UUIDv7 générés en base (<code>uuidv7()</code>), donc triables par date de création. Chaque table porte un trigger <code>moddatetime</code> qui tient <code>updated_at</code> à jour.</p>
+      <p class="sub" lang="en">A four-level spine — <code>package → package_release → package_module → package_type_fun_signature</code> — plus package ownership as a join table, and the dependencies each release declares (<code>package_dependency</code>, <code>20261028100000</code>), from which the type links resolve at query time. Every id is a UUIDv7 generated in the database (<code>uuidv7()</code>), hence sortable by creation date. Each table carries a <code>moddatetime</code> trigger that keeps <code>updated_at</code> current.</p>
 
       <div class="scroller">
         <svg class="erd" viewBox="0 0 960 1010" role="img" aria-label="Schéma relationnel des tables Gloogle / Relational schema of the Gloogle tables">
@@ -1749,6 +1750,19 @@ pub type Type {
             <text class="t-col" x="442" y="413">gleam_toml, url</text>
             <text class="t-col" x="442" y="430">gleam_constraint, version_ordering</text><text class="t-gen" x="708" y="430" text-anchor="end">GENERATED · STORED</text>
             <text class="t-col" x="442" y="447">retirement</text><text class="t-key" x="708" y="447" text-anchor="end">jsonb</text>
+          </g>
+
+          <!-- package_dependency -->
+          <g>
+            <rect class="box-bg" x="40" y="380" width="270" height="123" rx="5"/>
+            <path class="box-hd" d="M40 385 a5 5 0 0 1 5 -5 h260 a5 5 0 0 1 5 5 v21 h-270 z"/>
+            <text class="t-name" x="52" y="400">package_dependency</text>
+            <text class="t-col" x="52" y="425">id</text><text class="t-key" x="298" y="425" text-anchor="end">PK</text>
+            <text class="t-col" x="52" y="442">package_release_id</text><text class="t-key" x="298" y="442" text-anchor="end">FK · CASCADE</text>
+            <text class="t-col" x="52" y="459">name, requirement</text><text class="t-key" x="298" y="459" text-anchor="end">UQ (release_id, name, kind)</text>
+            <text class="t-col" x="52" y="476">kind</text><text class="t-key" x="298" y="476" text-anchor="end">dependency_kind</text>
+            <text class="t-gen" x="52" y="493" lang="fr">depuis gleam_toml · index (name)</text>
+            <text class="t-gen" x="52" y="493" lang="en">from gleam_toml · index (name)</text>
           </g>
 
           <!-- package_module -->
@@ -1806,6 +1820,12 @@ pub type Type {
           <circle class="dot" cx="575" cy="197" r="3"/>
           <text class="card-l" x="582" y="214">1</text>
           <text class="card-l" x="582" y="293">N</text>
+
+          <!-- rel: package_dependency -> package_release -->
+          <path class="rel" d="M310 440 L430 440"/>
+          <circle class="dot" cx="430" cy="440" r="3"/>
+          <text class="card-l" x="412" y="434" text-anchor="end">1</text>
+          <text class="card-l" x="318" y="434">N</text>
 
           <!-- rel: package_module -> package_release -->
           <path class="rel" d="M575 560 L575 457"/>
@@ -2010,8 +2030,8 @@ pub type Type {
         <div class="card">
           <h4 lang="fr">La référence croisée résolue (<code>ref</code>)</h4>
           <h4 lang="en">The resolved cross-reference (<code>ref</code>)</h4>
-          <p lang="fr">Pas stockée non plus, et pour une raison de fond : une <code>ref</code> résout une plage semver contre un ensemble de versions qui évolue. Elle doit donc se calculer au moment de la requête, en respectant l'exigence de la release appelante — via une future table <code>package_dependency</code>. C'est précisément pour que cette résolution soit une jointure plutôt qu'un état stocké que <code>Name</code> porte <code>package</code> et <code>module</code>.</p>
-          <p lang="en">Not stored either, and for a fundamental reason: a <code>ref</code> resolves a semver range against an evolving set of versions. So it must be computed at query time, respecting the using release's requirement — via a future <code>package_dependency</code> table. It is precisely so that this resolution is a join rather than stored state that <code>Name</code> carries <code>package</code> and <code>module</code>.</p>
+          <p lang="fr">Pas stockée non plus, et pour une raison de fond : une <code>ref</code> résout une plage semver contre un ensemble de versions qui évolue. Elle se calcule donc au moment de la requête, en respectant l'exigence de la release appelante — depuis le 2026-10-28, <code>jupiter/links.attach</code> : pour un lot de résultats, les paquets étrangers que leurs IR mentionnent, les exigences des releases déclarantes (<code>package_dependency</code>), les versions connues de ces paquets, puis par résultat et par paquet la plus récente que <code>semver.is_match</code> accepte — deux requêtes par réponse. Le résultat voyage dans <code>TypeSearch.links</code> (<code>paquet → version</code>) et venus en fait le lien hexdocs de chaque type nommé ; un paquet non déclaré, une exigence qu'aucune release ne satisfait, une release sans <code>gleam.toml</code> : pas de lien, pas de version devinée. C'est précisément pour que cette résolution soit une jointure plutôt qu'un état stocké que <code>Name</code> porte <code>package</code> et <code>module</code>.</p>
+          <p lang="en">Not stored either, and for a fundamental reason: a <code>ref</code> resolves a semver range against an evolving set of versions. So it is computed at query time, respecting the using release's requirement — since 2026-10-28, <code>jupiter/links.attach</code>: for a batch of results, the foreign packages their IR mentions, the declaring releases' requirements (<code>package_dependency</code>), the known versions of those packages, then per result and package the newest one <code>semver.is_match</code> accepts — two queries per response. The result travels in <code>TypeSearch.links</code> (<code>package → version</code>) and venus turns it into the hexdocs link of every named type; an undeclared package, a requirement no release satisfies, a release without a <code>gleam.toml</code>: no link, no guessed version. It is precisely so that this resolution is a join rather than stored state that <code>Name</code> carries <code>package</code> and <code>module</code>.</p>
         </div>
       </div>
     </section>

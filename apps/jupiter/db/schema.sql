@@ -86,6 +86,16 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
+-- Name: dependency_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.dependency_kind AS ENUM (
+    'dependency',
+    'dev-dependency'
+);
+
+
+--
 -- Name: type_nature; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -170,6 +180,19 @@ CREATE TABLE public.package (
     popularity jsonb,
     language text DEFAULT 'gleam'::text NOT NULL,
     registry text DEFAULT 'hex'::text NOT NULL
+);
+
+
+--
+-- Name: package_dependency; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.package_dependency (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    package_release_id uuid NOT NULL,
+    name text NOT NULL,
+    requirement text NOT NULL,
+    kind public.dependency_kind NOT NULL
 );
 
 
@@ -314,6 +337,22 @@ ALTER TABLE ONLY public.hex_user
 
 
 --
+-- Name: package_dependency package_dependency_package_release_id_name_kind_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_dependency
+    ADD CONSTRAINT package_dependency_package_release_id_name_kind_key UNIQUE (package_release_id, name, kind);
+
+
+--
+-- Name: package_dependency package_dependency_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_dependency
+    ADD CONSTRAINT package_dependency_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: package_module package_module_package_release_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -399,6 +438,13 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.search_analytics
     ADD CONSTRAINT search_analytics_pkey PRIMARY KEY (query);
+
+
+--
+-- Name: package_dependency_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_dependency_name ON public.package_dependency USING btree (name);
 
 
 --
@@ -535,6 +581,14 @@ CREATE TRIGGER search_analytics_moddatetime BEFORE UPDATE ON public.search_analy
 
 
 --
+-- Name: package_dependency package_dependency_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_dependency
+    ADD CONSTRAINT package_dependency_package_release_id_fkey FOREIGN KEY (package_release_id) REFERENCES public.package_release(id) ON DELETE CASCADE;
+
+
+--
 -- Name: package_module package_module_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -621,4 +675,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20261026150000'),
     ('20261027100000'),
     ('20261027110000'),
-    ('20261027120000');
+    ('20261027120000'),
+    ('20261028100000');

@@ -134,10 +134,10 @@ fn replace_indexed(
     Index(name, _) -> {
       case dict.get(indexes, name) {
         Ok(value) -> #(Index("", value), #(indexes, current))
-        Error(_) -> #(Index("", current), #(
-          dict.insert(indexes, name, current),
-          current + 1,
-        ))
+        Error(_) -> #(
+          Index("", current),
+          #(dict.insert(indexes, name, current), current + 1),
+        )
       }
     }
     Custom(name, kinds) -> {

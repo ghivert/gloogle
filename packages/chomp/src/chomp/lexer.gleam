@@ -106,7 +106,9 @@ pub fn simple(matchers: List(Matcher(a, Nil))) -> Lexer(a, Nil) {
 /// current mode. This is useful for sophisticated lexers that might need to
 /// handle things like interpolated strings or indentation-sensitive syntax.
 ///
-pub fn advanced(matchers: fn(mode) -> List(Matcher(a, mode))) -> Lexer(a, mode) {
+pub fn advanced(
+  matchers: fn(mode) -> List(Matcher(a, mode)),
+) -> Lexer(a, mode) {
   Lexer(fn(mode) { matchers(mode) })
 }
 
@@ -151,7 +153,9 @@ pub fn drop(f: fn(String, String) -> Bool) -> Matcher(a, mode) {
 ///
 /// The function returns a [`Match`](#Match) that tells the lexer what to do next.
 ///
-pub fn custom(f: fn(mode, String, String) -> Match(a, mode)) -> Matcher(a, mode) {
+pub fn custom(
+  f: fn(mode, String, String) -> Match(a, mode),
+) -> Matcher(a, mode) {
   Matcher(f)
 }
 
@@ -192,7 +196,10 @@ pub fn then(
 /// the matcher is successful and either `Keep`s or `Drop`s a value.
 ///
 ///
-pub fn into(matcher: Matcher(a, mode), f: fn(mode) -> mode) -> Matcher(a, mode) {
+pub fn into(
+  matcher: Matcher(a, mode),
+  f: fn(mode) -> mode,
+) -> Matcher(a, mode) {
   use mode, lexeme, lookahead <- Matcher
 
   case matcher.run(mode, lexeme, lookahead) {

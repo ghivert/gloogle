@@ -6,69 +6,100 @@ on:
       - main
   pull_request:
 
-jobs:
-  frontend:
-    name: Frontend tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Setup BEAM
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: '27.0.0'
-          gleam-version: '1.6.2'
-          rebar3-version: '3'
-          # elixir-version: "1.15.4"
-      - name: Download gleam dependencies
-        run: gleam deps download
-        working-directory: apps/frontend
-      - name: Run gleam test
-        run: gleam test
-        working-directory: apps/frontend
-      - name: Check gleam format
-        run: gleam format --check src test
-        working-directory: apps/frontend
+env:
+  OTP_VERSION: '28'
+  GLEAM_VERSION: '1.19.2'
+  REBAR3_VERSION: '3'
+  NODE_VERSION: '24'
 
-  backend:
-    name: Backend tests
+jobs:
+  jupiter:
+    name: jupiter
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: gloogle
           POSTGRES_USER: gloogle
+          POSTGRES_DB: gloogle
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s
           --health-retries 5
         ports:
           - 5432:5432
+    defaults:
+      run:
+        working-directory: apps/jupiter
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Setup BEAM
-        uses: erlef/setup-beam@v1
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
         with:
-          otp-version: '27.0.0'
-          gleam-version: '1.6.2'
-          rebar3-version: '3'
-      - name: Download gleam dependencies
-        run: gleam deps download
-        working-directory: apps/backend
-      - name: Populate DB
-        run: psql < db/seeds.sql
-        working-directory: apps/backend
-        env:
-          PGPASSWORD: gloogle
-          PGHOST: localhost
-          PGUSER: gloogle
-          PGPORT: 5432
-      - name: Run gleam test
-        run: gleam test
-        working-directory: apps/backend
+          otp-version: ${{ env.OTP_VERSION }}
+          gleam-version: ${{ env.GLEAM_VERSION }}
+          rebar3-version: ${{ env.REBAR3_VERSION }}
+      - name: Load the schema
+        # The schema is dumped by pg_dump 18; load it with a matching psql.
+        run: >-
+          docker run --rm --network host
+          -v "$PWD/db/schema.sql:/schema.sql:ro"
+          -e PGPASSWORD=gloogle
+          postgres:18
+          psql -v ON_ERROR_STOP=1 -h localhost -U gloogle -d gloogle -f /schema.sql
+      - run: gleam deps download
+      - run: gleam format --check src test
+      - run: gleam test
         env:
           POSTGRES_HOST: localhost
-      - name: Check gleam format
-        run: gleam format --check src test
-        working-directory: apps/backend
+
+  erlang-packages:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [packages/galaxy, packages/plasma, packages/chomp]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          gleam-version: ${{ env.GLEAM_VERSION }}
+          rebar3-version: ${{ env.REBAR3_VERSION }}
+      - run: gleam deps download
+      - run: gleam format --check src test
+      - run: gleam test
+
+  javascript-packages:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [apps/venus, packages/vitools]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          gleam-version: ${{ env.GLEAM_VERSION }}
+          rebar3-version: ${{ env.REBAR3_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: gleam deps download
+      - run: gleam format --check src test
+      # gleeunit fails on JavaScript when a package has no test yet.
+      - name: gleam test
+        run: |
+          if grep -rqE 'pub fn [a-z0-9_]+_test\(' test; then
+            gleam test
+          else
+            gleam build
+          fi

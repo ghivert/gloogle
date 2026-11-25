@@ -2,7 +2,8 @@ import gleam/dynamic/decode
 import gleam/json
 import gleam/option.{Some}
 
-pub const query = "
+pub const query =
+  "
 query getStargazers($name: String!, $owner: String!) {
   repository(owner: $owner, name: $name) {
     stargazerCount

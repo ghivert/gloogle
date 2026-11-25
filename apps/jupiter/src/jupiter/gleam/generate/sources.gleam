@@ -28,7 +28,10 @@ fn int_parameters_to_string(parameters: Int) {
   |> fn(s) { "(" <> s <> ")" }
 }
 
-pub fn type_definition_to_string(type_name: String, type_def: pi.TypeDefinition) {
+pub fn type_definition_to_string(
+  type_name: String,
+  type_def: pi.TypeDefinition,
+) {
   let params = int_parameters_to_string(type_def.parameters)
   let base = type_name <> params
   use <- bool.guard(when: type_def.constructors == [], return: base)

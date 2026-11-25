@@ -95,4 +95,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: gleam deps download
       - run: gleam format --check src test
-      - run: gleam test
+      # gleeunit fails on JavaScript when a package has no test yet.
+      - name: gleam test
+        run: |
+          if grep -rqE 'pub fn [a-z0-9_]+_test\(' test; then
+            gleam test
+          else
+            gleam build
+          fi

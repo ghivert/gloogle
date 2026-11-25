@@ -61,7 +61,10 @@ fn update_keys(
   }
 }
 
-fn update_empty_keys(keys: Keys, updater: fn(TypeSearch) -> TypeSearch) -> Keys {
+fn update_empty_keys(
+  keys: Keys,
+  updater: fn(TypeSearch) -> TypeSearch,
+) -> Keys {
   Keys(..keys, next: {
     keys.next
     |> option.lazy_unwrap(empty)

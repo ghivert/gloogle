@@ -14,19 +14,20 @@ pub type Palette {
   )
 }
 
-pub const dark = Palette(
-  white: "#fefefc",
-  dark_white: "#aeaeac",
-  unnamed_blue: "#a6f0fc",
-  faff_pink: "#ffaff3",
-  dark_faff_pink: "#eb94de",
-  aged_plastic_yellow: "#fffbe8",
-  unexpected_aubergine: "#584355",
-  underwater_blue: "#292d3e",
-  charcoal: "#2f2f2f",
-  black: "#1e1e1e",
-  blacker: "#151515",
-)
+pub const dark =
+  Palette(
+    white: "#fefefc",
+    dark_white: "#aeaeac",
+    unnamed_blue: "#a6f0fc",
+    faff_pink: "#ffaff3",
+    dark_faff_pink: "#eb94de",
+    aged_plastic_yellow: "#fffbe8",
+    unexpected_aubergine: "#584355",
+    underwater_blue: "#292d3e",
+    charcoal: "#2f2f2f",
+    black: "#1e1e1e",
+    blacker: "#151515",
+  )
 
 pub const erlang = "rgb(155, 32, 54)"
 

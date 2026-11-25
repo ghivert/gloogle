@@ -544,7 +544,10 @@ pub fn one_of(parsers: List(Parser(a, e, tok, ctx))) -> Parser(a, e, tok, ctx) {
 /// Try the given parser, but if it fails return the given default value instead
 /// of failing.
 ///
-pub fn or(parser: Parser(a, e, tok, ctx), default: a) -> Parser(a, e, tok, ctx) {
+pub fn or(
+  parser: Parser(a, e, tok, ctx),
+  default: a,
+) -> Parser(a, e, tok, ctx) {
   one_of([parser, return(default)])
 }
 
@@ -607,7 +610,9 @@ pub fn many1(parser: Parser(a, e, tok, ctx)) -> Parser(List(a), e, tok, ctx) {
 /// return(statements)
 /// ```
 ///
-pub fn until_end(parser: Parser(a, e, tok, ctx)) -> Parser(List(a), e, tok, ctx) {
+pub fn until_end(
+  parser: Parser(a, e, tok, ctx),
+) -> Parser(List(a), e, tok, ctx) {
   use xs <- loop([])
   use is_at_end <- do(is_at_end())
 

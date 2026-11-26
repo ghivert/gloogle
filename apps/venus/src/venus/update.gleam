@@ -37,7 +37,7 @@ pub fn handle_search_results(
   search_results
   |> model.update_search_results(state, input, _)
   |> model.toggle_loading
-  |> pair.new(router.push(router.Search("q=" <> input)))
+  |> pair.new(router.push(router.Search(input)))
 }
 
 pub fn handle_trendings(state: State, trendings: List(package.Package)) {
@@ -103,7 +103,7 @@ pub fn handle_submitted_search(state: State) {
       let new_route = router.Search(new_state.submitted_input)
       let is_same_route = new_state.route == new_route
       use <- bool.guard(when: is_same_route, return: #(new_state, effect.none()))
-      [router.push(router.Search("q=" <> new_state.submitted_input))]
+      [router.push(router.Search(new_state.submitted_input))]
       |> list.prepend(window.blur())
       |> effect.batch
       |> pair.new(new_state, _)

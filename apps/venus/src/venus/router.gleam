@@ -46,15 +46,22 @@ pub fn update_page_title(route: Route) {
   }
 }
 
+/// `Search` carries the raw user query. It is percent-encoded here, never
+/// concatenated: `#`, `&` or `+` in a type signature would otherwise be read
+/// back as a fragment, a separator or a space.
 pub fn to_uri(route: Route) -> Uri {
-  let assert Ok(uri) = case route {
-    Home -> uri.parse("/")
-    Search(query:) -> uri.parse("/search?" <> query)
-    Packages -> uri.parse("/packages")
-    Trending -> uri.parse("/trending")
-    Analytics -> uri.parse("/analytics")
+  let path = case route {
+    Home -> "/"
+    Search(..) -> "/search"
+    Packages -> "/packages"
+    Trending -> "/trending"
+    Analytics -> "/analytics"
   }
-  uri
+  let query = case route {
+    Search(query:) -> option.Some(uri.query_to_string([#("q", query)]))
+    _ -> option.None
+  }
+  uri.Uri(..uri.empty, path:, query:)
 }
 
 pub fn push(route: Route) {

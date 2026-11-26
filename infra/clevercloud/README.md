@@ -149,11 +149,15 @@ rest of the stack.
 5. **Wire GitHub** (Settings → Environments → `production`):
    - secrets `CLEVER_TOKEN`, `CLEVER_SECRET` (a clever-tools login, ideally a
      dedicated account), `NETLIFY_AUTH_TOKEN` (Netlify personal access token),
-     optional `SENTRY_AUTH_TOKEN`;
-   - variables `NETLIFY_SITE_ID` (Netlify → Site configuration → Site ID),
-     optional `CLEVER_ORG` (only if the app name `gloogle-jupiter` is
-     ambiguous for that account), optional `SENTRY_ORG`, `SENTRY_PROJECT`.
+     `NETLIFY_SITE_ID` (Netlify → Site configuration → Site ID; site
+     `gloogle-app`), optional `SENTRY_AUTH_TOKEN`;
+   - variables: optional `CLEVER_ORG` (only if the app name `gloogle-jupiter`
+     is ambiguous for that account), optional `SENTRY_ORG`, `SENTRY_PROJECT`.
      No app ID: CI deploys by the name this stack gives the app;
+   - on GHCR, give the repository write access to the `gloogle` package
+     (package settings → Manage Actions access → `ghivert/gloogle`, role
+     Write): the package predates the workflow, so its `GITHUB_TOKEN` is
+     denied otherwise (`permission_denied: write_package`);
    - on Netlify, stop the site's own builds (Site configuration → Build &
      deploy → Stop builds): CI deploys the build output.
 

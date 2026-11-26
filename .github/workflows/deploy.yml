@@ -11,10 +11,14 @@ name: deploy
 # Repository settings (environment `production`):
 #   secrets  CLEVER_TOKEN, CLEVER_SECRET   clever-tools credentials
 #            NETLIFY_AUTH_TOKEN            Netlify personal access token
+#            NETLIFY_SITE_ID               Site configuration → Site ID
 #            SENTRY_AUTH_TOKEN             optional, sourcemap upload
 #   vars     CLEVER_ORG                    optional, only if the app name is ambiguous
-#            NETLIFY_SITE_ID               Site configuration → Site ID
 #            SENTRY_ORG, SENTRY_PROJECT    optional
+#
+# GHCR: the `gloogle` package predates this workflow, so the repository needs
+# write access to it (package settings → Manage Actions access → ghivert/gloogle,
+# role Write), or the push is denied (`permission_denied: write_package`).
 
 on:
   workflow_run:
@@ -99,14 +103,14 @@ jobs:
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
           cache-from: type=gha,scope=venus
           cache-to: type=gha,mode=max,scope=venus
+      # Run from the build output, not the checkout: at the repository root the
+      # CLI sees the Yarn workspaces and refuses to guess the project.
       - name: Deploy to Netlify
+        working-directory: ${{ runner.temp }}/venus
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
-        run: >-
-          npx --yes netlify-cli@27.20.1 deploy
-          --prod
-          --no-build
-          --dir "$RUNNER_TEMP/venus"
-          --site "$NETLIFY_SITE_ID"
-          --message "Deploy $SHA"
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          test -n "$NETLIFY_SITE_ID" || { echo "::error::NETLIFY_SITE_ID is not set"; exit 1; }
+          npx --yes netlify-cli@27.20.1 deploy --prod --no-build --dir . \
+            --site "$NETLIFY_SITE_ID" --message "Deploy $SHA"

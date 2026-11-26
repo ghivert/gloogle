@@ -1566,8 +1566,8 @@ pub type Type {
             <tr>
               <td class="m">POST</td><td class="m">/packages/update/:name</td><td class="m">handlers.package_update</td>
               <td class="d">
-                <span lang="fr">Resynchronise un paquet à la demande (<code>force: True</code>). Répond <code>{}</code> sans attendre.</span>
-                <span lang="en">Re-syncs a package on demand (<code>force: True</code>). Answers <code>{}</code> without waiting.</span>
+                <span lang="fr">Resynchronise un paquet à la demande (<code>force: True</code>). Répond <code>{}</code> sans attendre. <strong>Route d'administration</strong> : sans <code>authorization: Bearer &lt;ADMIN_TOKEN&gt;</code>, toute requête <code>POST</code> reçoit 404, et sans <code>ADMIN_TOKEN</code> configuré personne ne passe (<code>router.authorized</code>, comparaison en temps constant). Chaque appel interroge Hex avec la clé de jupiter et réingère toutes les releases : ouverte, la route servait à épuiser l'instance et la limite de la clé.</span>
+                <span lang="en">Re-syncs a package on demand (<code>force: True</code>). Answers <code>{}</code> without waiting. <strong>Admin route</strong>: without <code>authorization: Bearer &lt;ADMIN_TOKEN&gt;</code> every <code>POST</code> gets 404, and with no <code>ADMIN_TOKEN</code> configured nobody passes (<code>router.authorized</code>, constant-time comparison). Each call queries Hex with jupiter's key and re-ingests every release: left open, the route could exhaust the instance and the key's rate limit.</span>
               </td>
             </tr>
           </tbody>

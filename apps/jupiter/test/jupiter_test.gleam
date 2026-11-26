@@ -8,6 +8,7 @@ import gleeunit
 import jupiter/context/environment
 import jupiter/context/postgres
 import jupiter/postgres/queries
+import jupiter/router
 import jupiter/router/handlers
 import pog
 
@@ -108,4 +109,18 @@ pub fn postgres_ssl_test() {
   assert postgres.ssl(url("?connect_timeout=5&sslmode=require"), dev)
     == pog.SslUnverified
   assert postgres.ssl(url("?sslmode=bogus"), prod) == pog.SslVerified
+}
+
+// Admin routes: only `Bearer <exact token>` passes, and nothing passes while
+// no token is configured.
+pub fn admin_authorized_test() {
+  let token = Ok("s3cret")
+  assert router.authorized(Ok("Bearer s3cret"), token)
+  assert !router.authorized(Ok("Bearer s3cre"), token)
+  assert !router.authorized(Ok("Bearer s3cret "), token)
+  assert !router.authorized(Ok("s3cret"), token)
+  assert !router.authorized(Ok("Basic s3cret"), token)
+  assert !router.authorized(Error(Nil), token)
+  assert !router.authorized(Ok("Bearer "), Error(Nil))
+  assert !router.authorized(Ok("Bearer s3cret"), Error(Nil))
 }

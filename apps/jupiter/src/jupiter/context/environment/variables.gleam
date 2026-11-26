@@ -14,6 +14,15 @@ pub fn github_token() {
   read("GITHUB_TOKEN")
 }
 
+/// Secret guarding the admin routes (`POST`). Unset or empty: those routes
+/// answer 404 to everyone.
+pub fn admin_token() -> Result(String, Nil) {
+  case envoy.get("ADMIN_TOKEN") {
+    Ok("") | Error(_) -> Error(Nil)
+    Ok(token) -> Ok(token)
+  }
+}
+
 pub fn bucket_uri() {
   read("BUCKET_URI")
 }

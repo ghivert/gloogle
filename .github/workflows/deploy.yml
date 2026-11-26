@@ -11,9 +11,11 @@ name: deploy
 # Repository settings (environment `production`):
 #   secrets  CLEVER_TOKEN, CLEVER_SECRET   clever-tools credentials
 #            NETLIFY_AUTH_TOKEN            Netlify personal access token
-#            NETLIFY_SITE_ID               Site configuration → Site ID
 #            SENTRY_AUTH_TOKEN             optional, sourcemap upload
-#   vars     CLEVER_ORG                    optional, only if the app name is ambiguous
+#   vars     CLEVER_ORG                    organisation of the app (ID or name):
+#                                          `clever link <name>` alone only looks
+#                                          in the token's personal space
+#            NETLIFY_SITE_ID               Site configuration → Site ID
 #            SENTRY_ORG, SENTRY_PROJECT    optional
 #
 # GHCR: the `gloogle` package predates this workflow, so the repository needs
@@ -109,7 +111,7 @@ jobs:
         working-directory: ${{ runner.temp }}/venus
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
         run: |
           test -n "$NETLIFY_SITE_ID" || { echo "::error::NETLIFY_SITE_ID is not set"; exit 1; }
           npx --yes netlify-cli@27.20.1 deploy --prod --no-build --dir . \

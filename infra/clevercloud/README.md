@@ -149,11 +149,13 @@ rest of the stack.
 5. **Wire GitHub** (Settings → Environments → `production`):
    - secrets `CLEVER_TOKEN`, `CLEVER_SECRET` (a clever-tools login, ideally a
      dedicated account), `NETLIFY_AUTH_TOKEN` (Netlify personal access token),
-     `NETLIFY_SITE_ID` (Netlify → Site configuration → Site ID; site
-     `gloogle-app`), optional `SENTRY_AUTH_TOKEN`;
-   - variables: optional `CLEVER_ORG` (only if the app name `gloogle-jupiter`
-     is ambiguous for that account), optional `SENTRY_ORG`, `SENTRY_PROJECT`.
-     No app ID: CI deploys by the name this stack gives the app;
+     optional `SENTRY_AUTH_TOKEN`;
+   - variables `CLEVER_ORG` (the organisation, `orga_…`: `clever link` by
+     name only searches the token's personal space without it, and answers
+     "Application not found"), `NETLIFY_SITE_ID` (Netlify → Site
+     configuration → Site ID; site `gloogle-app`), optional `SENTRY_ORG`,
+     `SENTRY_PROJECT`. No app ID: CI deploys by the name this stack gives the
+     app;
    - on GHCR, give the repository write access to the `gloogle` package
      (package settings → Manage Actions access → `ghivert/gloogle`, role
      Write): the package predates the workflow, so its `GITHUB_TOKEN` is

@@ -1,18 +1,52 @@
+import data/ir
+import data/ir/from_gleam
 import gleam/dict
 import gleam/json
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/package_interface
 import gleam/result
 import jupiter/gleam/context.{type Context}
 import jupiter/gleam/generate/metadata
 import jupiter/gleam/generate/sources
-import jupiter/gleam/generate/types
-import jupiter/gleam/type_search
+import jupiter/gleam/toml
 import jupiter/postgres/queries
 import palabres
 
 const module_name = "api/signatures"
+
+/// The columns that hang off the IR, all derived from the one alpha-renamed
+/// declaration: the encoded `signature_ir`, its phase-1 fingerprint (`arity`,
+/// `type_names`) and the normal form `signature_canonical` (`None` for a type
+/// definition, which never matches by shape).
+pub type Derived {
+  Derived(
+    signature_ir: json.Json,
+    arity: Int,
+    type_names: List(String),
+    canonical: Option(String),
+  )
+}
+
+/// Alpha-rename a lowered declaration, then derive every IR column from it —
+/// the one place this happens, shared by ingestion and `tasks/backfill_ir`.
+pub fn structured(declaration: ir.Declaration) -> Derived {
+  let declaration = ir.alpha_rename_declaration(declaration)
+  let #(arity, type_names) = ir.fingerprint(declaration)
+  Derived(
+    signature_ir: ir.encode(declaration),
+    arity:,
+    type_names:,
+    canonical: ir.canonical(declaration),
+  )
+}
+
+/// The release's declared dependencies, from its `gleam.toml`: what the type
+/// links resolve against at query time (`jupiter/links`).
+pub fn upsert_dependencies(ctx: Context, release_id: String) {
+  toml.dependencies(ctx.gleam_toml)
+  |> list.try_each(queries.upsert_package_dependency(ctx.db, release_id, _))
+}
 
 fn add_gleam_constraint(ctx: Context, release_id: String) {
   case ctx.package_interface.gleam_version_constraint {
@@ -42,15 +76,16 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
         documentation: option.None,
         metadata: json.null(),
         signature: "",
-        json_signature: json.null(),
-        parameters: [],
+        signature_ir: json.null(),
+        arity: 0,
+        type_names: [],
+        canonical: None,
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
-    use #(json_signature, parameters) <- result.try({
-      types.type_definition_to_json(ctx, name, def)
-    })
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
+      structured(from_gleam.type_definition(def))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       kind:,
@@ -58,8 +93,10 @@ fn upsert_type_definitions(ctx: Context, module: context.Module) {
       documentation: def.documentation,
       metadata: metadata.generate(def.deprecation, None),
       signature: sources.type_definition_to_string(name, def),
-      json_signature:,
-      parameters:,
+      signature_ir:,
+      arity:,
+      type_names:,
+      canonical:,
       module_id: module.id,
       deprecation: def.deprecation,
       implementations: None,
@@ -88,15 +125,16 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
         documentation: option.None,
         metadata: json.null(),
         signature: "",
-        json_signature: json.null(),
-        parameters: [],
+        signature_ir: json.null(),
+        arity: 0,
+        type_names: [],
+        canonical: None,
         module_id: module.id,
         deprecation: option.None,
         implementations: None,
       )
-    use #(json_signature, parameters) <- result.try({
-      types.type_alias_to_json(ctx, name, alias)
-    })
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
+      structured(from_gleam.type_alias(alias))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name:,
@@ -104,8 +142,10 @@ fn upsert_type_aliases(ctx: Context, module: context.Module) {
       documentation: alias.documentation,
       metadata: metadata.generate(alias.deprecation, None),
       signature: sources.type_alias_to_string(name, alias),
-      json_signature:,
-      parameters:,
+      signature_ir:,
+      arity:,
+      type_names:,
+      canonical:,
       module_id: module.id,
       deprecation: alias.deprecation,
       implementations: None,
@@ -124,9 +164,8 @@ fn upsert_constants(ctx: Context, module: context.Module) {
   let all_constants = dict.to_list(module.module.constants)
   result.all({
     use #(name, constant) <- list.map(all_constants)
-    use #(json_signature, parameters) <- result.try({
-      types.constant_to_json(ctx, name, constant)
-    })
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
+      structured(from_gleam.constant(constant))
     queries.upsert_package_type_fun_signature(
       db: ctx.db,
       name:,
@@ -135,8 +174,10 @@ fn upsert_constants(ctx: Context, module: context.Module) {
       metadata: Some(constant.implementations)
         |> metadata.generate(constant.deprecation, _),
       signature: sources.constant_to_string(name, constant),
-      json_signature:,
-      parameters:,
+      signature_ir:,
+      arity:,
+      type_names:,
+      canonical:,
       module_id: module.id,
       deprecation: constant.deprecation,
       implementations: Some(constant.implementations),
@@ -155,10 +196,9 @@ fn upsert_functions(ctx: Context, module: context.Module) {
   let all_functions = dict.to_list(module.module.functions)
   result.all({
     use #(name, function) <- list.map(all_functions)
-    use #(json_signature, parameters) <- result.try({
-      types.function_to_json(ctx, name, function)
-    })
     let signature = sources.function_to_string(name, function)
+    let Derived(signature_ir:, arity:, type_names:, canonical:) =
+      structured(from_gleam.function(function))
     let content =
       queries.upsert_package_type_fun_signature(
         db: ctx.db,
@@ -168,19 +208,15 @@ fn upsert_functions(ctx: Context, module: context.Module) {
         metadata: Some(function.implementations)
           |> metadata.generate(function.deprecation, _),
         signature:,
-        json_signature:,
-        parameters:,
+        signature_ir:,
+        arity:,
+        type_names:,
+        canonical:,
         module_id: module.id,
         deprecation: function.deprecation,
         implementations: Some(function.implementations),
       )
-    case content {
-      Ok([id]) -> {
-        type_search.add(signature:, id:)
-        content
-      }
-      _ -> content
-    }
+    content
   })
 }
 
@@ -226,6 +262,7 @@ pub fn extract_signatures(ctx: Context) {
   let res = queries.get_package_release_ids(ctx.db, ctx.package_interface)
   use #(_pid, release_id) <- result.try(res)
   use _ <- result.try(add_gleam_constraint(ctx, release_id))
+  use _ <- result.try(upsert_dependencies(ctx, release_id))
   package.modules
   |> dict.to_list
   |> list.map(extract_module_signatures(ctx, release_id, _))

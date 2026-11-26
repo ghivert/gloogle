@@ -27,6 +27,7 @@ pub type Msg {
   UserFocusedSearch(event: Dynamic)
   UserInputtedSearch(query: String)
   UserPressedEscape
+  UserRequestedBroadSearch
   UserSubmittedSearch
   UserToggledFilter(filter: Filter, value: Bool)
 }

@@ -7,7 +7,6 @@ import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/hexpm
-import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -22,6 +21,7 @@ import jupiter/data/hex_read
 import jupiter/data/hex_user.{type HexUser}
 import jupiter/data/interfaces.{type Interfaces, Interfaces}
 import jupiter/gleam/context
+import jupiter/gleam/toml
 import jupiter/loss.{type Loss}
 import pog
 
@@ -416,6 +416,85 @@ pub fn add_package_gleam_constraint(
   |> result.map_error(loss.DatabaseError)
 }
 
+/// One declared dependency of a release; the requirement is replaced on
+/// conflict, so re-ingesting a release refreshes its rows.
+pub fn upsert_package_dependency(
+  db: pog.Connection,
+  release_id: String,
+  dependency: toml.Dependency,
+) -> Loss(Nil) {
+  let kind = case dependency.kind {
+    toml.Runtime -> "dependency"
+    toml.Development -> "dev-dependency"
+  }
+  "INSERT INTO package_dependency (package_release_id, name, requirement, kind)
+   VALUES ($1, $2, $3, $4::dependency_kind)
+   ON CONFLICT (package_release_id, name, kind) DO UPDATE
+     SET requirement = excluded.requirement"
+  |> pog.query
+  |> pog.parameter(pog.text(release_id))
+  |> pog.parameter(pog.text(dependency.name))
+  |> pog.parameter(pog.text(dependency.requirement))
+  |> pog.parameter(pog.text(kind))
+  |> pog.execute(db)
+  |> result.replace(Nil)
+  |> result.map_error(loss.DatabaseError)
+}
+
+/// The declared dependencies of the given releases — `(package, version)`
+/// pairs, passed as two parallel arrays — as `(package, version, dependency,
+/// requirement)` rows, runtime dependencies first so that a package listed
+/// under both kinds resolves by its runtime requirement.
+pub fn dependencies_of(
+  db: pog.Connection,
+  releases: List(#(String, String)),
+) -> Loss(List(#(String, String, String, String))) {
+  let #(packages, versions) = list.unzip(releases)
+  "SELECT p.name AS package, r.version AS version, d.name AS dependency, d.requirement AS requirement
+   FROM unnest($1::text[], $2::text[]) AS wanted(package, version)
+   JOIN package p ON p.name = wanted.package
+   JOIN package_release r ON r.package_id = p.id AND r.version = wanted.version
+   JOIN package_dependency d ON d.package_release_id = r.id
+   ORDER BY d.kind"
+  |> pog.query
+  |> pog.parameter(pog.array(pog.text, packages))
+  |> pog.parameter(pog.array(pog.text, versions))
+  |> pog.returning({
+    use package <- decode.field("package", decode.string)
+    use version <- decode.field("version", decode.string)
+    use dependency <- decode.field("dependency", decode.string)
+    use requirement <- decode.field("requirement", decode.string)
+    decode.success(#(package, version, dependency, requirement))
+  })
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+/// Every semver release known for the given packages, newest first within a
+/// package — the candidates a requirement is matched against.
+pub fn releases_of(
+  db: pog.Connection,
+  packages: List(String),
+) -> Loss(List(#(String, String))) {
+  "SELECT p.name AS package, r.version AS version
+   FROM package p
+   JOIN package_release r ON r.package_id = p.id
+   WHERE p.name = ANY($1::text[])
+     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+   ORDER BY p.name, r.version_ordering DESC"
+  |> pog.query
+  |> pog.parameter(pog.array(pog.text, packages))
+  |> pog.returning({
+    use package <- decode.field("package", decode.string)
+    use version <- decode.field("version", decode.string)
+    decode.success(#(package, version))
+  })
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
 pub fn add_package_retirement(
   db: pog.Connection,
   retirement: hexpm.ReleaseRetirement,
@@ -520,8 +599,10 @@ pub fn upsert_package_type_fun_signature(
   documentation documentation: Option(String),
   metadata metadata: json.Json,
   signature signature: String,
-  json_signature json_signature: json.Json,
-  parameters parameters: List(String),
+  signature_ir signature_ir: json.Json,
+  arity arity: Int,
+  type_names type_names: List(String),
+  canonical canonical: Option(String),
   module_id module_id: String,
   deprecation deprecation: Option(package_interface.Deprecation),
   implementations implementations: Option(package_interface.Implementations),
@@ -530,24 +611,30 @@ pub fn upsert_package_type_fun_signature(
      name,
      documentation,
      signature_,
-     json_signature,
      kind,
-     parameters,
      metadata,
      package_module_id,
      deprecation,
-     implementations
-   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     implementations,
+     signature_ir,
+     arity,
+     type_names,
+     type_names_key,
+     signature_canonical
+   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
    ON CONFLICT (package_module_id, name) DO UPDATE
      SET
        documentation = $2,
        signature_ = $3,
-       json_signature = $4,
-       kind = $5,
-       parameters = $6,
-       metadata = $7,
-       deprecation = $9,
-       implementations = $10
+       kind = $4,
+       metadata = $5,
+       deprecation = $7,
+       implementations = $8,
+       signature_ir = $9,
+       arity = $10,
+       type_names = $11,
+       type_names_key = $12,
+       signature_canonical = $13
    RETURNING id::text"
   |> pog.query
   |> pog.parameter(pog.text(name))
@@ -558,9 +645,7 @@ pub fn upsert_package_type_fun_signature(
     |> pog.text
   })
   |> pog.parameter(pog.text(signature))
-  |> pog.parameter(json_signature |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(kind_to_string(kind)))
-  |> pog.parameter(pog.array(pog.text, parameters))
   |> pog.parameter(metadata |> json.to_string() |> pog.text())
   |> pog.parameter(pog.text(module_id))
   |> pog.parameter({
@@ -574,6 +659,11 @@ pub fn upsert_package_type_fun_signature(
     |> option.map(pog.text)
     |> option.unwrap(pog.null())
   })
+  |> pog.parameter(signature_ir |> json.to_string() |> pog.text())
+  |> pog.parameter(pog.int(arity))
+  |> pog.parameter(pog.array(pog.text, type_names))
+  |> pog.parameter(pog.text(type_names_key(type_names)))
+  |> pog.parameter(pog.nullable(pog.text, canonical))
   |> pog.returning(decode.at(["id"], decode.string))
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
@@ -615,18 +705,23 @@ pub fn find_similar_type_names(db: pog.Connection, name: String) {
   |> result.map(fn(r) { r.rows })
 }
 
+/// Every text tier skips the recursive-type placeholders whose second upsert
+/// never landed (`signature_ = ''`, JSON `null` in `metadata`,
+/// 123 rows over 24 packages in the 2026-07 snapshot): `type_search.decoder()`
+/// cannot decode them, and one such row fails the whole batch — a silent empty
+/// tier. The root cause is in ingestion; see `signature-ir-todos.md`.
 pub fn name_search(db: pog.Connection, query: String) {
   "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -635,6 +730,8 @@ pub fn name_search(db: pog.Connection, query: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE s.name = $1
+     AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -653,12 +750,12 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -670,6 +767,8 @@ pub fn module_and_name_search(db: pog.Connection, query: String) {
      ON true
    WHERE s.name = s_n.full_name[2]
    AND m.name LIKE '%' || lower(s_n.full_name[1]) || '%'
+     AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -698,12 +797,12 @@ pub fn content_search(db: pog.Connection, query: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -716,6 +815,8 @@ pub fn content_search(db: pog.Connection, query: String) {
       s.name ILIKE '%' || $1 || '%'
       OR s.signature_compact ILIKE '%' || replace($2, ' ', '%') || '%'
     )
+     AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -734,12 +835,12 @@ pub fn signature_search(db: pog.Connection, q: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -748,6 +849,8 @@ pub fn signature_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.signature_) @@ websearch_to_tsquery($1)
+     AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -765,12 +868,12 @@ pub fn documentation_search(db: pog.Connection, q: String) {
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -779,6 +882,8 @@ pub fn documentation_search(db: pog.Connection, q: String) {
    JOIN package p
      ON p.id = r.package_id
    WHERE to_tsvector('english', s.documentation) @@ websearch_to_tsquery($1)
+     AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
    ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
    LIMIT 100"
@@ -799,18 +904,23 @@ pub fn documentation_search(db: pog.Connection, q: String) {
 /// The `SIMILAR TO` guard on `r.version` only discards non-semver releases
 /// (pre-releases, build tags, etc.), so downstream code can always parse and
 /// order the version.
+///
+/// Capped at 100 rows like every other tier: "error" matched 1,958 rows, each
+/// carrying its documentation and its IR (~1 KB), serialised, decoded and
+/// re-encoded for venus, which shows a handful. The module name is served
+/// by the trigram GIN `package_module_name_trgm` (`20261027100000`).
 pub fn module_search(db: pog.Connection, q: String) {
   "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
      s.name type_name,
      s.documentation documentation,
      s.kind signature_kind,
      s.metadata metadata,
-     s.json_signature,
+     s.signature_ir AS signature_ir,
      m.name module_name,
      p.name package_name,
      r.version version,
      p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
+     r.version_ordering AS ordering
    FROM package_type_fun_signature s
    JOIN package_module m
      ON m.id = s.package_module_id
@@ -822,8 +932,11 @@ pub fn module_search(db: pog.Connection, q: String) {
      -- Keep only well-formed semver releases (e.g. '1.2.3'); pre-releases such
      -- as '1.2.3-rc1' are excluded. Picking the latest version is the
      -- frontend's job, not this query's.
+     AND s.signature_ <> ''
+     AND s.signature_ir IS NOT NULL
      AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
+   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name
+   LIMIT 100"
   |> pog.query
   |> pog.parameter(pog.text(q))
   |> pog.returning(type_search.decoder())
@@ -832,42 +945,208 @@ pub fn module_search(db: pog.Connection, q: String) {
   |> result.map(fn(r) { r.rows })
 }
 
-pub fn exact_type_search(db: pog.Connection, q: List(String)) {
-  use <- bool.guard(when: list.is_empty(q), return: Ok([]))
-  let ids =
-    list.index_map(q, fn(_, idx) { "$" <> int.to_string(idx + 1) })
-    |> string.join(", ")
-  {
-    "SELECT DISTINCT ON (package_rank, ordering, package_name, type_name, signature_kind, module_name)
-     s.name type_name,
-     s.documentation documentation,
-     s.kind signature_kind,
-     s.metadata metadata,
-     s.json_signature,
-     m.name module_name,
-     p.name package_name,
-     r.version version,
-     p.rank package_rank,
-     string_to_array(regexp_replace(r.version, '([0-9]+).([0-9]+).([0-9]+).*', '\\1.\\2.\\3'), '.')::int[] AS ordering
-   FROM package_type_fun_signature s
-   JOIN package_module m
-     ON m.id = s.package_module_id
-   JOIN package_release r
-     ON m.package_release_id = r.id
-   JOIN package p
-     ON p.id = r.package_id
-   WHERE s.id IN ("
-    <> ids
-    <> ")
-     AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
-   ORDER BY package_rank DESC, ordering DESC, package_name, type_name, signature_kind, module_name"
-  }
+/// Which releases phase 1 of the type search looks at.
+pub type Scope {
+  /// Each package's latest semver release that has modules — the ecosystem as
+  /// it can be installed today. The default: one row per declaration without
+  /// any `DISTINCT ON`, and a sixth of the rows to read on frequent names.
+  LatestRelease
+  /// Every release, one row per declaration at its latest version — what
+  /// `broad=true` asks for: a declaration removed from a package's latest
+  /// version is still found, at the last version that had it.
+  EveryRelease
+}
+
+/// Phase 1 of type search: narrow the whole signature table to at most 100
+/// candidates by shape, in both directions of generality, then let phase 2
+/// (`data/ir/unify`) verify each one structurally. Two indexed predicates, OR-ed:
+///
+/// - `type_names @> $2` (composite GIN on `(arity, type_names)`): the candidate
+///   mentions every query name — exact matches and candidates *more specific*
+///   than the query (the query's holes and variables absorb the extra names).
+/// - `type_names_key = ANY($3)` (btree on `(arity, type_names_key)`): the
+///   candidate's names are a *subset* of the query's — candidates *more general*
+///   than the query (`fn(List(a)) -> Bool` for `(List(Int)) -> Bool`). The caller
+///   enumerates the proper subsets of the query's names as canonical keys
+///   (sorted names joined by `,`); `<@` on the GIN was measured far too slow
+///   (it rechecks every row sharing a name), equality on a text key is a
+///   handful of btree probes the GIN cannot claim.
+///
+/// Then ordered closest-first by `abs(cardinality(type_names) - n)` — the
+/// number of names one side has to absorb, whichever side is the general one —
+/// with package rank breaking ties.
+///
+/// `scope` decides which releases are candidates. `LatestRelease` joins the
+/// signatures to each package's latest semver release that has modules (a
+/// `DISTINCT ON (package_id)` over 8k releases, hashed once per query): what
+/// remained of the cost on frequent names was the heap scan of every version
+/// of every matching declaration — 51k rows for `{List}` — before `DISTINCT ON`
+/// kept one per declaration; restricting to the latest release reads 12k and
+/// needs no dedupe (`{List}` 200–280 ms → 70 ms on the local snapshot, rare
+/// names unchanged at ~25 ms; a correlated "latest release" subquery per row
+/// was measured at 300–600 ms and rejected). `EveryRelease` is the previous
+/// behaviour, kept for `broad=true`: `DISTINCT ON (package, module, name, kind)`
+/// at the latest `version_ordering`, like the text tiers.
+///
+/// Rows with a null IR are excluded (nothing to verify against), and so are
+/// the recursive-type placeholders whose second upsert never landed
+/// (`signature_ = ''`, JSON `null` in `metadata`): they carry
+/// an IR since the backfill, but `type_search.decoder()` cannot decode them and
+/// one such row fails the whole batch. Every tier also skips a NULL IR for the
+/// same reason: `type_search.decoder()` reads `signature_ir` since venus renders
+/// it, and a row the backfill could not fill would otherwise empty its tier.
+///
+/// Two shape guards, both measured: `type_definition` rows are skipped (phase 2
+/// never verifies one — its constructors are found by name — and the 22,771
+/// parameterless enums all carry the empty key, 1.4 s → 0.4 s on `List(Int)`);
+/// and a query with no names at all (`fn(a) -> a`) does not run `@>` (`@> '{}'`
+/// is true for the whole arity, 3 s) but only the empty key, the fully generic
+/// candidates (112 ms) — the only ones the distance ordering would keep anyway.
+///
+/// What this still misses: a candidate more general than the query whose names
+/// appear only under a query hole (`fn(List(a)) -> b` for `(_) -> Bool`). Sound
+/// phase-1 selection for that direction with holes is `arity` alone; deferred.
+pub fn fingerprint_candidates(
+  db db: pog.Connection,
+  arity arity: Int,
+  type_names type_names: List(String),
+  subset_keys subset_keys: List(String),
+  scope scope: Scope,
+) -> Loss(List(type_search.TypeSearch)) {
+  let shape =
+    "s.arity = $1
+       AND s.kind <> 'type_definition'
+       AND ((cardinality($2::text[]) > 0 AND s.type_names @> $2::text[])
+         OR s.type_names_key = ANY($3::text[]))
+       AND s.signature_ir IS NOT NULL
+       AND s.signature_ <> ''"
+  let distance = "abs(cardinality(s.type_names) - $4) distance"
+  let sql =
+    scoped_candidates(scope, result_columns <> ",\n       " <> distance, shape)
+    <> "
+   ORDER BY distance, package_rank DESC
+   LIMIT 100"
+  sql
   |> pog.query
-  |> list.fold(q, _, fn(query, q) { pog.parameter(query, pog.text(q)) })
+  |> pog.parameter(pog.int(arity))
+  |> pog.parameter(pog.array(pog.text, type_names))
+  |> pog.parameter(pog.array(pog.text, subset_keys))
+  |> pog.parameter(pog.int(list.length(type_names)))
   |> pog.returning(type_search.decoder())
   |> pog.execute(db)
   |> result.map_error(loss.DatabaseError)
   |> result.map(fn(r) { r.rows })
+}
+
+/// The exact bucket of the type tier, answered by the normal form: every
+/// declaration whose `signature_canonical` is the query's (`ir.to_canonical`
+/// of a hole-free, label-free query), under the same release `scope` as phase
+/// 1. A few btree probes whatever the names' frequency — and, unlike phase 1,
+/// no `LIMIT 100` ordered by distance between the query and its exact matches:
+/// `(String) -> String` has hundreds of rows at distance 0, and phase 1 keeps
+/// the hundred best-ranked, losing exact matches from low-ranked packages.
+/// The rows join phase 1's candidates and go through phase 2 like any other.
+pub fn canonical_matches(
+  db db: pog.Connection,
+  canonical canonical: String,
+  scope scope: Scope,
+) -> Loss(List(type_search.TypeSearch)) {
+  let shape =
+    "s.signature_canonical = $1
+       AND s.signature_ir IS NOT NULL
+       AND s.signature_ <> ''"
+  let sql = scoped_candidates(scope, result_columns, shape) <> "
+   ORDER BY package_rank DESC
+   LIMIT 100"
+  sql
+  |> pog.query
+  |> pog.parameter(pog.text(canonical))
+  |> pog.returning(type_search.decoder())
+  |> pog.execute(db)
+  |> result.map_error(loss.DatabaseError)
+  |> result.map(fn(r) { r.rows })
+}
+
+/// The columns every type-tier query returns: a `TypeSearch` row.
+const result_columns =
+  "s.name type_name,
+       s.documentation documentation,
+       s.kind signature_kind,
+       s.metadata metadata,
+       s.signature_ir AS signature_ir,
+       m.name module_name,
+       p.name package_name,
+       r.version version,
+       p.rank package_rank"
+
+/// The signature rows of the releases a `Scope` covers, filtered by `shape`
+/// (a predicate over `s`), one row per declaration. `LatestRelease` joins from
+/// each package's latest semver release that has modules; `EveryRelease` reads
+/// every release and keeps the latest version of each declaration with
+/// `DISTINCT ON`. The caller appends its `ORDER BY` and `LIMIT`.
+fn scoped_candidates(scope: Scope, columns: String, shape: String) -> String {
+  case scope {
+    LatestRelease -> "SELECT " <> columns <> "
+   FROM (
+     SELECT DISTINCT ON (r.package_id) r.id, r.package_id, r.version
+     FROM package_release r
+     WHERE r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+       AND EXISTS (SELECT 1 FROM package_module m WHERE m.package_release_id = r.id)
+     ORDER BY r.package_id, r.version_ordering DESC
+   ) r
+   JOIN package p
+     ON p.id = r.package_id
+   JOIN package_module m
+     ON m.package_release_id = r.id
+   JOIN package_type_fun_signature s
+     ON s.package_module_id = m.id
+   WHERE " <> shape
+    EveryRelease -> "SELECT * FROM (
+     SELECT DISTINCT ON (p.name, m.name, s.name, s.kind)
+       " <> columns <> "
+     FROM package_type_fun_signature s
+     JOIN package_module m
+       ON m.id = s.package_module_id
+     JOIN package_release r
+       ON m.package_release_id = r.id
+     JOIN package p
+       ON p.id = r.package_id
+     WHERE " <> shape <> "
+       AND r.version SIMILAR TO '[0-9]*.[0-9]*.[0-9]*'
+     ORDER BY p.name, m.name, s.name, s.kind, r.version_ordering DESC
+   ) candidates"
+  }
+}
+
+/// The canonical key of a fingerprint's names: sorted (as `ir.fingerprint`
+/// emits them), joined by `,`. Stored in `type_names_key` next to the array so
+/// the subset lookup is a btree equality the GIN cannot claim.
+pub fn type_names_key(type_names: List(String)) -> String {
+  string.join(type_names, ",")
+}
+
+/// Beyond this many names the subset enumeration (2^n keys) stops paying for
+/// itself; such queries only get the `@>` direction.
+const max_subset_names = 6
+
+/// The canonical keys of every *proper* subset of the query's names, the empty
+/// set included (`fn(a) -> b` is a subset of everything) and the full set
+/// excluded (`@>` already covers it) — except for a nameless query, whose only
+/// subset is the empty key itself, since `@>` is switched off for it.
+/// `type_names` arrives sorted from `ir.fingerprint_type`, so each subset is
+/// emitted in canonical order.
+pub fn subset_keys(type_names: List(String)) -> List(String) {
+  use <- bool.guard(when: list.is_empty(type_names), return: [""])
+  use <- bool.guard(
+    when: list.length(type_names) > max_subset_names,
+    return: [],
+  )
+  type_names
+  |> list.fold([[]], fn(subsets, name) {
+    list.append(subsets, list.map(subsets, fn(s) { list.append(s, [name]) }))
+  })
+  |> list.filter(fn(s) { list.length(s) < list.length(type_names) })
+  |> list.map(type_names_key)
 }
 
 pub fn select_gleam_toml(db: pog.Connection, offset: Int) {

@@ -1,0 +1,64 @@
+# Local stack for Gloogle: Postgres + an S3-compatible object store (RustFS).
+#
+#   docker compose -f infra/local/compose.yml up -d
+#
+# Ports are deliberately far from the defaults — Postgres on 25432, RustFS on
+# 29000 (S3 API, path-style) / 29001 (console) — so this stack never collides
+# with the Steerlab one (5432/5433, 4566/9001, …) however it grows. The bucket
+# itself is created by scripts/mirror_bucket.py on first run. Data lives in
+# named volumes and survives `down`; `down -v` wipes.
+#
+# Why RustFS and not MinIO: MinIO's images are no longer pullable from Docker
+# Hub or quay.io from here; RustFS speaks the same S3 API.
+#
+# Seeding from production (the data cannot be regenerated — hex_read cursors,
+# analytics, timeseries): see scripts/seed-local.sh.
+
+name: gloogle
+
+services:
+  postgres:
+    image: postgres:18  # the schema uses uuidv7(), native since Postgres 18
+    container_name: gloogle-postgres
+    # Memory sized for the production snapshot (~800 MB heap, 500k signatures):
+    # with the 128 MB default, a frequent-name phase-1 query re-reads 150 MB of
+    # pages from the (slow, virtualised) disk every time and timings swing 10x.
+    # Kept moderate: this laptop also runs the Steerlab stack, and a 1 GB
+    # setting pushed it into swap (mist's 1 s init timeouts then fire at boot).
+    command: >
+      postgres -c shared_buffers=384MB -c effective_cache_size=1GB
+               -c work_mem=32MB -c maintenance_work_mem=256MB
+    environment:
+      POSTGRES_USER: gloogle
+      POSTGRES_PASSWORD: gloogle
+      POSTGRES_DB: gloogle
+    ports:
+      - "25432:5432"
+    volumes:
+      # Postgres 18 images keep PGDATA under /var/lib/postgresql/<major>/docker,
+      # so the volume mounts the parent directory, not the old `/data` leaf.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gloogle -d gloogle"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  s3:
+    image: rustfs/rustfs:1.0.1
+    container_name: gloogle-s3
+    environment:
+      RUSTFS_ACCESS_KEY: gloogle
+      RUSTFS_SECRET_KEY: gloogle-local
+      RUSTFS_REGION: fr-par
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: warn
+    ports:
+      - "29000:9000"
+      - "29001:9001"
+    volumes:
+      - s3-data:/data
+
+volumes:
+  postgres-data:
+  s3-data:

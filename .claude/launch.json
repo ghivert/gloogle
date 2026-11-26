@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "venus",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["workspace", "@jupiter/venus", "venus:dev", "--port", "5173", "--strictPort"],
+      "port": 5173
+    }
+  ]
+}

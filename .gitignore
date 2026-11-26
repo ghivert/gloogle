@@ -21,3 +21,7 @@ dist/
 gloogle_migrated.sql
 gloogle_migrated.sql.gz
 gloogle_render_backup_*.sql.gz
+
+# Local stack: production dumps and bucket mirrors (large, not source)
+infra/local/dumps/
+infra/local/.venv/

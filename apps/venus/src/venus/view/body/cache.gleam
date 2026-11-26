@@ -5,6 +5,7 @@ import lustre/attribute as a
 import lustre/element as el
 import lustre/element/html as h
 import lustre/event as e
+import venus/strings
 import venus/view/body/search_result as sr
 import venus/view/types as t
 
@@ -63,6 +64,22 @@ fn empty_types() {
   ])
 }
 
+/// Shown instead of `types_separator` when the API answered from the type
+/// tier alone: explains it, and offers to run every tier.
+fn widen_callout() {
+  h.div([a.class("search-result-empty-callout widen-search")], [
+    h.div([], [h.text(strings.narrowed_search)]),
+    h.button(
+      [
+        a.class("widen-search-button"),
+        a.type_("button"),
+        e.on_click(msg.UserRequestedBroadSearch),
+      ],
+      [h.text(strings.widen_search)],
+    ),
+  ])
+}
+
 fn types_separator() {
   h.div([a.class("search-result-empty-callout")], [
     h.text("Starting here, Gloogle tries to respond to your query by trying "),
@@ -82,6 +99,7 @@ pub fn cache_search_results(
   searches: List(type_search.TypeSearch),
   docs_searches: List(type_search.TypeSearch),
   modules_searches: List(type_search.TypeSearch),
+  narrowed narrowed: Bool,
 ) {
   h.div([a.class("search-results-wrapper")], [
     sidebar(search, index),
@@ -91,9 +109,16 @@ pub fn cache_search_results(
           h.text("Search results for “" <> search <> "”"),
         ]),
       ]),
-      case types {
-        [] -> empty_types()
-        types ->
+      case types, narrowed {
+        [], True -> widen_callout()
+        [], False -> empty_types()
+        types, True ->
+          el.fragment([
+            view_search_results(types),
+            h.div([a.class("search-result-separator")], []),
+            widen_callout(),
+          ])
+        types, False ->
           el.fragment([
             view_search_results(types),
             h.div([a.class("search-result-separator")], []),

@@ -1,4 +1,7 @@
+\restrict dbmate
+
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
+-- Dumped by pg_dump version 18.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -11,6 +14,20 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: btree_gin; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS btree_gin WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION btree_gin; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION btree_gin IS 'support for indexing common datatypes in GIN';
+
 
 --
 -- Name: fuzzystrmatch; Type: EXTENSION; Schema: -; Owner: -
@@ -41,6 +58,20 @@ COMMENT ON EXTENSION moddatetime IS 'functions for tracking last modification ti
 
 
 --
+-- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
+
+
+--
 -- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -52,6 +83,16 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: dependency_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.dependency_kind AS ENUM (
+    'dependency',
+    'dev-dependency'
+);
 
 
 --
@@ -136,7 +177,22 @@ CREATE TABLE public.package (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     rank integer DEFAULT 0 NOT NULL,
-    popularity jsonb
+    popularity jsonb,
+    language text DEFAULT 'gleam'::text NOT NULL,
+    registry text DEFAULT 'hex'::text NOT NULL
+);
+
+
+--
+-- Name: package_dependency; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.package_dependency (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    package_release_id uuid NOT NULL,
+    name text NOT NULL,
+    requirement text NOT NULL,
+    kind public.dependency_kind NOT NULL
 );
 
 
@@ -181,7 +237,8 @@ CREATE TABLE public.package_release (
     package_interface text,
     gleam_toml text,
     retirement jsonb,
-    inserted_at timestamp without time zone
+    inserted_at timestamp without time zone,
+    version_ordering integer[] GENERATED ALWAYS AS ((string_to_array(regexp_replace(version, '([0-9]+).([0-9]+).([0-9]+).*'::text, '\1.\2.\3'::text), '.'::text))::integer[]) STORED
 );
 
 
@@ -194,15 +251,19 @@ CREATE TABLE public.package_type_fun_signature (
     name text NOT NULL,
     documentation text NOT NULL,
     signature_ text NOT NULL,
-    json_signature jsonb NOT NULL,
     kind public.type_nature CONSTRAINT package_type_fun_signature_nature_not_null NOT NULL,
-    parameters uuid[] NOT NULL,
     deprecation text,
     implementations text,
     metadata jsonb NOT NULL,
     package_module_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    signature_compact text GENERATED ALWAYS AS (replace(signature_, ' '::text, ''::text)) STORED,
+    signature_ir jsonb,
+    arity integer,
+    type_names text[],
+    type_names_key text,
+    signature_canonical text
 );
 
 
@@ -273,6 +334,22 @@ ALTER TABLE ONLY public.hex_user
 
 ALTER TABLE ONLY public.hex_user
     ADD CONSTRAINT hex_user_username_key UNIQUE (username);
+
+
+--
+-- Name: package_dependency package_dependency_package_release_id_name_kind_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_dependency
+    ADD CONSTRAINT package_dependency_package_release_id_name_kind_key UNIQUE (package_release_id, name, kind);
+
+
+--
+-- Name: package_dependency package_dependency_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_dependency
+    ADD CONSTRAINT package_dependency_pkey PRIMARY KEY (id);
 
 
 --
@@ -364,10 +441,38 @@ ALTER TABLE ONLY public.search_analytics
 
 
 --
+-- Name: package_dependency_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_dependency_name ON public.package_dependency USING btree (name);
+
+
+--
+-- Name: package_module_name_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_module_name_trgm ON public.package_module USING gin (name public.gin_trgm_ops);
+
+
+--
 -- Name: package_name_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX package_name_index ON public.package_type_fun_signature USING btree (name, kind);
+
+
+--
+-- Name: package_popularity_github; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_popularity_github ON public.package USING btree (((popularity -> 'github'::text))) WHERE ((popularity -> 'github'::text) IS NOT NULL);
+
+
+--
+-- Name: package_type_fun_signature_canonical_btree; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_canonical_btree ON public.package_type_fun_signature USING btree (signature_canonical) WHERE (signature_canonical IS NOT NULL);
 
 
 --
@@ -385,10 +490,38 @@ CREATE INDEX package_type_fun_signature_name ON public.package_type_fun_signatur
 
 
 --
+-- Name: package_type_fun_signature_name_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_name_trgm ON public.package_type_fun_signature USING gin (name public.gin_trgm_ops);
+
+
+--
 -- Name: package_type_fun_signature_signature; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX package_type_fun_signature_signature ON public.package_type_fun_signature USING gin (to_tsvector('english'::regconfig, signature_));
+
+
+--
+-- Name: package_type_fun_signature_signature_compact_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_signature_compact_trgm ON public.package_type_fun_signature USING gin (signature_compact public.gin_trgm_ops);
+
+
+--
+-- Name: package_type_fun_signature_arity_type_names_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_arity_type_names_gin ON public.package_type_fun_signature USING gin (arity, type_names);
+
+
+--
+-- Name: package_type_fun_signature_arity_type_names_key_btree; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX package_type_fun_signature_arity_type_names_key_btree ON public.package_type_fun_signature USING btree (arity, type_names_key);
 
 
 --
@@ -448,6 +581,14 @@ CREATE TRIGGER search_analytics_moddatetime BEFORE UPDATE ON public.search_analy
 
 
 --
+-- Name: package_dependency package_dependency_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.package_dependency
+    ADD CONSTRAINT package_dependency_package_release_id_fkey FOREIGN KEY (package_release_id) REFERENCES public.package_release(id) ON DELETE CASCADE;
+
+
+--
 -- Name: package_module package_module_package_release_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -491,6 +632,9 @@ ALTER TABLE ONLY public.package_type_fun_signature
 -- PostgreSQL database dump complete
 --
 
+\unrestrict dbmate
+
+
 --
 -- Dbmate schema migrations
 --
@@ -517,4 +661,19 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20240801220817'),
     ('20240902224247'),
     ('20240902225236'),
-    ('20241016151324');
+    ('20241016151324'),
+    ('20260703095933'),
+    ('20260703095934'),
+    ('20260703100000'),
+    ('20260703100001'),
+    ('20260703100002'),
+    ('20260703100003'),
+    ('20260703100004'),
+    ('20261026120000'),
+    ('20261026130000'),
+    ('20261026140000'),
+    ('20261026150000'),
+    ('20261027100000'),
+    ('20261027110000'),
+    ('20261027120000'),
+    ('20261028100000');

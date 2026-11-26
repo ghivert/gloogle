@@ -17,6 +17,11 @@ pub const docs_match =
 
 pub const modules_match = "Matched from a module name"
 
+pub const narrowed_search =
+  "Your query is a type, so Gloogle answered it from type search alone. Text tiers — names, signatures, documentation, modules — did not run."
+
+pub const widen_search = "Widen the search"
+
 pub const retry_query =
   "Retry with a different query. You can match functions, types or constants names, as well as functions types directly!"
 

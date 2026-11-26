@@ -5,7 +5,6 @@ import gleam/result
 import jupiter/context.{type Context}
 import jupiter/context/environment/variables
 import jupiter/context/postgres
-import jupiter/gleam/type_search
 import jupiter/router
 import jupiter/workers
 import mist
@@ -24,7 +23,6 @@ pub fn main() {
     |> supervisor.add(postgres)
     |> supervisor.add(http_server(ctx))
     |> supervisor.add(periodic_workers(ctx))
-    |> supervisor.add(type_search.worker(ctx))
     |> supervisor.start
   process.sleep_forever()
 }

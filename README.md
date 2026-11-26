@@ -64,9 +64,12 @@ HEX_API_KEY = "xxxxx"
 GITHUB_TOKEN = "xxxxx"
 ```
 
-In production `BUCKET_URI` is the bare virtual-hosted Scaleway host
-(`hex-mirror.s3.fr-par.scw.cloud`) and the keys are the Scaleway ones; the S3
-client picks the shape from the variable.
+Production runs on Clever Cloud (`infra/clevercloud`, see its README): there
+`BUCKET_URI` is a Cellar URL (`https://cellar-c2.services.clever-cloud.com/gloogle-hex-mirror`,
+path-style) and the `SCALEWAY_*` variables, which keep their historical names,
+hold the Cellar keys; the S3 client picks the shape from the variable. A bare
+host (`hex-mirror.s3.fr-par.scw.cloud`, the former Scaleway bucket) means
+virtual-hosted https.
 
 ### Seeding the local stack from production
 
@@ -79,11 +82,15 @@ copies everything:
 # 1. Database: restore apps/jupiter/db/gloogle_migrated.sql.gz — the production
 #    snapshot kept next to the migrations (gitignored; 2026-07-02, ~110 MB) —
 #    then dbmate up for the migrations newer than it.
-# 2. Bucket: mirror the Scaleway bucket to infra/local/dumps/, then into RustFS.
+# 2. Bucket: mirror the bucket named by BUCKET_URI (a bare virtual-hosted host,
+#    the former Scaleway form) to infra/local/dumps/, then into RustFS.
 infra/local/scripts/seed-local.sh          # or: seed-local.sh db / seed-local.sh s3
 
-# For a fresher database than the snapshot, dump production (Render) instead:
-PROD_DATABASE_URL="postgres://…render…/gloogle?sslmode=require" \
+# For a fresher database than the snapshot, dump production (Clever Cloud)
+# instead — `tofu output -raw postgresql_uri` in infra/clevercloud. Its
+# certificate is self-signed: with a ~/.postgresql/root.crt around, add
+# PGSSLROOTCERT=/nonexistent/root.crt so `require` does not verify it.
+PROD_DATABASE_URL="postgres://…clever-cloud.com:7451/…?sslmode=require" \
   infra/local/scripts/seed-local.sh db
 # …or restore any dump you have: DUMP_FILE=path/to/dump infra/local/scripts/seed-local.sh db
 ```

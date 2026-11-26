@@ -1,0 +1,112 @@
+name: deploy
+
+# Builds happen here, in Docker; the hosts only host.
+#   jupiter → image on GHCR, then Clever Cloud receives a one-line Dockerfile
+#             `FROM <image>@<digest>` (.github/scripts/clever-push.sh);
+#   venus   → the static build, deployed to Netlify with its CLI (the Netlify
+#             site must have its own builds stopped).
+#
+# Runs after a green `test` on main, or by hand.
+#
+# Repository settings (environment `production`):
+#   secrets  CLEVER_TOKEN, CLEVER_SECRET   clever-tools credentials
+#            NETLIFY_AUTH_TOKEN            Netlify personal access token
+#            SENTRY_AUTH_TOKEN             optional, sourcemap upload
+#   vars     CLEVER_ORG                    optional, only if the app name is ambiguous
+#            NETLIFY_SITE_ID               Site configuration → Site ID
+#            SENTRY_ORG, SENTRY_PROJECT    optional
+
+on:
+  workflow_run:
+    workflows: [test]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+  # The public `gloogle` package. No `latest` tag: Clever Cloud pins the digest,
+  # and `latest` still names the 2024 image.
+  JUPITER_IMAGE: ghcr.io/${{ github.repository_owner }}/gloogle
+
+jobs:
+  jupiter:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push the image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/jupiter/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.JUPITER_IMAGE }}:${{ env.SHA }}
+          cache-from: type=gha,scope=jupiter
+          cache-to: type=gha,mode=max,scope=jupiter
+      - name: Deploy to Clever Cloud
+        env:
+          CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+          CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+          CLEVER_ORG: ${{ vars.CLEVER_ORG }}
+          GITHUB_SHA: ${{ env.SHA }}
+          IMAGE: ${{ env.JUPITER_IMAGE }}@${{ steps.build.outputs.digest }}
+        # The app name is the one infra/clevercloud gives it (`<name>-jupiter`).
+        run: |
+          mkdir -p "$RUNNER_TEMP/jupiter" && cd "$RUNNER_TEMP/jupiter"
+          echo "FROM $IMAGE" > Dockerfile
+          "$GITHUB_WORKSPACE/.github/scripts/clever-push.sh" gloogle-jupiter "$CLEVER_ORG"
+
+  venus:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the site
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/venus/Dockerfile
+          target: site
+          outputs: type=local,dest=${{ runner.temp }}/venus
+          build-args: |
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ vars.SENTRY_PROJECT }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+          cache-from: type=gha,scope=venus
+          cache-to: type=gha,mode=max,scope=venus
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+        run: >-
+          npx --yes netlify-cli@27.20.1 deploy
+          --prod
+          --no-build
+          --dir "$RUNNER_TEMP/venus"
+          --site "$NETLIFY_SITE_ID"
+          --message "Deploy $SHA"

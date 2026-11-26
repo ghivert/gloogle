@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+
+organisation = "orga_xxx" # or user_xxx for a personal space
+
+# Encrypts the state; 16+ characters, keep it in a password manager.
+state_passphrase = ""
+
+hex_api_key       = ""
+github_token      = ""
+
+# Only if the ghcr.io/ghivert/gloogle package were private (it is public):
+# registry_user     = "ghivert"
+# registry_password = "" # token with read:packages
+
+# Defaults, override if needed:
+# postgresql_plan = "xs_sml"
+# jupiter_flavor  = "XS"
+# bucket_name     = "gloogle-hex-mirror"
+# database_route  = "networkgroup" # "public" fails: self-signed add-on cert, see variables.tf
+# jupiter_domains = ["gloogle-jupiter.cleverapps.io", "api.gloogle.run"]

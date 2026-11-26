@@ -766,6 +766,11 @@
           <p lang="fr">Intégration Vite pour le build de venus.</p>
           <p lang="en">Vite integration for the venus build.</p>
         </div>
+        <div class="card">
+          <h4>packages/tom</h4>
+          <p lang="fr">Copie de <code>tom</code> 2.1.0 (le parseur TOML de Louis Pilfold), dont jupiter lit les <code>gleam.toml</code> des releases. Un seul correctif : une super-table définie après une de ses sous-tables (<code>[a.b]</code> puis <code>[a]</code>), valide en TOML, était refusée — lumenmail 1.1.2 ne s'ingérait pas. À remplacer par la version Hex quand l'amont corrige.</p>
+          <p lang="en">A copy of <code>tom</code> 2.1.0 (Louis Pilfold's TOML parser), which jupiter uses to read the releases' <code>gleam.toml</code>. One fix: a super-table defined after one of its sub-tables (<code>[a.b]</code> then <code>[a]</code>), valid TOML, was rejected — lumenmail 1.1.2 did not ingest. To be replaced by the Hex version once upstream fixes it.</p>
+        </div>
       </div>
     </section>
 

@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [packages/galaxy, packages/plasma, packages/chomp]
+        package: [packages/galaxy, packages/plasma, packages/chomp, packages/tom]
     defaults:
       run:
         working-directory: ${{ matrix.package }}

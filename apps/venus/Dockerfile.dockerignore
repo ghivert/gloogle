@@ -1,0 +1,13 @@
+**/build
+**/node_modules
+**/dist
+**/.mise.local.toml
+**/erl_crash.dump
+**/.DS_Store
+**/.yarn
+.git
+infra
+certs
+apps/jupiter/src
+apps/jupiter/db
+apps/jupiter/test

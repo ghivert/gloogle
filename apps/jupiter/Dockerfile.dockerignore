@@ -1,0 +1,8 @@
+**/build
+**/node_modules
+**/.mise.local.toml
+**/erl_crash.dump
+.git
+infra
+apps/venus
+apps/jupiter/db

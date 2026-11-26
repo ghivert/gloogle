@@ -766,6 +766,11 @@
           <p lang="fr">Intégration Vite pour le build de venus.</p>
           <p lang="en">Vite integration for the venus build.</p>
         </div>
+        <div class="card">
+          <h4>packages/tom</h4>
+          <p lang="fr">Copie de <code>tom</code> 2.1.0 (le parseur TOML de Louis Pilfold), dont jupiter lit les <code>gleam.toml</code> des releases. Un seul correctif : une super-table définie après une de ses sous-tables (<code>[a.b]</code> puis <code>[a]</code>), valide en TOML, était refusée — lumenmail 1.1.2 ne s'ingérait pas. À remplacer par la version Hex quand l'amont corrige.</p>
+          <p lang="en">A copy of <code>tom</code> 2.1.0 (Louis Pilfold's TOML parser), which jupiter uses to read the releases' <code>gleam.toml</code>. One fix: a super-table defined after one of its sub-tables (<code>[a.b]</code> then <code>[a]</code>), valid TOML, was rejected — lumenmail 1.1.2 did not ingest. To be replaced by the Hex version once upstream fixes it.</p>
+        </div>
       </div>
     </section>
 
@@ -900,17 +905,43 @@
         <code>api/hex_repo</code> cherche le tarball d'une release d'abord sur le disque, puis dans le
         bucket S3, et seulement ensuite sur <code>repo.hex.pm</code> — chaque niveau remplit le précédent.
         Le client <code>aws/s3</code> lit la forme du bucket dans <code>BUCKET_URI</code> : un hôte nu
-        (<code>hex-mirror.s3.fr-par.scw.cloud</code>, la prod sur Scaleway) donne https et des objets en
+        (<code>hex-mirror.s3.fr-par.scw.cloud</code>, l'ancienne prod sur Scaleway) donne https et des objets en
         <code>/&lt;clé&gt;</code> ; une URL complète (<code>http://localhost:29000/gloogle</code>) donne le
         schéma et le port écrits et des objets en <code>/&lt;bucket&gt;/&lt;clé&gt;</code> (path-style).
         C'est ce qui permet la stack locale <code>infra/local/compose.yml</code> — Postgres sur 25432,
         RustFS sur 29000/29001, ports choisis loin de tout — alimentée depuis la prod par
         <code>infra/local/scripts/seed-local.sh</code> : miroir du bucket Scaleway (8 083 archives,
         576 Mio) et restauration de la base depuis l'instantané de prod
-        <code>apps/jupiter/db/gloogle_migrated.sql.gz</code> (2 juillet 2026, hors git ; la prod vit chez
-        Render, pas chez Scaleway), suivie de <code>dbmate up</code> pour les migrations plus récentes.
+        <code>apps/jupiter/db/gloogle_migrated.sql.gz</code> (2 juillet 2026, hors git ; prise sur
+        Render, l'ancienne prod), suivie de <code>dbmate up</code> pour les migrations plus récentes.
         Ce qui ne se régénère pas et justifie la copie : <code>hex_read</code>, <code>analytics</code>,
         <code>analytics_timeseries</code>, <code>search_analytics</code>, l'historique de popularité.
+      </p>
+
+      <p class="note" lang="fr">
+        <strong>La prod part sur Clever Cloud, qui ne fait qu'héberger.</strong>
+        <code>infra/clevercloud</code> (OpenTofu) provisionne un add-on PostgreSQL 18 (le schéma appelle
+        <code>uuidv7()</code>), un stockage objet Cellar et son bucket d'archives, jupiter en app Docker,
+        et un network group WireGuard entre jupiter et Postgres. venus reste sur Netlify (CDN gratuit, que Clever Cloud n'a pas). Tout se
+        construit en Docker sur GitHub Actions (<code>.github/workflows/deploy.yml</code>, après un
+        <code>test</code> vert sur <code>main</code>) : l'image de jupiter
+        (<code>apps/jupiter/Dockerfile</code>) part sur GHCR et l'app reçoit un Dockerfile d'une ligne,
+        <code>FROM …@sha256:…</code> ; l'étage <code>site</code> de <code>apps/venus/Dockerfile</code>
+        (le build Vite, <code>_headers</code> et <code>_redirects</code> compris) part sur Netlify par
+        sa CLI, sans build côté Netlify. jupiter tourne sur <strong>une seule instance, sans autoscaling</strong> :
+        les workers périodiques vivent dans le même BEAM que l'API, une deuxième instance les doublerait.
+        La base de prod est initialisée une fois depuis la stack locale, déjà migrée et remplie. Le
+        bucket d'archives quitte Scaleway pour Cellar : <code>BUCKET_URI</code> y prend la forme URL
+        (path-style, ce que Cellar recommande), et les clés de l'add-on remplissent
+        <code>SCALEWAY_ACCESS_KEY</code> / <code>SCALEWAY_SECRET_KEY</code>, qui gardent leur nom
+        historique ; son contenu est copié une fois par <code>mirror_bucket.py</code>. Le mode TLS de Postgres
+        vient du <code>sslmode</code> de <code>DATABASE_URL</code> quand il y figure
+        (<code>context/postgres.ssl</code>, sens de libpq), sinon d'un défaut : rien en dev,
+        <code>SslVerified</code> en prod (autorités du système, nom d'hôte vérifié). Sur Clever Cloud, jupiter joint la base par le
+        network group — nom de membre <code>postgresql-….m.ng-….cc-ng.cloud</code>, port
+        <code>8080</code>, celui de tout add-on dédié dans un groupe — en <code>sslmode=require</code> : le certificat de l'add-on est auto-signé par
+        instance, et le <code>ssl</code> d'Erlang refuse un pair auto-signé même placé parmi les autorités
+        de confiance (<code>selfsigned_peer</code>) ; WireGuard authentifie déjà les deux bouts.
       </p>
 
       <p class="note" lang="fr">
@@ -977,17 +1008,44 @@
         <code>api/hex_repo</code> looks for a release tarball on disk first, then in the S3 bucket, and
         only then on <code>repo.hex.pm</code> — each level fills the one before it. The
         <code>aws/s3</code> client reads the bucket's shape from <code>BUCKET_URI</code>: a bare host
-        (<code>hex-mirror.s3.fr-par.scw.cloud</code>, production on Scaleway) means https and objects at
+        (<code>hex-mirror.s3.fr-par.scw.cloud</code>, the former production on Scaleway) means https and objects at
         <code>/&lt;key&gt;</code>; a full URL (<code>http://localhost:29000/gloogle</code>) means the
         scheme and port as written and objects at <code>/&lt;bucket&gt;/&lt;key&gt;</code> (path-style).
         That is what enables the local stack <code>infra/local/compose.yml</code> — Postgres on 25432,
         RustFS on 29000/29001, ports chosen far from everything — seeded from production by
         <code>infra/local/scripts/seed-local.sh</code>: a mirror of the Scaleway bucket (8,083 archives,
         576 MiB) and a restore of the database from the production snapshot
-        <code>apps/jupiter/db/gloogle_migrated.sql.gz</code> (2 July 2026, outside git; production lives on
-        Render, not Scaleway), followed by <code>dbmate up</code> for the newer migrations.
+        <code>apps/jupiter/db/gloogle_migrated.sql.gz</code> (2 July 2026, outside git; taken from
+        Render, the former production), followed by <code>dbmate up</code> for the newer migrations.
         What cannot be regenerated, and justifies the copy: <code>hex_read</code>, <code>analytics</code>,
         <code>analytics_timeseries</code>, <code>search_analytics</code>, the popularity history.
+      </p>
+
+      <p class="note" lang="en">
+        <strong>Production moves to Clever Cloud, which only hosts.</strong>
+        <code>infra/clevercloud</code> (OpenTofu) provisions a PostgreSQL 18 add-on (the schema calls
+        <code>uuidv7()</code>), a Cellar object storage and its archive bucket, jupiter as a Docker app,
+        and a WireGuard network group between jupiter and Postgres. venus stays on Netlify (free CDN, which Clever Cloud lacks). Everything is
+        built in Docker on GitHub Actions (<code>.github/workflows/deploy.yml</code>, after a green
+        <code>test</code> on <code>main</code>): jupiter's image (<code>apps/jupiter/Dockerfile</code>)
+        goes to GHCR and the app receives a one-line Dockerfile, <code>FROM …@sha256:…</code>; the
+        <code>site</code> stage of <code>apps/venus/Dockerfile</code> (the Vite build,
+        <code>_headers</code> and <code>_redirects</code> included) goes to Netlify through its CLI, with
+        no build on Netlify's side. jupiter runs on <strong>a single instance, no auto-scaling</strong>: the
+        periodic workers live in the same BEAM as the API, a second instance would run them twice. The
+        production database is seeded once from the local stack, already migrated and backfilled. The
+        archive bucket leaves Scaleway for Cellar: <code>BUCKET_URI</code> takes its URL form there
+        (path-style, which Cellar recommends), and the add-on's keys fill
+        <code>SCALEWAY_ACCESS_KEY</code> / <code>SCALEWAY_SECRET_KEY</code>, which keep their historical
+        name; its content is copied once by <code>mirror_bucket.py</code>. Postgres's TLS mode comes
+        from the <code>sslmode</code> of <code>DATABASE_URL</code> when present
+        (<code>context/postgres.ssl</code>, libpq's meaning), else from a default: none in development,
+        <code>SslVerified</code> in production (OS trust store, hostname checked). On Clever Cloud, jupiter reaches the database through
+        the network group — member name <code>postgresql-….m.ng-….cc-ng.cloud</code>, port
+        <code>8080</code>, that of every dedicated add-on inside a group — with
+        <code>sslmode=require</code>: the add-on's certificate is self-signed per
+        instance, and Erlang's <code>ssl</code> refuses a self-signed peer even when it is among the
+        trusted CAs (<code>selfsigned_peer</code>); WireGuard already authenticates both ends.
       </p>
     </section>
 
@@ -1561,8 +1619,8 @@ pub type Type {
             <tr>
               <td class="m">POST</td><td class="m">/packages/update/:name</td><td class="m">handlers.package_update</td>
               <td class="d">
-                <span lang="fr">Resynchronise un paquet à la demande (<code>force: True</code>). Répond <code>{}</code> sans attendre.</span>
-                <span lang="en">Re-syncs a package on demand (<code>force: True</code>). Answers <code>{}</code> without waiting.</span>
+                <span lang="fr">Resynchronise un paquet à la demande (<code>force: True</code>). Répond <code>{}</code> sans attendre. <strong>Route d'administration</strong> : sans <code>authorization: Bearer &lt;ADMIN_TOKEN&gt;</code>, toute requête <code>POST</code> reçoit 404, et sans <code>ADMIN_TOKEN</code> configuré personne ne passe (<code>router.authorized</code>, comparaison en temps constant). Chaque appel interroge Hex avec la clé de jupiter et réingère toutes les releases : ouverte, la route servait à épuiser l'instance et la limite de la clé.</span>
+                <span lang="en">Re-syncs a package on demand (<code>force: True</code>). Answers <code>{}</code> without waiting. <strong>Admin route</strong>: without <code>authorization: Bearer &lt;ADMIN_TOKEN&gt;</code> every <code>POST</code> gets 404, and with no <code>ADMIN_TOKEN</code> configured nobody passes (<code>router.authorized</code>, constant-time comparison). Each call queries Hex with jupiter's key and re-ingests every release: left open, the route could exhaust the instance and the key's rate limit.</span>
               </td>
             </tr>
           </tbody>

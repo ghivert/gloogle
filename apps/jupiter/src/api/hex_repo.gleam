@@ -37,7 +37,11 @@ fn extract_tar(
   use _ <- result.try(tar.extract(content, destination))
   use request <- result.map(request_package_interface(base_name, version))
   let gleam_toml = string.join([destination, "gleam.toml"], with: "/")
-  case httpc.send(request) {
+  // HexDocs answers 301 to `<package>.hexdocs.pm/<version>/…` (underscores
+  // become hyphens): follow it, or every release falls back to
+  // `gleam docs build`, whose Hex API calls hit the rate limit.
+  let hexdocs = httpc.configure() |> httpc.follow_redirects(True)
+  case httpc.dispatch(hexdocs, request) {
     Ok(Response(status: 200, body:, ..)) -> {
       palabres.debug("Using HexDocs for package-interface.json")
       |> palabres.string("slug", slug)

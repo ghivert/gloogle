@@ -1,7 +1,7 @@
 # Gloogle
 
 Monorepo. `apps/jupiter` (backend, Gleam/Erlang), `apps/venus` (frontend, Lustre),
-`packages/galaxy` (types shared across the HTTP boundary), plus `plasma`, `chomp`, `vitools`.
+`packages/galaxy` (types shared across the HTTP boundary), plus `plasma`, `chomp`, `vitools`, and `tom` (a patched copy of the Hex TOML parser, see its README).
 
 Design docs: `signature-ir.md` (the signature IR design), `signature-ir-todos.md` (deferred work),
 `optimisations.md`.

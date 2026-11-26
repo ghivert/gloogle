@@ -5,8 +5,12 @@ import gleam/list
 import gleam/option.{None}
 import gleam/package_interface as pi
 import gleeunit
+import jupiter/context/environment
+import jupiter/context/postgres
 import jupiter/postgres/queries
+import jupiter/router
 import jupiter/router/handlers
+import pog
 
 pub fn main() {
   gleeunit.main()
@@ -87,4 +91,36 @@ pub fn closed_query_test() {
   assert !closed("fn(List(_)) -> Bool")
   assert !closed("fn(with: Int) -> Bool")
   assert !closed("_")
+}
+
+// `sslmode` in DATABASE_URL wins, with libpq's meaning; without it, no TLS in
+// development and verified TLS in production. An unknown mode falls back to
+// the default (pog.url_config rejects it anyway).
+pub fn postgres_ssl_test() {
+  let url = fn(query) { "postgres://u:p@host:5432/db" <> query }
+  let prod = environment.Production
+  let dev = environment.Development
+  assert postgres.ssl(url(""), prod) == pog.SslVerified
+  assert postgres.ssl(url(""), dev) == pog.SslDisabled
+  assert postgres.ssl(url("?sslmode=require"), prod) == pog.SslUnverified
+  assert postgres.ssl(url("?sslmode=disable"), prod) == pog.SslDisabled
+  assert postgres.ssl(url("?sslmode=verify-full"), dev) == pog.SslVerified
+  assert postgres.ssl(url("?sslmode=verify-ca"), dev) == pog.SslVerified
+  assert postgres.ssl(url("?connect_timeout=5&sslmode=require"), dev)
+    == pog.SslUnverified
+  assert postgres.ssl(url("?sslmode=bogus"), prod) == pog.SslVerified
+}
+
+// Admin routes: only `Bearer <exact token>` passes, and nothing passes while
+// no token is configured.
+pub fn admin_authorized_test() {
+  let token = Ok("s3cret")
+  assert router.authorized(Ok("Bearer s3cret"), token)
+  assert !router.authorized(Ok("Bearer s3cre"), token)
+  assert !router.authorized(Ok("Bearer s3cret "), token)
+  assert !router.authorized(Ok("s3cret"), token)
+  assert !router.authorized(Ok("Basic s3cret"), token)
+  assert !router.authorized(Error(Nil), token)
+  assert !router.authorized(Ok("Bearer "), Error(Nil))
+  assert !router.authorized(Ok("Bearer s3cret"), Error(Nil))
 }

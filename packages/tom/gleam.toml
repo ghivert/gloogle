@@ -1,0 +1,17 @@
+name = "tom"
+version = "2.1.0"
+
+description = "A pure Gleam TOML parser!"
+licences = ["Apache-2.0"]
+repository = { type = "github", user = "lpil", repo = "tom" }
+links = [
+  { title = "TOML website", href = "https://toml.io/en/" },
+  { title = "Sponsor", href = "https://github.com/sponsors/lpil" },
+]
+
+[dependencies]
+gleam_stdlib = ">= 0.53.0 and < 3.0.0"
+gleam_time = ">= 1.2.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = "~> 1.0"

@@ -1,9 +1,5 @@
-/*.css
-cache-control: max-age=86400
-cache-control: public
-cache-control: must-revalidate
+/assets/*
+  cache-control: public, max-age=31536000, immutable
 
 /*.ttf
-cache-control: max-age=86400
-cache-control: public
-cache-control: must-revalidate
+  cache-control: public, max-age=86400, must-revalidate

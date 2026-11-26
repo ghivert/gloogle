@@ -1,6 +1,6 @@
 # Runtimes used by the stack.
 [tools]
-gleam = "1.17.0"
+gleam = "1.19.2"
 erlang = "28"
 node = "24"
 elixir = "1.19"

@@ -25,9 +25,10 @@ pog = ">= 4.0.0 and < 5.0.0"
 prng = ">= 5.0.0 and < 6.0.0"
 ranger = ">= 1.4.0 and < 2.0.0"
 simplifile = ">= 2.1.0 and < 3.0.0"
-tom = ">= 2.0.0 and < 3.0.0"
+tom = {path = "../../packages/tom"}
 wisp = ">= 2.0.0 and < 3.0.0"
 palabres_wisp = ">= 1.0.2 and < 2.0.0"
+gleam_crypto = ">= 1.6.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

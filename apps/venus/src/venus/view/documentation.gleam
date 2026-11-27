@@ -1,7 +1,7 @@
 import gleam/list
 import gleam/string
 import lustre/attribute as a
-import lustre/element/html as h
+import lustre/element
 
 @external(javascript, "../../markdown.ffi.mjs", "convert")
 fn converter(content: String) -> String
@@ -20,6 +20,6 @@ pub fn view(document: String) {
     |> list.map(remove_leading_space)
     |> string.join("\n")
     |> converter
-    |> a.attribute("dangerous-unescaped-html", _)
-  h.div([content, a.class("documentation")], [])
+  // The HTML is sanitised by DOMPurify in `markdown.ffi.mjs`.
+  element.unsafe_raw_html("", "div", [a.class("documentation")], content)
 }
